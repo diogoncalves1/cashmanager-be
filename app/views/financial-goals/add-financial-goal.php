@@ -86,16 +86,14 @@ $curDate = $curDate->format("Y-m-d");
                                 class="form-control-label px-3"><?php echo $status_translate; ?><span
                                     class="text-danger-emphasis"> *</span></label>
                             <select name="status" required>
-                                <?php $result_status = get_status_goal($conn);
-                                while ($row = mysqli_fetch_assoc($result_status)) {
-                                    if ($row['id'] != 33) { ?>
-                                <option value="<?php echo $row['id']; ?>"><?php if ($_COOKIE['lang'] == "EN")
-                                                                                        echo $row['name'];
-                                                                                    else
-                                                                                        echo $row['name_pt']; ?>
+                                <?php foreach ($statusGoals as $statusGoal) { ?>
+                                <option value="<?php echo $statusGoal['id']; ?>">
+                                    <?php if ($_COOKIE['lang'] == "EN")
+                                                                                            echo $statusGoal['name'];
+                                                                                        else
+                                                                                            echo $statusGoal['name_pt']; ?>
                                 </option>
-                                <?php }
-                                } ?>
+                                <?php } ?>
                             </select>
                         </div>
                         <div class="form-group col-sm-6 flex-column d-flex"> <label

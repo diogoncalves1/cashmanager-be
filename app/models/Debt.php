@@ -1,15 +1,11 @@
 <?php
 
-namespace app\models\Debt;
+namespace app\Models;
 
-class Debt
+use app\Models\Model;
+
+class Debt extends Model
 {
-    private $conn;
-
-    function __construct($conn)
-    {
-        $this->conn = $conn;
-    }
 
     function addDebt() {}
     function updateDebt() {}

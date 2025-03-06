@@ -3,9 +3,16 @@
 namespace app\Controllers;
 
 use app\Controllers\Controller;
+use app\Models\Debt;
 
 class DebtController
 {
+    private $debtModel;
+
+    public function __construct()
+    {
+        $this->debtModel = new Debt();
+    }
     function index()
     {
         Controller::view("debts/manage-debts");
@@ -70,6 +77,7 @@ class DebtController
             $n_inst = $p->n_installments;
             $v_inst = $p->value_installments;
         }
+        $this->debtModel->updateDebt();
         update_debt($conn, $id, $p->creditor, $p->total_value, $rate, $installment, $p->due_date, $p->description, $n_inst, $v_inst, $interest);
         if ($_COOKIE['lang'] == "PT")
             $_SESSION['alert'] = "Dívida Atualizada com sucesso";

@@ -158,6 +158,7 @@ class TransactionController
     {
         Controller::view("transactions/view-scheduled-expense");
     }
+
     function delete($params)
     {
         $response = "";
@@ -265,5 +266,19 @@ class TransactionController
 
             echo $response;
         }
+    }
+
+    public function deleteProofExpense($params)
+    {
+        $transactionId = $params->id;
+        $this->transactionModel->deleteProofExpense($transactionId);
+        $this->transactionModel->getProof($transactionId);/*
+        $query = "SELECT proof FROM transactions WHERE id =$id ";
+        $result = $conn->query($query);
+        $row = $result->fetch_assoc();
+        $proofName = $row["proof"];
+        unlink("../assets/images/proofs/" . $proofName);
+        $query = "UPDATE transactions SET proof=null";
+        $conn->query($query);*/
     }
 }

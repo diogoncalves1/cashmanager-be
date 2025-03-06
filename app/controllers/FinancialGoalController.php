@@ -5,6 +5,7 @@ namespace app\Controllers;
 use app\Controllers\Controller;
 use app\Models\FinancialGoalCategory;
 use app\Models\Priority;
+use app\Models\StatusGoal;
 use PDO;
 
 class FinancialGoalController
@@ -15,14 +16,17 @@ class FinancialGoalController
     }
     function add()
     {
-
+        $statusGoalStmt = StatusGoal::all();
         $financialGoalCategoriesStmt = FinancialGoalCategory::all();
         $prioritiesStmt = Priority::all();
+        $statusGoal = $statusGoalStmt->fetchAll(PDO::FETCH_ASSOC);
         $financialGoalCategories = $financialGoalCategoriesStmt->fetchAll(PDO::FETCH_ASSOC);
         $priorities = $prioritiesStmt->fetchAll(PDO::FETCH_ASSOC);
+
         $data = [
             "financialGoalCategories" => $financialGoalCategories,
-            "priorities" => $priorities
+            "priorities" => $priorities,
+            "statusGoals" => $statusGoal
         ];
         Controller::view("financial-goals/add-financial-goal", $data);
     }
@@ -39,13 +43,16 @@ class FinancialGoalController
     }
     function edit()
     {
+        $statusGoalStmt = StatusGoal::all();
         $financialGoalCategorysStmt = FinancialGoalCategory::all();
         $prioritiesStmt = Priority::all();
+        $statusGoal = $statusGoalStmt->fetchAll(PDO::FETCH_ASSOC);
         $financialGoalCategorys = $financialGoalCategorysStmt->fetchAll(PDO::FETCH_ASSOC);
         $priorities = $prioritiesStmt->fetchAll(PDO::FETCH_ASSOC);
         $data = [
             "financialGoalCategorys" => $financialGoalCategorys,
-            "priorities" => $priorities
+            "priorities" => $priorities,
+            "statusGoals" => $statusGoal
         ];
         Controller::view("financial-goals/edit-financial-goal", $data);
     }

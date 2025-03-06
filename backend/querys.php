@@ -6,7 +6,6 @@ require_once("users/querys.php");
 require_once("alert/querys.php");
 require_once("limits/querys.php");
 require_once("financial_goal/querys.php");
-require_once("status_goal/querys.php");
 require_once("friend/querys.php");
 require_once("share_type/querys.php");
 require_once("share_request/querys.php");

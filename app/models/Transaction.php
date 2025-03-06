@@ -18,6 +18,8 @@ class Transaction extends Model
         $stmt->execute([$accountId]);
     }
 
+    public function getProof(int $transactionId) {}
+
     public function getUserTransactions(int $userId)
     {
         $query = "SELECT * FROM transactions WHERE user_id = $userId ORDER BY date ASC, type DESC, id DESC;";
@@ -109,4 +111,6 @@ class Transaction extends Model
     {
         return $this->conn->query("DELETE FROM {$this->table} WHERE id = {$transactionId}");
     }
+
+    public function deleteProofExpense() {}
 }

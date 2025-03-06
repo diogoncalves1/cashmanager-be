@@ -75,9 +75,8 @@ $curDate = $curDate->format("Y-m-d");
                                     class="text-danger-emphasis"> *</span></label>
                             <select name="category" required>
                                 <?php foreach ($financialGoalCategorys as $financialGoalCategory) { ?>
-                                <option value="<?php echo $financialGoalCategory['id']; ?>"
-                                    <?php if ($financialGoalCategory['id'] == $row['cat_id'])
-                                                                                                            echo "selected"; ?>>
+                                <option value="<?php echo $financialGoalCategory['id']; ?>" <?php if ($financialGoalCategory['id'] == $row['cat_id'])
+                                                    echo "selected"; ?>>
                                     <?php if ($_COOKIE['lang'] == "EN")
                                                     echo $financialGoalCategory['name'];
                                                 else
@@ -91,14 +90,13 @@ $curDate = $curDate->format("Y-m-d");
                                 class="form-control-label px-3"><?php echo $status_translate; ?><span
                                     class="text-danger-emphasis"> *</span></label>
                             <select name="status" required>
-                                <?php $result_status = get_status_goal($conn);
-                                        while ($roWW = mysqli_fetch_assoc($result_status)) { ?>
-                                <option value="<?php echo $roWW['id']; ?>" <?php if ($roWW['id'] == $row['status_id'])
-                                                                                            echo "selected";  ?>>
+                                <?php foreach ($statusGoals as $statusGoal) { ?>
+                                <option value="<?php echo $statusGoal['id']; ?>" <?php if ($statusGoal['id'] == $row['status_id'])
+                                                    echo "selected";  ?>>
                                     <?php if ($_COOKIE['lang'] == "EN")
-                                                    echo $roWW['name'];
+                                                    echo $statusGoal['name'];
                                                 else
-                                                    echo $roWW['name_pt']; ?></option>
+                                                    echo $statusGoal['name_pt']; ?></option>
                                 <?php } ?>
                             </select>
                         </div>
