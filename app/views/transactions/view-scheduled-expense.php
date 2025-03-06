@@ -1,4 +1,7 @@
 <?php
+
+use app\Models\Account;
+
 $this->layout("master");
 session_start();
 $_SESSION['path'] = $_SERVER['REQUEST_URI'];
@@ -8,6 +11,7 @@ if (!isset($_COOKIE['user']))
 require_once "../backend/querys.php";
 require_once "../backend/language.php";
 $expense_id = $_GET['id'];
+$accountInstance = new Account();
 ?>
 <main class="col-md-9 ms-sm-auto col-lg-10 px-sm-2">
     <div
@@ -27,8 +31,8 @@ $expense_id = $_GET['id'];
     $i = $result_transaction->num_rows;
     while ($row = mysqli_fetch_assoc($result_transaction)) {
     ?>
-        <div class="table-responsive">
-            <table class="table table-bordered <?php if ($row['type'] == 1)
+    <div class="table-responsive">
+        <table class="table table-bordered <?php if ($row['type'] == 1)
                                                     echo "success";
                                                 else
                                                     echo "danger";
@@ -37,20 +41,20 @@ $expense_id = $_GET['id'];
                                                                                                 else
                                                                                                     echo "danger";
                                                                                             } ?>">
-                <thead>
-                    <tr>
-                        <th scope="col" class="col-3"><?php echo $scheduled_date; ?></th>
-                        <th scope="col" class="col-2"><?php echo $type_translate; ?></th>
-                        <th scope="col" class="col-2"><?php echo $account; ?></th>
-                        <th scope="col" class="col-2"><?= $row['type'] == 0 ? $to : $from; ?></th>
-                        <th scope="col" class="col-1"><?php echo $value; ?></th>
-                        <?php if ($row['type'] == 0) { ?>
-                            <th scope="col" class="col-2"><?php echo $category ?></th>
-                        <?php } ?>
-                    </tr>
-                </thead>
-                <tbody id="table">
-                    <?php
+            <thead>
+                <tr>
+                    <th scope="col" class="col-3"><?php echo $scheduled_date; ?></th>
+                    <th scope="col" class="col-2"><?php echo $type_translate; ?></th>
+                    <th scope="col" class="col-2"><?php echo $account; ?></th>
+                    <th scope="col" class="col-2"><?= $row['type'] == 0 ? $to : $from; ?></th>
+                    <th scope="col" class="col-1"><?php echo $value; ?></th>
+                    <?php if ($row['type'] == 0) { ?>
+                    <th scope="col" class="col-2"><?php echo $category ?></th>
+                    <?php } ?>
+                </tr>
+            </thead>
+            <tbody id="table">
+                <?php
 
 
                     if ($row['type'] == 1) {
@@ -59,23 +63,23 @@ $expense_id = $_GET['id'];
                         $color = "#e30022;";
 
                     ?>
-                    <tr>
-                        <td style="color: <?php echo $color; ?>"><?php echo $row['date']; ?></td>
-                        <td style="color: <?php echo $color; ?>"><?php echo $type[$row['type']]; ?></td>
-                        <td style="color: <?php echo $color; ?>">
-                            <?php echo get_name_account($conn, $row['account_id']); ?>
-                        </td>
-                        <td style="color: <?php echo $color; ?>"><?php echo $row['to_p']; ?></td>
-                        <td style="color: <?php echo $color; ?>"><?php echo $row['value']; ?><?= $coin ?></td>
-                        <?php if ($row['type'] == 0) { ?>
-                            <td style="color: <?php echo $color; ?>">
-                                <?= get_category_name($conn, $row['cat_id']); ?>
-                            </td>
-                        <?php } ?>
-                    </tr>
-                    <tr>
-                        <td colspan="7">
-                            <table class="table <?php if ($row['type'] == 1)
+                <tr>
+                    <td style="color: <?php echo $color; ?>"><?php echo $row['date']; ?></td>
+                    <td style="color: <?php echo $color; ?>"><?php echo $type[$row['type']]; ?></td>
+                    <td style="color: <?php echo $color; ?>">
+                        <?php echo $accountInstance->getNameAccount($row['account_id']); ?>
+                    </td>
+                    <td style="color: <?php echo $color; ?>"><?php echo $row['to_p']; ?></td>
+                    <td style="color: <?php echo $color; ?>"><?php echo $row['value']; ?><?= $coin ?></td>
+                    <?php if ($row['type'] == 0) { ?>
+                    <td style="color: <?php echo $color; ?>">
+                        <?= get_category_name($conn, $row['cat_id']); ?>
+                    </td>
+                    <?php } ?>
+                </tr>
+                <tr>
+                    <td colspan="7">
+                        <table class="table <?php if ($row['type'] == 1)
                                                     echo "success";
                                                 else
                                                     echo "danger";
@@ -84,24 +88,24 @@ $expense_id = $_GET['id'];
                                                                                                 else
                                                                                                     echo "danger";
                                                                                             } ?>">
-                                <thead>
-                                    <th>Description</th>
-                                </thead>
-                                <tbody>
-                                    <tr">
-                                        <td style="color: <?php echo $color; ?>">
-                                            <?php echo $row['description']; ?>
-                                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            </td>
-            </tr>
+                            <thead>
+                                <th>Description</th>
+                            </thead>
+                            <tbody>
+                                <tr">
+                                    <td style="color: <?php echo $color; ?>">
+                                        <?php echo $row['description']; ?>
+                                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </td>
+        </tr>
         <?php
         $last_transaction = $row['value'];
         $i--;
     } ?>
         </tbody>
         </table>
-        </div>
+    </div>
 </main>

@@ -3,6 +3,7 @@
 namespace app\Models;
 
 use app\Models\Model;
+use PDO;
 
 class Loan extends Model
 {
@@ -14,4 +15,10 @@ class Loan extends Model
 
         $this->conn->prepare("INSERT INTO {$this->table} () VALUES {}");
     }*/
+
+    public function getUserLoan(int $userId)
+    {
+        $stmt = $this->conn->query("SELECT * FROM {$this->table} WHERE user_id = {$userId}");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

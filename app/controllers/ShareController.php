@@ -6,6 +6,8 @@ use app\Controllers\Controller;
 use app\Models\ShareRequest;
 use app\Models\User;
 use app\Models\Account;
+use app\Models\Role;
+use PDO;
 
 class ShareController
 {
@@ -18,7 +20,10 @@ class ShareController
 
     function index()
     {
-        Controller::view("extras/share");
+        $rolesStmt = Role::all();
+        $roles = $rolesStmt->fetchAll(PDO::FETCH_ASSOC);
+        $data = ["roles" => $roles];
+        Controller::view("extras/share", $data);
     }
     function store($p)
     {

@@ -21,6 +21,11 @@
 		<EN>Add Coin</EN>
 	</word>
 	<word>
+		<name>admin</name>
+		<PT>Administrador</PT>
+		<EN>Admin</EN>
+	</word>
+	<word>
 		<name>scheduled_expenses</name>
 		<PT>Despesas Agendadas</PT>
 		<EN>Scheduled Expenses</EN>

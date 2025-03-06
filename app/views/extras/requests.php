@@ -1,5 +1,12 @@
 <link rel="stylesheet" href="/CashManager/public/assets/css/form.css">
 <?php
+
+use app\Models\Account;
+use app\Models\Role;
+
+$accountInstance = new Account();
+$roleInstance = new Role();
+
 $this->layout("master");
 session_start();
 $_SESSION['path'] = $_SERVER['REQUEST_URI'];
@@ -9,6 +16,7 @@ if (!isset($_COOKIE['user']))
 require_once "../backend/querys.php";
 require_once "../backend/language.php";
 require "../backend/translate.php";
+
 ?>
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
     <div
@@ -34,25 +42,26 @@ require "../backend/translate.php";
                     if ($result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
                     ?>
-                            <div
-                                class="card <?= $_COOKIE['lights'] == 1 ? "box-shadow" : ""; ?> mt-2 mb-2 request<?= $row['id']; ?>">
-                                <div class="row">
-                                    <?php
+                    <div
+                        class="card <?= $_COOKIE['lights'] == 1 ? "box-shadow" : ""; ?> mt-2 mb-2 request<?= $row['id']; ?>">
+                        <div class="row">
+                            <?php
                                     $userResult = get_user($conn, $row["user_sending"]);
                                     while ($userSend = $userResult->fetch_assoc()) {
                                     ?>
-                                        <div class="col-sm-3 col-3">
-                                            <h6><?= $userSend["name"]; ?> ID:<?= $userSend["id"]; ?></h6>
-                                        </div>
-                                        <div class="col-sm-4 col-4">
-                                            <h6><?= $words["position"];  ?>: <?= $words[get_role_name($conn, $row["role_id"])] ?>
-                                            </h6>
-                                        </div>
-                                        <div class="col-sm-3 col-3">
-                                            <h6><?= $words[get_share_type_name($conn, $row["type"])];  ?>: <?php
+                            <div class="col-sm-3 col-3">
+                                <h6><?= $userSend["name"]; ?> ID:<?= $userSend["id"]; ?></h6>
+                            </div>
+                            <div class="col-sm-4 col-4">
+                                <h6><?= $words["position"];  ?>:
+                                    <?= $words[$roleInstance->getRoleName($row["role_id"])] ?>
+                                </h6>
+                            </div>
+                            <div class="col-sm-3 col-3">
+                                <h6><?= $words[get_share_type_name($conn, $row["type"])];  ?>: <?php
                                                                                                             switch ($row['type']) {
                                                                                                                 case 1: {
-                                                                                                                        echo get_name_account($conn, $row['obj_id']);
+                                                                                                                        echo $accountInstance->getNameAccount($row['obj_id']);
                                                                                                                         break;
                                                                                                                     }
                                                                                                                 case 2: {
@@ -64,21 +73,21 @@ require "../backend/translate.php";
                                                                                                                         break;
                                                                                                                     }
                                                                                                             } ?>
-                                            </h6>
-                                        </div>
-
-                                        <div class="col-1"> <a id="icon-a" href="#"
-                                                onclick="confirm(<?= $row['type']; ?>, <?= $row['obj_id']; ?>, <?= $row['id']; ?>, <?= $row['role_id'] ?>)"><svg
-                                                    class="bi bi-2">
-                                                    <use id="icon-result" xlink:href="#check" />
-                                                </svg></a></div>
-                                        <div class="col-1"> <a id="icon-a" href="#" onclick="reject(<?= $row['id']; ?>)"><svg
-                                                    class="bi bi-2">
-                                                    <use id="icon-result" xlink:href="#x" />
-                                                </svg></a></div>
-                                </div>
+                                </h6>
                             </div>
-                <?php   }
+
+                            <div class="col-1"> <a id="icon-a" href="#"
+                                    onclick="confirm(<?= $row['type']; ?>, <?= $row['obj_id']; ?>, <?= $row['id']; ?>, <?= $row['role_id'] ?>)"><svg
+                                        class="bi bi-2">
+                                        <use id="icon-result" xlink:href="#check" />
+                                    </svg></a></div>
+                            <div class="col-1"> <a id="icon-a" href="#" onclick="reject(<?= $row['id']; ?>)"><svg
+                                        class="bi bi-2">
+                                        <use id="icon-result" xlink:href="#x" />
+                                    </svg></a></div>
+                        </div>
+                    </div>
+                    <?php   }
                                 }
                             } ?>
                 </div>

@@ -3,17 +3,21 @@
 namespace app\Controllers;
 
 use app\Controllers\Controller;
+use app\Models\TimePeriod;
+use PDO;
 
 class BudgetController
 {
-    private $conn;
     function index()
     {
         Controller::view("budgets/manage-budget");
     }
     function add()
     {
-        Controller::view("budgets/add-budget");
+        $timePeriodsStmt = TimePeriod::all();
+        $timePeriods = $timePeriodsStmt->fetchAll(PDO::FETCH_ASSOC);
+        $data = ["timePeriods" => $timePeriods];
+        Controller::view("budgets/add-budget", $data);
     }
     function store($params)
     {

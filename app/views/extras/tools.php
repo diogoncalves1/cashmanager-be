@@ -16,8 +16,9 @@ require_once "../backend/language.php";
             <div class="btn-group me-2">
                 <button type="button" id="expense"
                     class="btn btn-sm btn-outline-danger"><?php echo $add_expense; ?></button>
-                <button type="button" id="revenue"
-                    class="btn btn-sm btn-outline-success"><?Php echo $add_revenue; ?></button>
+                <button type="button" id="revenue" class="btn btn-sm btn-outline-success">
+                    <?Php echo $add_revenue; ?>
+                </button>
             </div>
         </div>
     </div>
@@ -27,15 +28,14 @@ require_once "../backend/language.php";
             <h3><?= $currency_converter ?></h3>
             <div class="col-12 text-center">
                 <div class="row justify-content-between text-left">
-                    <div class="form-group col-6 flex-column d-flex"> <label
-                            class="form-control-label px-3  "> <?= $from ?>:</label>
+                    <div class="form-group col-6 flex-column d-flex"> <label class="form-control-label px-3  ">
+                            <?= $from ?>:</label>
                         <select id="from-currency">
-                            <?php $result = get_coin($conn);
-                            while ($row = $result->fetch_assoc()) { ?>
-                                <option value="<?= $row['code'] ?>">
-                                    <?= $_COOKIE['lang'] == "EN" ? $row['name'] : $row['name_pt']; ?>
-                                    <?= $row['symbol']; ?>
-                                </option>
+                            <?php foreach ($coins as $coin) { ?>
+                            <option value="<?= $coin['code'] ?>">
+                                <?= $_COOKIE['lang'] == "EN" ? $coin['name'] : $coin['name_pt']; ?>
+                                <?= $coin['symbol']; ?>
+                            </option>
                             <?php } ?>
                         </select>
                     </div>
@@ -43,19 +43,18 @@ require_once "../backend/language.php";
                     <div class="form-group col-6 flex-column d-flex">
                         <label class="form-control-label px-3"><?php echo $to; ?>:</label>
                         <select id="to-currency">
-                            <?php $result = get_coin($conn);
-                            while ($row = $result->fetch_assoc()) { ?>
-                                <option value="<?= $row['code'] ?>">
-                                    <?= $_COOKIE['lang'] == "EN" ? $row['name'] : $row['name_pt']; ?>
-                                    <?= $row['symbol']; ?>
-                                </option>
+                            <?php foreach ($coins as $coin) { ?>
+                            <option value="<?= $coin['code'] ?>">
+                                <?= $_COOKIE['lang'] == "EN" ? $coin['name'] : $coin['name_pt']; ?>
+                                <?= $coin['symbol']; ?>
+                            </option>
                             <?php } ?>
                         </select>
                     </div>
                 </div>
                 <div class="row justify-content-between text-left">
-                    <div class="form-group col-6 flex-column d-flex"> <label
-                            class="form-control-label px-3"> <?= $value ?></label>
+                    <div class="form-group col-6 flex-column d-flex"> <label class="form-control-label px-3">
+                            <?= $value ?></label>
                         <input type="number" step="0.01" id="amount">
                     </div>
                     <div class="col-6">
@@ -78,8 +77,8 @@ require_once "../backend/language.php";
             <h3><?= $compound_interest; ?></h3>
             <div class="col-12 text-center">
                 <div class="row justify-content-between text-left">
-                    <div class="form-group col-6 flex-column d-flex"> <label
-                            class="form-control-label px-3  "> <?= $initial_investment ?></label>
+                    <div class="form-group col-6 flex-column d-flex"> <label class="form-control-label px-3  ">
+                            <?= $initial_investment ?></label>
                         <input type="number" step="0.01" id="initial-amount" placeholder="0.00€" required>
                     </div>
 
@@ -89,12 +88,12 @@ require_once "../backend/language.php";
                     </div>
                 </div>
                 <div class="row justify-content-between text-left">
-                    <div class="form-group col-6 flex-column d-flex"> <label
-                            class="form-control-label px-3"> <?= $years ?></label>
+                    <div class="form-group col-6 flex-column d-flex"> <label class="form-control-label px-3">
+                            <?= $years ?></label>
                         <input type="number" step="0.01" id="years">
                     </div>
-                    <div class="form-group col-6 flex-column d-flex"> <label
-                            class="form-control-label px-3"> <?= $reinforcement ?></label>
+                    <div class="form-group col-6 flex-column d-flex"> <label class="form-control-label px-3">
+                            <?= $reinforcement ?></label>
                         <input type="number" step="0.01" id="reinforcement">
                     </div>
                     <div class="row justify-content-end">

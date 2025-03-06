@@ -38,4 +38,9 @@ class Category extends Model
         $stmt = $this->conn->query("SELECT id FROM {$this->table} WHERE code = {$categoryName}");
         return $stmt->fetchColumn();
     }
+
+    public function updateCategory($subCategory, $categoryId)
+    {
+        return $this->conn->query("UPDATE {$this->table} SET `sub-category`={$subCategory} WHERE id = {$categoryId}") ?: 0;
+    }
 }

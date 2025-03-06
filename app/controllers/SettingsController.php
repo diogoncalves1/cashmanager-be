@@ -3,13 +3,17 @@
 namespace app\Controllers;
 
 use app\Controllers\Controller;
-
+use app\Models\Coin;
+use PDO;
 
 class SettingsController
 {
     function index()
     {
-        Controller::view("extras/settings");
+        $coinsStmt = Coin::all();
+        $coins = $coinsStmt->fetchAll(PDO::FETCH_ASSOC);
+        $data = ["coins" => $coins];
+        Controller::view("extras/settings", $data);
     }
     function reminder()
     {
@@ -23,7 +27,10 @@ class SettingsController
     }
     function tools()
     {
-        Controller::view("extras/tools");
+        $coinsStmt = Coin::all();
+        $coins = $coinsStmt->fetchAll(PDO::FETCH_ASSOC);
+        $data = ["coins" => $coins];
+        Controller::view("extras/tools", $data);
     }
     function update($p)
     {

@@ -1,5 +1,5 @@
 function goToEdit(id) {
-    window.location.href = "/CashManager/public/financial-goals/edit?i=" + id;
+    window.location.href = "/CashManager/financial-goals/edit?i=" + id;
 }
 
 const MODAL_BTN = document.getElementById("modal-btn");

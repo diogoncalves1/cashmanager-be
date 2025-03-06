@@ -1,5 +1,4 @@
 <?php
-require_once("account/querys.php");
 require_once("category/querys.php");
 require_once("objective/querys.php");
 require_once("transactions/querys.php");
@@ -7,12 +6,8 @@ require_once("users/querys.php");
 require_once("alert/querys.php");
 require_once("limits/querys.php");
 require_once("financial_goal/querys.php");
-require_once("goal_category/querys.php");
-require_once("priority/querys.php");
 require_once("status_goal/querys.php");
-require_once("coin/querys.php");
 require_once("friend/querys.php");
-require_once("time_period/querys.php");
 require_once("share_type/querys.php");
 require_once("share_request/querys.php");
 require_once("shares/querys.php");
@@ -20,8 +15,6 @@ require_once("scheduled_expenses/querys.php");
 require_once("alert_scheduled/querys.php");
 require_once("alert_user/querys.php");
 require_once("debt/querys.php");
-require_once("loan/querys.php");
-require_once("role/querys.php");
 include("config.php");
 
 // EXTRAS

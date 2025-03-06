@@ -8,16 +8,16 @@ use Exception;
 
 class CategoryController
 {
-    private $categoryInstance;
+    private $categoryModel;
 
     function __construct()
     {
-        $this->categoryInstance = new Category();
+        $this->categoryModel = new Category();
     }
 
     function index()
     {
-        $categorys = $this->categoryInstance->getCategory();
+        $categorys = $this->categoryModel->getCategory();
         Controller::view("admin/cats-expenses", ["categorys" => $categorys]);
     }
     function add()
@@ -30,20 +30,33 @@ class CategoryController
     }
     function update($p)
     {
-        $id = $_GET["i"];
-        include("../backend/querys.php");
-        $code = get_code_cat($conn, $id);
+        $categoryId = $_GET["i"];
+        $code = $this->categoryModel->getCode($categoryId);
+
         if (isset($p->sub_cat))
             $sc = 1;
         else
             $sc = 0;
-        update_category($conn, $code, $p->PT, $p->EN, $sc, $id);
+
+        $this->categoryModel->updateCategory($sc, $categoryId);
+
+        $url = "../backend/translate.xml";
+        $xml = simplexml_load_file($url);
+
+        foreach ($xml as $word) {
+            if ($word->name == $code) {
+                $word->PT = $p->PT;
+                $word->EN = $p->EN;
+            }
+        }
+        $xml->asXML($url);
+
         header("location: /CashManager/public/admin/categories-expenses");
     }
     public function delete()
     {
         $categoryId = $_POST["id"];
-        $categoryCode = $this->categoryInstance->getCode($categoryId);
+        $categoryCode = $this->categoryModel->getCode($categoryId);
         $response = Category::delete($categoryId);
 
         $xml = simplexml_load_file("../backend/translate.xml");
@@ -68,7 +81,7 @@ class CategoryController
         $conditions = ["code", "`sub-category`"];
         $values = [$p->code, isset($p->sub_cat) ?: 0];
 
-        $this->categoryInstance::add($conditions, $values);
+        $this->categoryModel::add($conditions, $values);
         $xml = simplexml_load_file("../backend/translate.xml");
         $word = $xml->addChild("word");
 

@@ -13,17 +13,17 @@ require "../backend/translate.php";
 ?>
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
     <?php if (isset($_SESSION["alert"])) { ?>
-        <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
-            <div id="checkToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="alert alert-success <?= $lightTest == 1 ? "box-shadow-success-alert" : "" ?> d-flex align-items-center mb-0"
-                    role="alert"><svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:">
-                        <use xlink:href="#check-circle-fill" />
-                    </svg>
-                    <div><?= $_SESSION['alert'] ?></div><button type="button" class="btn-close me-2 m-auto"
-                        data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
+        <div id="checkToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="alert alert-success <?= $lightTest == 1 ? "box-shadow-success-alert" : "" ?> d-flex align-items-center mb-0"
+                role="alert"><svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:">
+                    <use xlink:href="#check-circle-fill" />
+                </svg>
+                <div><?= $_SESSION['alert'] ?></div><button type="button" class="btn-close me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
+    </div>
     <?php
         unset($_SESSION["alert"]);
     }  ?>
@@ -52,7 +52,7 @@ require "../backend/translate.php";
                             <select name="type" id="type" onchange="test()" required>
                                 <?php $result_cats = get_share_type($conn);
                                 while ($row = mysqli_fetch_assoc($result_cats)) { ?>
-                                    <option value="<?php echo $row['id']; ?>"><?= $words[$row["name"]] ?></option>
+                                <option value="<?php echo $row['id']; ?>"><?= $words[$row["name"]] ?></option>
                                 <?php } ?>
                             </select>
                         </div>
@@ -60,10 +60,9 @@ require "../backend/translate.php";
                                 class="form-control-label px-3"><?= $words["position"]; ?><span
                                     class="text-danger-emphasis"> *</span></label>
                             <select name="role" id="type" onchange="test()" required>
-                                <?php $result_cats = get_role($conn);
-                                while ($row = mysqli_fetch_assoc($result_cats)) {
-                                    if ($row["name"] != "creator") { ?>
-                                        <option value="<?php echo $row['id']; ?>"><?= $words[$row["name"]] ?></option>
+                                <?php foreach ($roles as $role) {
+                                    if ($role["name"] != "creator") { ?>
+                                <option value="<?php echo $role['id']; ?>"><?= $words[$role["name"]] ?></option>
                                 <?php }
                                 }   ?>
                             </select>
@@ -82,9 +81,9 @@ require "../backend/translate.php";
                                         $userResult = get_user($conn, $row['user_1']);
                                     $userSend = $userResult->fetch_assoc();
                                 ?>
-                                    <option value="<?php echo $userSend['id']; ?>">
-                                        <?= $userSend['name']; ?> ID:<?= $userSend["id"]; ?>
-                                    </option>
+                                <option value="<?php echo $userSend['id']; ?>">
+                                    <?= $userSend['name']; ?> ID:<?= $userSend["id"]; ?>
+                                </option>
                                 <?php } ?>
                             </select>
                         </div>

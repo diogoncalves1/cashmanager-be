@@ -6,7 +6,7 @@ $_SESSION['page'] = "settings";
 if (!isset($_COOKIE['user']))
     header("location: /CashManager/public/sign-up");
 require_once "../backend/querys.php";
-$coin = $_COOKIE['coin_id'];
+$userCoin = $_COOKIE['coin_id'];
 require_once "../backend/language.php";
 ?>
 <main class="mt-5 col-md-9 ms-sm-auto col-lg-10 px-sm-2">
@@ -55,12 +55,12 @@ require_once "../backend/language.php";
                                 <div class="form-group flex-column d-flex">
                                     <label for="website"><?= $coin_translate; ?></label>
                                     <select name="coin" class="form-select">
-                                        <?php $result = get_coin($conn);
-                                        while ($row = $result->fetch_assoc()) { ?>
-                                        <option value="<?= $row['id']; ?>" <?php if ($coin == $row['id'])
+                                        <?php
+                                        foreach ($coins as $coin) { ?>
+                                        <option value="<?= $coin['id']; ?>" <?php if ($userCoin == $coin['id'])
                                                                                     echo "selected"; ?>>
-                                            <?= $_COOKIE['lang'] == "EN" ? $row['name'] : $row['name_pt']; ?>
-                                            (<?= $row['code']; ?>, <?= $row['symbol']; ?>)
+                                            <?= $_COOKIE['lang'] == "EN" ? $coin['name'] : $coin['name_pt']; ?>
+                                            (<?= $coin['code']; ?>, <?= $coin['symbol']; ?>)
                                         </option>
                                         <?php } ?>
                                     </select>
@@ -71,8 +71,8 @@ require_once "../backend/language.php";
                                     <label class="form-check-label" for="flexSwitchCheckChecked"><?= $lights; ?></label>
                                     <input class="form-check-input" type="checkbox" role="switch" name="light"
                                         id="lights" onchange="lightTest(this.checked)" <?php if ($lightTest == 1) {
-                                            echo "checked";
-                                        } ?>>
+                                                                                            echo "checked";
+                                                                                        } ?>>
 
                                 </div>
                             </div>
@@ -82,8 +82,8 @@ require_once "../backend/language.php";
                                         for="flexSwitchCheckChecked"><?= $notifications; ?></label>
                                     <input class="form-check-input" type="checkbox" role="switch" name="notifications"
                                         id="notifications" <?php if ($notificationsTest == 1) {
-                                            echo "checked";
-                                        } ?>>
+                                                                echo "checked";
+                                                            } ?>>
 
                                 </div>
                             </div>

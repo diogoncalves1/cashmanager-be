@@ -20,8 +20,9 @@ $curDate = $curDate->format("Y-m-d");
             <div class="btn-group me-2">
                 <button type="button" id="expense"
                     class="btn btn-sm btn-outline-danger"><?php echo $add_expense; ?></button>
-                <button type="button" id="revenue"
-                    class="btn btn-sm btn-outline-success"><?Php echo $add_revenue; ?></button>
+                <button type="button" id="revenue" class="btn btn-sm btn-outline-success">
+                    <?Php echo $add_revenue; ?>
+                </button>
             </div>
         </div>
     </div>
@@ -35,15 +36,15 @@ $curDate = $curDate->format("Y-m-d");
                             <label class="form-control-label px-3  "><?php echo $goal; ?>
                                 <span class="text-danger-emphasis">*</span>
                             </label>
-                            <input type="number" class="input" step="0.01" min="0.01" id="input-value"
-                                name="value" placeholder="0.00<?= $coin; ?>" required>
+                            <input type="number" class="input" step="0.01" min="0.01" id="input-value" name="value"
+                                placeholder="0.00<?= $coin; ?>" required>
                         </div>
                         <div class="form-group col-sm-6 flex-column d-flex">
                             <label class="form-control-label px-3"><?php echo $name; ?>
                                 <span class="text-danger-emphasis"> *</span>
                             </label>
-                            <input type="text" id="lname" class="input" name="name"
-                                placeholder="<?= $name; ?>..." required>
+                            <input type="text" id="lname" class="input" name="name" placeholder="<?= $name; ?>..."
+                                required>
                         </div>
                     </div>
                     <div class="row justify-content-between text-left">
@@ -51,15 +52,15 @@ $curDate = $curDate->format("Y-m-d");
                             <label class="form-control-label px-3"><?php echo $initial_date_translate; ?>
                                 <span class="text-danger-emphasis"> *</span>
                             </label>
-                            <input onchange="verifyDate()" type="date" min="<?= $curDate; ?>"
-                                id="initial-date" class="input" name="start_date" required>
+                            <input onchange="verifyDate()" type="date" min="<?= $curDate; ?>" id="initial-date"
+                                class="input" name="start_date" required>
                         </div>
                         <div class="form-group col-sm-6 flex-column d-flex">
                             <label class="form-control-label px-3"><?php echo $final_date_translate; ?>
                                 <span class="text-danger-emphasis"> *</span>
                             </label>
-                            <input onchange="verifyDate()" type="date" min="<?= $curDate; ?>"
-                                id="final-date" class="input" name="final_date" required>
+                            <input onchange="verifyDate()" type="date" min="<?= $curDate; ?>" id="final-date"
+                                class="input" name="final_date" required>
                         </div>
                     </div>
                     <div class="row justify-content-between text-left">
@@ -67,22 +68,16 @@ $curDate = $curDate->format("Y-m-d");
                                 class="form-control-label px-3"><?php echo $category; ?><span
                                     class="text-danger-emphasis"> *</span></label>
                             <select name="category" required>
-                                <?php $result_cats = get_goal_category($conn);
-                                while ($row = mysqli_fetch_assoc($result_cats)) {
-                                    if ($row['id'] != 33) {
-                                        if ($row['sub-category'] == 1) { ?>
-                                            </optgroup>
-                                            <optgroup label="<?php if ($_COOKIE['lang'] == "EN")
-                                                                    echo $row['name'];
-                                                                else
-                                                                    echo $row['name_pt']; ?>">
-                                            <?php } ?>
-                                            <option value="<?php echo $row['id']; ?>"><?php if ($_COOKIE['lang'] == "EN")
-                                                                                            echo $row['name'];
-                                                                                        else
-                                                                                            echo $row['name_pt']; ?></option>
-                                    <?php }
-                                } ?>
+                                <?php foreach ($financialGoalCategories as $financialGoalCategory) {
+                                ?>
+                                <option value="<?php echo $financialGoalCategory['id']; ?>">
+                                    <?php if ($_COOKIE['lang'] == "EN")
+                                            echo $financialGoalCategory['name'];
+                                        else
+                                            echo $financialGoalCategory['name_pt']; ?>
+                                </option>
+                                <?php }
+                                ?>
                             </select>
                         </div>
                     </div>
@@ -94,10 +89,11 @@ $curDate = $curDate->format("Y-m-d");
                                 <?php $result_status = get_status_goal($conn);
                                 while ($row = mysqli_fetch_assoc($result_status)) {
                                     if ($row['id'] != 33) { ?>
-                                        <option value="<?php echo $row['id']; ?>"><?php if ($_COOKIE['lang'] == "EN")
+                                <option value="<?php echo $row['id']; ?>"><?php if ($_COOKIE['lang'] == "EN")
                                                                                         echo $row['name'];
                                                                                     else
-                                                                                        echo $row['name_pt']; ?></option>
+                                                                                        echo $row['name_pt']; ?>
+                                </option>
                                 <?php }
                                 } ?>
                             </select>
@@ -106,22 +102,14 @@ $curDate = $curDate->format("Y-m-d");
                                 class="form-control-label px-3"><?php echo $priority_translate; ?><span
                                     class="text-danger-emphasis"> *</span></label>
                             <select name="priority" required>
-                                <?php $result_priority = get_priority($conn);
-                                while ($row = mysqli_fetch_assoc($result_priority)) {
-                                    if ($row['id'] != 33) {
-                                        if ($row['sub-category'] == 1) { ?>
-                                            </optgroup>
-                                            <optgroup label="<?php if ($_COOKIE['lang'] == "EN")
-                                                                    echo $row['name'];
-                                                                else
-                                                                    echo $row['name_pt']; ?>">
-                                            <?php } ?>
-                                            <option value="<?php echo $row['id']; ?>"><?php if ($_COOKIE['lang'] == "EN")
-                                                                                            echo $row['name'];
-                                                                                        else
-                                                                                            echo $row['name_pt']; ?></option>
-                                    <?php }
-                                } ?>
+                                <?php foreach ($priorities as $priority) { ?>
+                                <option value="<?php echo $priority['id']; ?>"><?php if ($_COOKIE['lang'] == "EN")
+                                                                                        echo $priority['name'];
+                                                                                    else
+                                                                                        echo $priority['name_pt']; ?>
+                                </option>
+                                <?php }
+                                ?>
                             </select>
                         </div>
                     </div>

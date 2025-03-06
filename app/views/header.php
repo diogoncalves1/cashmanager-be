@@ -3,7 +3,12 @@
     </div>
 </div>
 
-<?php $alertDate = new DateTime("now");
+<?php
+
+use app\Models\Alert;
+
+$alertInstance = new Alert();
+$alertDate = new DateTime("now");
 $alertDate->modify("+5 days");
 $curDate = new DateTime("now");
 $alertDate = $alertDate->format("Y-m-d");
@@ -73,41 +78,41 @@ $alertDate = $alertDate->format("Y-m-d");
 </header>
 
 <?php if ($_COOKIE['notifications'] == 1) { ?>
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <?php
-        $result = get_alert($conn, $user_id);
-        while ($alert = $result->fetch_assoc()) { ?>
-            <div id="liveToast" class="toast fade hide show" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="alert <?php if ($alert['type'] == 1) {
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <?php
+        $alerts = $alertInstance->getUserAlerts($user_id, $curDate->format("Y-m-01"));
+        foreach ($alerts as $alert) { ?>
+    <div id="liveToast" class="toast fade hide show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="alert <?php if ($alert['type'] == 1) {
                                         echo "alert-danger ";
                                         echo $lightTest == 1 ? "box-shadow-danger-alert" : "";
                                     } else {
                                         echo "alert-warning ";
                                         echo $lightTest == 1 ? "box-shadow-warning" : "";
-                                    } ?> d-flex align-items-center mb-0"
-                    role="alert">
-                    <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:">
-                        <use xlink:href="#exclamation-triangle-fill" />
-                    </svg>
-                    <div>
-                        <?= $alert['mensage']; ?>
-                    </div>
-                    <button type="button" class="btn-close me-2 m-auto" onclick="readAlert(<?= $alert['id']; ?>)"
-                        data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
+                                    } ?> d-flex align-items-center mb-0" role="alert">
+            <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:">
+                <use xlink:href="#exclamation-triangle-fill" />
+            </svg>
+            <div>
+                <?= $alert['mensage']; ?>
             </div>
-            <?php }
+            <button type="button" class="btn-close me-2 m-auto" onclick="readAlert(<?= $alert['id']; ?>)"
+                data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    <?php }
         $result = get_alert_scheduled($conn, $user_id);
         while ($alert = $result->fetch_assoc()) {
             if ($alertDate >= $alert['date']) { ?>
-                <div id="alert-scheduled-<?= $alert['scheduled_expenses_id']; ?>" class="toast fade hide show" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="alert alert-warning <?= $lightTest == 1 ? "box-shadow-warning" : "" ?> d-flex align-items-center mb-0"
-                        role="alert">
-                        <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:">
-                            <use xlink:href="#exclamation-triangle-fill" />
-                        </svg>
-                        <div>
-                            <?php
+    <div id="alert-scheduled-<?= $alert['scheduled_expenses_id']; ?>" class="toast fade hide show" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="alert alert-warning <?= $lightTest == 1 ? "box-shadow-warning" : "" ?> d-flex align-items-center mb-0"
+            role="alert">
+            <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:">
+                <use xlink:href="#exclamation-triangle-fill" />
+            </svg>
+            <div>
+                <?php
 
                             $resultE = get_scheduled_expenses($conn, 0, $alert['scheduled_expenses_id']);
                             $row = $resultE->fetch_assoc();
@@ -132,30 +137,30 @@ $alertDate = $alertDate->format("Y-m-d");
 
                             //echo get_category_name($conn, $row['cat_id']) . "!"
                             ?>
-                        </div>
-                        <button type="button" class="btn-close me-2 m-auto" onclick="readScheduledAlert(<?= $alert['id']; ?>)"
-                            data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                </div>
-            <?php }
+            </div>
+            <button type="button" class="btn-close me-2 m-auto" onclick="readScheduledAlert(<?= $alert['id']; ?>)"
+                data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    <?php }
         }
         $result = get_alert_user($conn, $user_id);
         while ($alert = $result->fetch_assoc()) { ?>
-            <div id="liveToast" class="toast fade hide show" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="alert alert-warning <?= $lightTest == 1 ? "box-shadow-warning" : "" ?> d-flex align-items-center mb-0"
-                    role="alert">
-                    <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:">
-                        <use xlink:href="#exclamation-triangle-fill" />
-                    </svg>
-                    <div>
-                        <?= $alert['mensage']; ?>
-                    </div>
-                    <button type="button" class="btn-close me-2 m-auto" onclick="deleteAlertUser(<?= $alert['id']; ?>)"
-                        data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
+    <div id="liveToast" class="toast fade hide show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="alert alert-warning <?= $lightTest == 1 ? "box-shadow-warning" : "" ?> d-flex align-items-center mb-0"
+            role="alert">
+            <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:">
+                <use xlink:href="#exclamation-triangle-fill" />
+            </svg>
+            <div>
+                <?= $alert['mensage']; ?>
             </div>
-        <?php } ?>
+            <button type="button" class="btn-close me-2 m-auto" onclick="deleteAlertUser(<?= $alert['id']; ?>)"
+                data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
     </div>
+    <?php } ?>
+</div>
 <?php } ?>
 
 <script src="/CashManager/assets/js/all.js"></script>
