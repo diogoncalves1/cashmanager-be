@@ -1,0 +1,223 @@
+.bi {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+}
+
+.euro {
+
+  width: 10%;
+}
+
+tr {
+  transition: .5s;
+}
+
+.cur-pointer {
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .sidebar .offcanvas-lg {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 48px;
+  }
+
+  .navbar-search {
+    display: block;
+  }
+}
+
+.sidebar .nav-link {
+  font-size: .875rem;
+  font-weight: 500;
+}
+
+.sidebar .nav-link.active {
+  color: #2470dc;
+}
+
+.sidebar-heading {
+  font-size: .75rem;
+}
+
+.navbar-brand {
+  padding-top: .75rem;
+  padding-bottom: .75rem;
+  background-color: rgba(0, 0, 0, .25);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+.navbar .form-control {
+  padding: .75rem 1rem;
+}
+
+.border-left-success {
+  border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-danger {
+  border-left: 0.25rem solid #e74a3b !important;
+}
+
+#expense-photo {
+  background-size: cover;
+  transition: .5s ease;
+  height: 100%;
+  /* Certifique-se de que o tamanho inicial seja algo visível */
+}
+
+.border-left-primary {
+  border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-warning {
+  border-left: 0.25rem solid #e9be00 !important;
+}
+
+.border-left-violet {
+  border-left: 0.25rem solid rgb(106, 13, 173) !important;
+}
+
+.text-violet {
+  color: rgb(125, 19, 201) !important;
+}
+
+.blue-text {
+  color: #00BCD4
+}
+
+.form-control-label {
+  margin-bottom: 0
+}
+
+input,
+select,
+textarea {
+  padding: 8px 15px;
+  border-radius: 5px !important;
+  margin: 5px 0px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  font-size: 18px !important;
+  font-weight: 300
+}
+
+.button {
+  padding: 8px 15px;
+  border-radius: 5px !important;
+  margin: 5px 0px;
+  box-sizing: border-box;
+  font-size: 18px !important;
+  font-weight: 500
+}
+
+
+option:hover {
+  background-color: #00BCD4;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  -moz-box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  box-shadow: none !important;
+  border: 1px solid #00BCD4;
+  outline-width: 0;
+
+}
+
+.bi-2 {
+  cursor: pointer;
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.bi-3 {
+  cursor: pointer;
+  display: inline-block;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.card {
+  transition: .4s;
+}
+
+.box-shadow {
+  box-shadow: rgb(61 165 240 / 25%) 0px 50px 100px -20px,
+    rgb(61 165 240 / 30%) 0px 30px 60px -30px,
+    rgb(61 165 240 / 35%) 0px -2px 6px 0px inset !important;
+}
+
+.card:hover {
+  scale: 1.02;
+}
+
+.zoom:hover {
+  scale: 1.05;
+}
+
+.euro {
+  font-size: 2.5rem;
+  color: rgb(214, 214, 214);
+}
+
+.box-shadow-danger {
+  box-shadow: rgb(255 0 0 / 25%) 0px 50px 100px -20px,
+    rgb(255 0 0 / 30%) 0px 30px 60px -30px,
+    rgb(255 0 0 / 35%) 0px -2px 6px 0px inset
+}
+
+.box-shadow-primary {
+  box-shadow: rgb(0 99 255 / 25%) 0px 50px 100px -20px,
+    rgb(0 99 255 / 30%) 0px 30px 60px -30px,
+    rgb(0 99 255 / 35%) 0px -2px 6px 0px inset
+}
+
+.box-shadow-success {
+  box-shadow: rgb(17 255 0 / 25%) 0px 50px 100px -20px,
+    rgb(17 255 0 / 30%) 0px 30px 60px -30px,
+    rgb(17 255 0 / 35%) 0px -2px 6px 0px inset
+}
+
+.box-shadow-success-alert {
+  box-shadow: rgb(17 255 0 / 25%) 0px 20px 50px 0px,
+    rgb(17 255 0 / 30%) 10px -7px 21px -20px,
+    rgb(17 255 0 / 35%) 0px -2px 6px 0px inset
+}
+
+.box-shadow-warning {
+  box-shadow: rgba(255, 230, 0, 0.25) 0px 20px 50px 0px,
+    rgb(255 230 0 / 30%) 10px -7px 21px -20px,
+    rgb(255 230 0 / 35%) 0px -2px 6px 0px inset
+}
+
+.box-shadow-danger-alert {
+  box-shadow: rgb(255 0 0 / 25%) 0px 20px 50px 0px,
+    rgb(255 0 0 / 30%) 10px -7px 21px -20px,
+    rgb(255 0 0 / 35%) 0px -2px 6px 0px inset;
+}
+
+.box-shadow-violet {
+  box-shadow: rgba(106, 13, 173, 0.25) 0px 50px 100px -20px,
+    rgba(106, 13, 173, 0.3) 0px 30px 60px -30px,
+    rgba(106, 13, 173, 0.35) 0px -2px 6px 0px inset;
+}
+
+.drop-shadow-success {
+  filter: drop-shadow(1px 1px 20px rgba(0, 255, 0, 0.4));
+}
+
+.box-shadow-success-btn {
+  box-shadow: rgba(0, 255, 0, 0.1) 0px 8px 24px,
+    rgba(0, 255, 0, 0.1) 0px 16px 56px,
+    rgba(0, 255, 0, 0.1) 0px 24px 80px;
+}
+
+.drop-shadow-danger {
+  filter: drop-shadow(1px 1px 20px rgba(255, 0, 0, 0.4));
+}

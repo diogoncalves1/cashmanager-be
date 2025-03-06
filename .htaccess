@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Define a base para reescrita no diretório /CashManager/
+RewriteBase /CashManager/
+
+# Permite o acesso direto a arquivos e diretórios existentes (como CSS, JS, imagens, etc.)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Redireciona todas as requisições que não são arquivos ou diretórios existentes para public/index.php
+RewriteRule ^(.*)$ public/index.php [QSA,L]

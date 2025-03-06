@@ -1,0 +1,43 @@
+Home 
+Mensagem Bem-vindo "Nome do utilizador"
+botões para adicionar receita ou despesa
+grafico do valor total semanal
+butão para alterar o grafico para semanal, mensal ou anual
+lista de transações
+
+Slide-left Bar
+lista por pagina
+
+Comparação Mensal
+Gráfico de colunas por mês com linhas de despesas e receitas
+Gráfico de Colunas Empilhadas com as despesas por categoria
+
+Comparação Anual
+Grafico de colunas por ano com linhas de despesas e receitas
+Grafico de Pizza com as despesas por categoria
+
+Sumário Mensal
+Gráficos Doughnuts com receitas e despesas por mês
+
+Criar Conta
+Criar conta com nome e valor inicial
+
+Gerir Contas
+Gerir Contas vendo o seu nome, valor atual na conta e opções de ver as transações, editar o nome e deletar a conta
+
+Criar Objetivos
+Criar Objetivo com nome e Valor do Objetivo
+
+Investir no Objetivo
+Investir no Objetivo Selecionando a conta qual será retirado o dinheiro, o objetivo e o valor desejado com limite máximo ou do valor da conta selecionada
+ou se o valor da conta for maior que o objetivo o valor restante para completar o objetivo
+
+Objetivos
+Pagina onde o utilizador ve cards com os seus objetivos
+
+Objetivos Concluídos
+Página onde o utilizador vê cards com os seus objetivos concluídos e reclamados
+
+Gerir Objetivo
+Página onde é imprimida uma tabela com o nome do objetivo, o valor da meta, o valor invetido atual, o total restante
+para completar o objetivo, botão que envia para a página de edição de objetivo e butão para deletar objetivo

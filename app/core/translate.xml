@@ -1,0 +1,542 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<langs>
+	<word>
+		<name>now</name>
+		<PT>Agora</PT>
+		<EN>Now</EN>
+	</word>
+	<word>
+		<name>name</name>
+		<PT>Nome</PT>
+		<EN>Name</EN>
+	</word>
+	<word>
+		<name>symbol</name>
+		<PT>Símbolo</PT>
+		<EN>Symbol</EN>
+	</word>
+	<word>
+		<name>add_coin</name>
+		<PT>Adicionar Moeda</PT>
+		<EN>Add Coin</EN>
+	</word>
+	<word>
+		<name>Dollar</name>
+		<PT>Dólar</PT>
+		<EN>Dollar</EN>
+	</word>
+	<word>
+		<name>Dirham</name>
+		<PT>Dirham</PT>
+		<EN>Dirham</EN>
+	</word>
+	<word>
+		<name>Afghani</name>
+		<PT>Afegane</PT>
+		<EN>Afghani</EN>
+	</word>
+	<word>
+		<name>Lek</name>
+		<PT>Lek</PT>
+		<EN>Lek</EN>
+	</word>
+	<word>
+		<name>Dram</name>
+		<PT>Dram</PT>
+		<EN>Dram</EN>
+	</word>
+	<word>
+		<name>permissions</name>
+		<PT>Permissões</PT>
+		<EN>Permissions</EN>
+	</word>
+	<word>
+		<name>add_permission</name>
+		<PT>Adicionar Permissão</PT>
+		<EN>Add Permission</EN>
+	</word>
+	<word>
+		<name>mensage_info_comparison_account_chart</name>
+		<PT>
+		&lt;p&gt;
+		&lt;strong&gt;Informações sobre o Gráfico:&lt;/strong&gt;
+		&lt;/p&gt;
+		&lt;p&gt;Este gráfico mostra o valor da soma das transações das contas de cada mês. As cores das linhas indicam diferentes contas, e o valor é mostrado quando você passa o rato(mouse) sobre os pontos no gráfico.&lt;/p&gt;
+		</PT>
+		<EN>&lt;p&gt;
+		&lt;strong&gt;Chart Information:&lt;/strong&gt;
+		&lt;/p&gt;
+		&lt;p&gt;This chart shows the value of the sum of the transactions of the accounts for each month. The colors of the lines indicate different accounts, and the value is shown when you hover over the dots on the chart.&lt;/p&gt;
+		</EN>
+	</word>
+	<word>
+		<name>investments</name>
+		<PT>Investimentos</PT>
+		<EN>Investments</EN>
+	</word>
+	<word>
+		<name>category_deleted_error</name>
+		<PT>Erro! Categoria nao foi deletada</PT>
+		<EN>Error! Category not deleted</EN>
+	</word>
+	<word>
+		<name>financial_goal_categories</name>
+		<PT>Categorias Meta Financeira</PT>
+		<EN>Financial Goal Categories</EN>
+	</word>
+	<word>
+		<name>add_category_expense</name>
+		<PT>Adicionar Categoria Despesa</PT>
+		<EN>Add Category Expense</EN>
+	</word>
+	<word>
+		<name>category_deleted_success</name>
+		<PT>Categoria deletada com sucesso</PT>
+		<EN>Category successfully deleted</EN>
+	</word>
+	<word>
+		<name>social</name>
+		<PT>Social</PT>
+		<EN>Social</EN>
+	</word>
+	<word>
+		<name>education</name>
+		<PT>Educação</PT>
+		<EN>Education</EN>
+	</word>
+	<word>
+		<name>health</name>
+		<PT>Saúde</PT>
+		<EN>Health</EN>
+	</word>
+	<word>
+		<name>sport</name>
+		<PT>Desporto</PT>
+		<EN>Sport</EN>
+	</word>
+	<word>
+		<name>pets</name>
+		<PT>Animais de Estimação</PT>
+		<EN>Pets</EN>
+	</word>
+	<word>
+		<name>pets_food</name>
+		<PT>Comida para Animais de Estimação</PT>
+		<EN>Pets Food</EN>
+	</word>
+	<word>
+		<name>travel</name>
+		<PT>Viagens</PT>
+		<EN>Travel</EN>
+	</word>
+	<word>
+		<name>transport_travel</name>
+		<PT>Transportes - Viagem</PT>
+		<EN>Transport - Travel</EN>
+	</word>
+	<word>
+		<name>other</name>
+		<PT>Outro</PT>
+		<EN>Other</EN>
+	</word>
+	<word>
+		<name>taxes</name>
+		<PT>Impostos</PT>
+		<EN>Taxes</EN>
+	</word>
+	<word>
+		<name>accommodation</name>
+		<PT>Alojamento</PT>
+		<EN>Accommodation</EN>
+	</word>
+	<word>
+		<name>tobacco</name>
+		<PT>Tabaco</PT>
+		<EN>Tobacco</EN>
+	</word>
+	<word>
+		<name>investment</name>
+		<PT>Investimento</PT>
+		<EN>Investment</EN>
+	</word>
+	<word>
+		<name>new_account</name>
+		<PT>Conta Nova</PT>
+		<EN>New Account</EN>
+	</word>
+	<word>
+		<name>code</name>
+		<PT>Código</PT>
+		<EN>Code</EN>
+	</word>
+	<word>
+		<name>users</name>
+		<PT>Utilizadores</PT>
+		<EN>Users</EN>
+	</word>
+	<word>
+		<name>total_users</name>
+		<PT>Total de Utilizadores</PT>
+		<EN>Total Users</EN>
+	</word>
+	<word>
+		<name>add_category</name>
+		<PT>Adicionar Categoria</PT>
+		<EN>Add Category</EN>
+	</word>
+	<word>
+		<name>add_debt</name>
+		<PT>Adicionar Dívida</PT>
+		<EN>Add Debt</EN>
+	</word>
+	<word>
+		<name>categorys</name>
+		<PT>Categorias</PT>
+		<EN>Categorys</EN>
+	</word>
+	<word>
+		<name>account</name>
+		<PT>Conta</PT>
+		<EN>Account</EN>
+	</word>
+	<word>
+		<name>light</name>
+		<PT>Claro</PT>
+		<EN>Light</EN>
+	</word>
+	<word>
+		<name>alert_share_sucess</name>
+		<PT>Pedido de partilha enviado com sucesso.</PT>
+		<EN>Share request sent successfully.</EN>
+	</word>
+	<word>
+		<name>for</name>
+		<PT>para</PT>
+		<EN>for</EN>
+	</word>
+	<word>
+		<name>user</name>
+		<PT>Utilizador</PT>
+		<EN>User</EN>
+	</word>
+	<word>
+		<name>position</name>
+		<PT>Cargo</PT>
+		<EN>Position</EN>
+	</word>
+	<word>
+		<name>completed_objectives</name>
+		<PT>Objetivos Concluídos</PT>
+		<EN>Completed Objectives</EN>
+	</word>
+	<word>
+		<name>year_comparison</name>
+		<PT>Comparação Anual</PT>
+		<EN>Year Comparison</EN>
+	</word>
+	<word>
+		<name>expenses_summary</name>
+		<PT>Sumário de Despesas</PT>
+		<EN>Expenses Summary</EN>
+	</word>
+	<word>
+		<name>schedule_expense</name>
+		<PT>Agendar Despesa</PT>
+		<EN>Schedule Expense</EN>
+	</word>
+	<word>
+		<name>shopping</name>
+		<PT>Compras</PT>
+		<EN>Shopping</EN>
+	</word>
+	<word>
+		<name>clothing</name>
+		<PT>Roupa</PT>
+		<EN>Clothing</EN>
+	</word>
+	<word>
+		<name>sneakers</name>
+		<PT>Sapatilhas</PT>
+		<EN>Sneakers</EN>
+	</word>
+	<word>
+		<name>tecnology</name>
+		<PT>Tecnologia</PT>
+		<EN>Tecnology</EN>
+	</word>
+	<word>
+		<name>gifts</name>
+		<PT>Prendas</PT>
+		<EN>Gifts</EN>
+	</word>
+	<word>
+		<name>transport</name>
+		<PT>Transportes</PT>
+		<EN>Transport</EN>
+	</word>
+	<word>
+		<name>car</name>
+		<PT>Carro</PT>
+		<EN>Car</EN>
+	</word>
+	<word>
+		<name>fuel</name>
+		<PT>Combustível</PT>
+		<EN>Fuel</EN>
+	</word>
+	<word>
+		<name>insurance</name>
+		<PT>Seguros</PT>
+		<EN>Insurance</EN>
+	</word>
+	<word>
+		<name>entertainent</name>
+		<PT>Entretenimento</PT>
+		<EN>Entertainent</EN>
+	</word>
+	<word>
+		<name>books/magazines</name>
+		<PT>Livros/Revistas</PT>
+		<EN>Books/Magazines</EN>
+	</word>
+	<word>
+		<name>home</name>
+		<PT>Casa</PT>
+		<EN>Home</EN>
+	</word>
+	<word>
+		<name>income</name>
+		<PT>Renda</PT>
+		<EN>Income</EN>
+	</word>
+	<word>
+		<name>electricity_bill</name>
+		<PT>Fatura da Luz</PT>
+		<EN>Electricity Bill</EN>
+	</word>
+	<word>
+		<name>water_bill</name>
+		<PT>Fatura da Água</PT>
+		<EN>Water Bill</EN>
+	</word>
+	<word>
+		<name>garbage_bill</name>
+		<PT>Fatura do Lixo</PT>
+		<EN>Garbage Bill</EN>
+	</word>
+	<word>
+		<name>family</name>
+		<PT>Família</PT>
+		<EN>Family</EN>
+	</word>
+	<word>
+		<name>children</name>
+		<PT>Crianças</PT>
+		<EN>Children</EN>
+	</word>
+	<word>
+		<name>sub_category</name>
+		<PT>Sub-Categoria</PT>
+		<EN>Sub-category</EN>
+	</word>
+	<word>
+		<name>edit_category_expense</name>
+		<PT>Editar Categoria Despesa</PT>
+		<EN>Edit Category Expense</EN>
+	</word>
+	<word>
+		<name>edit_account</name>
+		<PT>Editar Conta</PT>
+		<EN>Edit Account</EN>
+	</word>
+	<word>
+		<name>account_comparison</name>
+		<PT>Comparação de Contas</PT>
+		<EN>Account Comparison</EN>
+	</word>
+	<word>
+		<name>creator</name>
+		<PT>Criador</PT>
+		<EN>Creator</EN>
+	</word>
+	<word>
+		<name>create_account</name>
+		<PT>Criar Conta</PT>
+		<EN>Create Account</EN>
+	</word>
+	<word>
+		<name>create_objective</name>
+		<PT>Criar Objetivo</PT>
+		<EN>Create Objective</EN>
+	</word>
+	<word>
+		<name>manager</name>
+		<PT>Gerente</PT>
+		<EN>Manager</EN>
+	</word>
+	<word>
+		<name>viewer</name>
+		<PT>Vizualizador</PT>
+		<EN>viewer</EN>
+	</word>
+	<word>
+		<name>editor</name>
+		<PT>Editor</PT>
+		<EN>Editor</EN>
+	</word>
+	<word>
+		<name>objective</name>
+		<PT>Objetivo</PT>
+		<EN>Objective</EN>
+	</word>
+	<word>
+		<name>financial_goal</name>
+		<PT>Meta Financeira</PT>
+		<EN>Financial Goal</EN>
+	</word>
+	<word>
+		<name>food/drinks</name>
+		<PT>Comidas/Bebibas</PT>
+		<EN>Food/Drinks</EN>
+	</word>
+	<word>
+		<name>eat_out</name>
+		<PT>Comer Fora</PT>
+		<EN>Eat Out</EN>
+	</word>
+	<word>
+		<name>account</name>
+		<PT>Conta</PT>
+		<EN>Account</EN>
+	</word>
+	<word>
+		<name>welcome</name>
+		<PT>Bem-Vindo</PT>
+		<EN>Welcome</EN>
+	</word>
+	<word>
+		<name>earnings</name>
+		<PT>Ganhos</PT>
+		<EN>Earnings</EN>
+	</word>
+	<word>
+		<name>ever</name>
+		<PT>Sempre</PT>
+		<EN>Ever</EN>
+	</word>
+	<word>
+		<name>sent_requests</name>
+		<PT>Pedidos Enviados</PT>
+		<EN>Sent Requests</EN>
+	</word>
+	<word>
+		<name>expenses</name>
+		<PT>Despesas</PT>
+		<EN>Expenses</EN>
+	</word>
+	<word>
+		<name>total</name>
+		<PT>Total</PT>
+		<EN>Total</EN>
+	</word>
+	<word>
+		<name>current</name>
+		<PT>Atual</PT>
+		<EN>Current</EN>
+	</word>
+	<word>
+		<name>this</name>
+		<PT>Este</PT>
+		<EN>This</EN>
+	</word>
+	<word>
+		<name>year</name>
+		<PT>Ano</PT>
+		<EN>Year</EN>
+	</word>
+	<word>
+		<name>summary</name>
+		<PT>Resumo</PT>
+		<EN>Summary</EN>
+	</word>
+	<word>
+		<name>monthly_comparison</name>
+		<PT>Comparação Mensal</PT>
+		<EN>Monthly Comparison</EN>
+	</word>
+	<word>
+		<name>Amigo</name>
+		<PT>Amigo</PT>
+		<EN>Friend</EN>
+	</word>
+	<word>
+		<name>Casa</name>
+		<PT>Casa</PT>
+		<EN>House</EN>
+	</word>
+	<word>
+		<name>savings_and_emergencies</name>
+		<PT>Poupança e Emergências</PT>
+		<EN>Savings accommodationnd Emergencies</EN>
+	</word>
+	<word>
+		<name>debts_and_loans</name>
+		<PT>Dívida e Empréstimo</PT>
+		<EN>Debts and Loans</EN>
+	</word>
+	<word>
+		<name>shopping_and_durable_goods</name>
+		<PT>Compras e Bens Duráveis</PT>
+		<EN>Shopping and Durable Goods</EN>
+	</word>
+	<word>
+		<name>education_and_improvement</name>
+		<PT>Educação e Aperfeiçoamento</PT>
+		<EN>Education and Improvement</EN>
+	</word>
+	<word>
+		<name>health_and_wellness</name>
+		<PT>Saúde e Bem-Estar</PT>
+		<EN>Health and Wellness</EN>
+	</word>
+	<word>
+		<name>travel_and_leisure</name>
+		<PT>Viagens e Lazer</PT>
+		<EN>Travel and Leisure</EN>
+	</word>
+	<word>
+		<name>home_and_real_estale</name>
+		<PT>Casa e Imóveis</PT>
+		<EN>Home and Real Estale</EN>
+	</word>
+	<word>
+		<name>retirement</name>
+		<PT>Aposentadoria</PT>
+		<EN>Retirement</EN>
+	</word>
+	<word>
+		<name>donations_and_philanthropy</name>
+		<PT>Doações e Filantropia</PT>
+		<EN>Donations and Philanthropy</EN>
+	</word>
+	<word>
+		<name>family_planning</name>
+		<PT>Planejamento Familiar</PT>
+		<EN>Family Planning</EN>
+	</word>
+	<word>
+		<name>extra_income</name>
+		<PT>Renda Extra</PT>
+		<EN>Extra Income</EN>
+	</word>
+	<word>
+		<name>personal_projects</name>
+		<PT>Projetos Pessoais</PT>
+		<EN>Personal Projects</EN>
+	</word>
+	<word>
+		<name>coins</name>
+		<PT>Moedas</PT>
+		<EN>Coins</EN>
+	</word>
+</langs>
