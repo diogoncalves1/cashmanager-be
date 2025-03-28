@@ -28,7 +28,7 @@ function goToDelete(id) {
 }
 
 function goToView(id) {
-    window.location.href = "/CashManager/transactions/view?i=" + id;
+    window.location.href = "/CashManager/transactions/view/" + id;
 }
 
 const MODAL_BTN = document.getElementById("modal-btn");

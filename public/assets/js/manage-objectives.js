@@ -1,7 +1,7 @@
 const BTN_CREATE = document.getElementById("add-objective");
 
 function goToEdit(id) {
-    window.location.href = "/CashManager/objectives/edit?i=" + id;
+    window.location.href = "/CashManager/objectives/edit/" + id;
 }
 
 function goToCreate() {
@@ -14,41 +14,61 @@ const TABLE = document.getElementById("table");
 const httpRequest = new XMLHttpRequest;
 const TD = document.querySelectorAll("td");
 
-function goToDelete(id) {
-
-    var tr = document.getElementById("tr-" + id);
-
-    var url = "/CashManager/backend/querys.php";
-    var data = "id=" + id + "&function=delete_objetive"
+async function deleteError() {
+    var error = await getWordXml("error");
+    Swal.fire({
+        title: error + "!",
+        icon: "error"
+    });
+}
+async function deleteConfirm() {
+    var deleted = await getWordXml("deleted");
+    var textAlert = await getWordXml("objective_deleted")
+    Swal.fire({
+        title: deleted,
+        text: textAlert,
+        icon: "success"
+    });
+}
+function deleteObjective(id) {
+    var url = "/CashManager/objectives/delete/" + id;
 
     httpRequest.onloadend = writeTable;
 
     function writeTable() {
+        console.log(httpRequest.response)
         if (httpRequest.status === 200 && httpRequest.readyState === 4) {
             if (httpRequest.response == 1) {
+                var tr = document.getElementById("tr-" + id);
                 TABLE.removeChild(tr);
-                const successToast = document.getElementById('liveToast')
-                const toastBootstrap = bootstrap.Toast.getOrCreateInstance(successToast)
-                toastBootstrap.show()
+                deleteConfirm();
             }
-            else {
-                const alertToast = document.getElementById('liveToastWarning')
-                const toastBootstrap = bootstrap.Toast.getOrCreateInstance(alertToast)
-                toastBootstrap.show()
-            }
+            else
+                deleteError();
         }
     }
-    httpRequest.open("POST", url, true);
-    httpRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    httpRequest.send(data);
+    httpRequest.open("DELETE", url);
+    httpRequest.send();
 }
 
-const MODAL_BTN = document.getElementById("modal-btn")
-
-function modal(id) {
-    MODAL_BTN.setAttribute("onclick", "goToDelete(" + id + ")");
+async function modal(id) {
+    var alert1 = await getWordXml("are_delete_objective");
+    var alert2 = await getWordXml("you_do_not_revert_this");
+    var confirm = await getWordXml("yes_delete");
+    var cancel = await getWordXml("cancel");
+    console.log(alert1);
+    Swal.fire({
+        title: alert1,
+        text: alert2,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        cancelButtonText: cancel,
+        confirmButtonText: confirm
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteObjective(id);
+        }
+    });
 }
-
-const toast = document.getElementById('checkToast');
-const toastBstrap = bootstrap.Toast.getOrCreateInstance(toast);
-toastBstrap.show();

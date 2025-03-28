@@ -5,18 +5,19 @@ namespace App\Models;
 use app\Models\Model;
 use PDO;
 
-class User extends Model
+class UserModel extends Model
 {
-    public $id;
-    public $name;
     protected $table = "users";
 
     function __construct()
     {
-        $data = unserialize($_COOKIE["user"]);
-        $this->id = $data["id"];
-        $this->name = $data["name"];
         parent::__construct();
+    }
+
+    public function getUserCash(int $userId)
+    {
+        $stmt = $this->conn->query("SELECT cash FROM users WHERE id = {$userId}");
+        return $stmt->fetchColumn();
     }
 
     public function getUsersCashByAccountPermission(int $accountId, string $permission)
@@ -45,7 +46,7 @@ class User extends Model
         $stmt->execute([$value, $userId]);
     }
 
-    public function withdrawCash(int $userId, float $value)
+    public function withdrawUserCash(int $userId, float $value)
     {
         $stmt = $this->conn->prepare("UPDATE {$this->table} SET cash = cash - ? WHERE id = ?");
         $stmt->execute([$value, $userId]);

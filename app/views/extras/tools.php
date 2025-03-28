@@ -32,10 +32,10 @@ require_once "../backend/language.php";
                             <?= $from ?>:</label>
                         <select id="from-currency">
                             <?php foreach ($coins as $coin) { ?>
-                            <option value="<?= $coin['code'] ?>">
-                                <?= $_COOKIE['lang'] == "EN" ? $coin['name'] : $coin['name_pt']; ?>
-                                <?= $coin['symbol']; ?>
-                            </option>
+                                <option value="<?= $coin['code'] ?>">
+                                    <?= $_COOKIE['lang'] == "EN" ? $coin['name'] : $coin['name_pt']; ?>
+                                    <?= $coin['symbol']; ?>
+                                </option>
                             <?php } ?>
                         </select>
                     </div>
@@ -44,10 +44,10 @@ require_once "../backend/language.php";
                         <label class="form-control-label px-3"><?php echo $to; ?>:</label>
                         <select id="to-currency">
                             <?php foreach ($coins as $coin) { ?>
-                            <option value="<?= $coin['code'] ?>">
-                                <?= $_COOKIE['lang'] == "EN" ? $coin['name'] : $coin['name_pt']; ?>
-                                <?= $coin['symbol']; ?>
-                            </option>
+                                <option value="<?= $coin['code'] ?>">
+                                    <?= $_COOKIE['lang'] == "EN" ? $coin['name'] : $coin['name_pt']; ?>
+                                    <?= $coin['symbol']; ?>
+                                </option>
                             <?php } ?>
                         </select>
                     </div>
@@ -118,4 +118,4 @@ require_once "../backend/language.php";
         </div>
     </div>
 </main>
-<script src="../assets/js/tools.js"> </script>
+<script src="/CashManager/public/assets/js/tools.js"> </script>

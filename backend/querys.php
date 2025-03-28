@@ -1,11 +1,9 @@
 <?php
 require_once("category/querys.php");
-require_once("objective/querys.php");
 require_once("transactions/querys.php");
 require_once("users/querys.php");
 require_once("alert/querys.php");
 require_once("limits/querys.php");
-require_once("financial_goal/querys.php");
 require_once("friend/querys.php");
 require_once("share_type/querys.php");
 require_once("share_request/querys.php");
@@ -14,9 +12,73 @@ require_once("scheduled_expenses/querys.php");
 require_once("alert_scheduled/querys.php");
 require_once("alert_user/querys.php");
 require_once("debt/querys.php");
-include("config.php");
 
 // EXTRAS
+
+
+function get_financial_goal($conn, $user_id, $id = 0, $view = 0, $edit = 0, $edit_invest = 0, $invest = 0)
+{
+    $query = "SELECT DISTINCT f.*, fu.role_id
+FROM financial_goal f
+JOIN financial_goal_user fu ON f.id = fu.financial_goal_id
+JOIN role r ON fu.role_id = r.id
+JOIN role_permission rp ON r.id = rp.role_id
+JOIN permission p ON rp.permission_id = p.id
+WHERE fu.user_id = $user_id";
+    if ($id != 0)
+        $query .= " AND f.id = $id ";
+    if ($view != 0)
+        $query .= " AND p.name = 'view_financial_goals' ";
+    if ($edit_invest != 0)
+        $query .= " AND p.name = 'edit_invest' ";
+    if ($invest != 0)
+        $query .= " AND p.name = 'invest_financial_goal' ";
+    if ($edit != 0)
+        $query .= " AND p.name = 'edit_financial_goal' ";
+    $result = $conn->query($query);
+    return $result;
+}
+
+function get_name_financial_goal($conn, $id)
+{
+    $query = "SELECT name FROM financial_goal WHERE id = $id";
+    $result = $conn->query($query);
+    $row = $result->fetch_assoc();
+    return $row['name'];
+}
+
+function delete_financial_goal($id)
+{
+    include("config.php");
+
+    $query = "DELETE FROM financial_goal WHERE id = $id";
+    $conn->query($query);
+
+    $response = "";
+    if ($_COOKIE['mode'] == "ligth") {
+        $color = "table-primary";
+    } else
+        $color = "";
+    $result_accounts = get_financial_goal($conn, $user_id);
+    while ($row = mysqli_fetch_assoc($result_accounts)) {
+        $response .= '<tr class="' . $color . ' primary">
+            <td>' . $row["name"] . '</td>
+            <td>' . $row['value'] . $coin . '</td>
+            <td>' . $row['earned_value'] . $coin . '</td>
+            <td>' . $row['value'] - $row['earned_value'] . $coin . '</td>
+            <td><button style="background: none; border: none;"
+                    onclick="goToEdit(' . $row['id'] . ')"><svg class="bi">
+                        <use xlink:href="#edit" />
+                    </svg></button></td>
+            <td class="center"><button data-bs-toggle="modal" data-bs-target="#delete-modal"
+                    style="background: none; border: none;"
+                    onclick="modal(' . $row['id'] . ')"><svg class="bi">
+                        <use xlink:href="#delete" />
+                    </svg></button></td>
+        </tr>';
+    }
+    echo $response;
+}
 
 function hasPermission($conn, $role_id, $permission_name)
 {
@@ -31,7 +93,13 @@ function hasPermission($conn, $role_id, $permission_name)
         return 1;
     return 0;
 }
-
+function get_objective_name_by_id($conn, $objective_id)
+{
+    $query = "SELECT name FROM objective WHERE id = $objective_id";
+    $result = $conn->query($query);
+    $row = $result->fetch_assoc();
+    return $row['name'];
+}
 function porcent($now, $meta)
 {
     $porcent = ($now / $meta) * 100;
@@ -43,9 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (isset($_POST['function'])) {
         $funcName = $_POST['function'];
         switch ($funcName) {
-            case "delete_objetive":
-                echo delete_objetive($_POST['id']);
-                break;
             case "set_mode":
                 set_mode($_POST['mode']);
                 break;
@@ -280,26 +345,26 @@ function test_obj($type, $user_sent)
     switch ($type) {
         case "1": {
                 $query = "SELECT DISTINCT a.*, au.role_id
-FROM account a
-JOIN accounts_user au ON a.id = au.account_id
-JOIN role r ON au.role_id = r.id
-JOIN role_permission rp ON r.id = rp.role_id
-JOIN permission p ON rp.permission_id = p.id
-WHERE au.user_id = $user_id 
-AND p.name = 'manage_account_shares'
-AND NOT EXISTS (
+        FROM account a
+        JOIN accounts_user au ON a.id = au.account_id
+        JOIN role r ON au.role_id = r.id
+        JOIN role_permission rp ON r.id = rp.role_id
+        JOIN permission p ON rp.permission_id = p.id
+        WHERE au.user_id = $user_id 
+        AND p.name = 'manage_account_shares'
+        AND NOT EXISTS (
     SELECT 1
     FROM accounts_user au2
     WHERE au2.user_id = $user_sent 
     AND au2.account_id = a.id
-)
-AND NOT EXISTS (
+        )
+        AND NOT EXISTS (
     SELECT 1
     FROM share_request sr
     WHERE sr.type = $type
     AND sr.user_sent = $user_sent
     AND sr.obj_id = a.id
-)";;
+        )";;
                 break;
             }
         case "2": {
@@ -437,124 +502,7 @@ function set_coin($conn, $id)
 
 if (isset($_SESSION['page'])) {
     switch ($_SESSION['page']) {
-        case "home": {
-                // Saldo
-                $cash = get_cash($conn, $user_id);
 
-                $query = "SELECT DISTINCT t.*, au.role_id
-                        FROM transactions t
-JOIN accounts_user au ON t.account_id = au.account_id
-JOIN role r ON au.role_id = r.id
-JOIN role_permission rp ON r.id = rp.role_id
-JOIN permission p ON rp.permission_id = p.id
-WHERE au.user_id = $user_id
-AND p.name = 'edit_user_cash'
- ORDER BY date ASC, type DESC, id DESC;";
-                $result_transactions_order = $conn->query($query);
-
-                $result_cats = get_all_category($conn);
-                $i = 0;
-                $cats = [];
-                while ($row = mysqli_fetch_assoc($result_cats)) {
-                    if ($_COOKIE['lang'] == "EN")
-                        $cats[$i] = $row['name'];
-                    else
-                        $cats[$i] = $row['name_pt'];
-                    $i++;
-                }
-
-                $total_transactions_table = [];
-                $days = [0, 0, 0, 0, 0, 0, 0];
-                $i = 0;
-                $numTransactions = $result_transactions_order->num_rows;
-                $last_date = 0;
-                $j = 0;
-                $total_transactions_table[-1] = 0;
-                $totalExpense = 0;
-                $totalRevenues = 0;
-                while ($row = mysqli_fetch_assoc($result_transactions_order)) {
-                    if ($row['type'] == 0)
-                        $totalExpense += $row['value'];
-                    else
-                        $totalRevenues += $row['value'];
-
-                    if ($row['date'] != $last_date)
-                        $j++;
-                    if ($row['type'] == 1)
-                        $total_transactions_table[$i] = $total_transactions_table[$i - 1] + $row['value'];
-                    else
-                        $total_transactions_table[$i] = $total_transactions_table[$i - 1] - $row['value'];
-                    $last_date = $row['date'];
-                    $numTransactions--;
-                    $i++;
-                }
-
-                $last_date = 0;
-                $revenues = 0;
-                $expenses = 0;
-                $days[-1] = 0;
-                for ($i = 0; $i <= 365; $i++) {
-                    $days[$i] = $cash;
-                    $date = new DateTime('now');
-                    $date = $date->modify("-$i Day");
-                    $date = $date->format("Y-m-d");
-                    $result_days = get_transactions($conn, $user_id, 0, 0, 0, 1, $date);
-                    $days[$i] += $expenses;
-                    $days[$i] -= $revenues;
-
-                    while ($row = mysqli_fetch_assoc($result_days)) {
-                        if ($row['type'] == 0)
-                            $expenses += $row['value'];
-                        else
-                            $revenues += $row['value'];
-                    }
-                    $last_date = $date;
-                }
-
-                $days_name = [];
-
-                for ($i = 0; $i < 366; $i++) {
-                    $days_name[$i] = new DateTime('now');
-                    $days_name[$i] = $days_name[$i]->modify("-$i Day");
-                    $days_name[$i] = $days_name[$i]->format("d/m");
-                }
-
-                $this_year = new Datetime("now");
-                $this_year = $this_year->format("Y-01-01");
-                $resultThisYear =  get_transactions($conn, $user_id, 0, 0, 0, 1, 0, 1, $this_year);
-                $cashThisYear = 0;
-                while ($row = $resultThisYear->fetch_assoc()) {
-                    $cashThisYear += $row['value'];
-                }
-
-                break;
-            }
-        case "manage transactions": {
-                $total_transactions_table = [];
-                $total_transactions_table[-1] = 0;
-                $query = "SELECT DISTINCT t.*, au.role_id
-                        FROM transactions t
-JOIN accounts_user au ON t.account_id = au.account_id
-JOIN role r ON au.role_id = r.id
-JOIN role_permission rp ON r.id = rp.role_id
-JOIN permission p ON rp.permission_id = p.id
-WHERE au.user_id = $user_id
-AND p.name = 'view_transactions'
-ORDER BY date ASC, type DESC, id DESC";
-                $result = $conn->query($query);
-                $i = 0;
-                while ($row = mysqli_fetch_assoc($result)) {
-                    if (hasPermission($conn, $row['role_id'], "edit_user_cash")) {
-                        if ($row['type'] == 1)
-                            $total_transactions_table[$i] = $total_transactions_table[$i - 1] + $row['value'];
-                        else
-                            $total_transactions_table[$i] = $total_transactions_table[$i - 1] - $row['value'];
-                    }
-                    $i++;
-                }
-
-                break;
-            }
         case "monthly comparison": {
                 $query = "SELECT DISTINCT t.*, au.role_id
             FROM transactions t

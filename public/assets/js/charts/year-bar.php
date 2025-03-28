@@ -1,6 +1,8 @@
 <script>
     const ctx3 = document.getElementById('myChart3').getContext('2d');
-    // eslint-disable-next-line no-unused-vars
+
+    days = array(<?= json_encode($days) ?>);
+
     const myChart3 = new Chart(ctx3, {
         type: 'line',
         data: {
@@ -33,7 +35,8 @@
                     callbacks: {
                         label: function(tooltipItem) {
                             // Adiciona o símbolo € no tooltip
-                            return tooltipItem.raw.toFixed(2) + '<?= $coin; ?>'; // .toFixed(2) para garantir duas casas decimais
+                            return tooltipItem.raw.toFixed(2) +
+                                '<?= $coin; ?>'; // .toFixed(2) para garantir duas casas decimais
                         }
                     }
                 }

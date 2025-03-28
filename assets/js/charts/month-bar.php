@@ -33,7 +33,8 @@
                     callbacks: {
                         label: function(tooltipItem) {
                             // Adiciona o símbolo € no tooltip
-                            return tooltipItem.raw.toFixed(2) + '<?= $coin; ?>'; // .toFixed(2) para garantir duas casas decimais
+                            return tooltipItem.raw.toFixed(2) +
+                                '<?= $userCoin; ?>'; // .toFixed(2) para garantir duas casas decimais
                         }
                     }
                 }

@@ -50,5 +50,5 @@ function goToManageTransactions(type) {
 }
 
 function goToviewTransaction(id) {
-  window.location.href = "/CashManager/transactions/view?i=" + id;
+  window.location.href = "/CashManager/transactions/view/" + id;
 }

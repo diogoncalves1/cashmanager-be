@@ -6,7 +6,7 @@ use PDO;
 use app\models\Database;
 use app\Models\Model;
 
-class Category extends Model
+class CategoryModel extends Model
 {
 
     protected $table = "category";
@@ -35,7 +35,7 @@ class Category extends Model
 
     public function getCategoryIdByCode(string $categoryName)
     {
-        $stmt = $this->conn->query("SELECT id FROM {$this->table} WHERE code = {$categoryName}");
+        $stmt = $this->conn->query("SELECT id FROM {$this->table} WHERE code = '{$categoryName}'");
         return $stmt->fetchColumn();
     }
 

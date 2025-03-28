@@ -14,6 +14,8 @@ class ShareRequest extends Model
         $stmt->execute([$objId, $type]);
     }
 
+    public function deleteShareRequest(int $shareRequestId) {}
+
     public function sendRequest(int $type, int $userSent, int $userSending, int $objId, int $roleId)
     {
         $stmt = $this->conn->prepare("INSERT INTO {$this->table}(type, user_sent, user_sending, obj_id, role_id) VALUES (?, ?, ?, ?, ?)");

@@ -3,71 +3,123 @@
 namespace app\Controllers;
 
 use app\Controllers\Controller;
-use app\Models\Account;
-use app\models\Database;
-use app\models\User;
-use app\Models\Transaction;
+use app\Models\AccountModel;
+use app\Models\AccountUserModel;
+use app\Models\CategoryModel;
+use app\Models\TransactionModel;
 use app\Models\Alert;
+use app\Models\AuthModel;
+use PDO;
 
 require "../app/core/functions.php";
+
 class TransactionController
 {
-    private $conn;
-    private $user;
     private $transactionModel;
     public function __construct()
     {
-        $this->conn = new Database();
-        $this->user = new User();
-        $this->transactionModel = new Transaction();
+        $this->transactionModel = new TransactionModel();
     }
 
-    function index()
+    // Views
+    public function showUserTransactions()
     {
-        Controller::view("transactions/manage-transactions");
-    }
-    function expense()
-    {
-        $curDate = date("Y-m-d");
-        $maxAcc = 0;
-        $accountInstance = new Account($this->conn->conn);
-        $accounts = $accountInstance->getUserAccounts($this->user->id);
-        foreach ($accounts as $account) {
-            if (hasPerm($this->conn->conn, $account["role_id"], "add_transactions")) {
-                $maxAcc = $account['cash'];
-                break;
-            }
+        if (AuthModel::checkLogin()) {
+            require "../app/core/translate.php";
+            session_start();
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = "manage transactions";
+
+            $userId = $this->transactionModel->id;
+            $userCoin = $this->transactionModel->coin;
+
+            $userTransactions = $this->transactionModel->getUserTransactions($userId);
+
+            $data = [
+                "translate" => $translate,
+                "userTransactions" => $userTransactions,
+                "userCoin" => $userCoin
+            ];
+
+            Controller::view("transactions/manage-transactions", $data);
         }
+    }
+    public function showAddExpenseForm()
+    {
+        if (AuthModel::checkLogin()) {
+            require "../app/core/translate.php";
+            session_start();
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = "expense";
 
-        Controller::view("transactions/expense", ["curDate" => $curDate, "maxAcc" => $maxAcc, "accountsUser" => $accounts]);
+            $categorysStmt = CategoryModel::all();
+            $accountInstance = new AccountModel();
+
+            $userAccounts = $accountInstance->getUserAccountsByPermission($this->transactionModel->id, "add_transactions");
+            $userCoin = $this->transactionModel->coin;
+
+            $categorys = $categorysStmt->fetchAll(PDO::FETCH_ASSOC);
+            $currentDate = date("Y-m-d");
+
+            $data = [
+                "translate" => $translate,
+                "accountsUser" => $userAccounts,
+                "currentDate" => $currentDate,
+                "userCoin" => $userCoin,
+                "categorys" => $categorys
+            ];
+
+            return Controller::view("transactions/expense", $data);
+        }
     }
-    function store_expense($params)
+    public function showAddRevenueForm()
     {
-        session_start();
-        $this->transactionModel->addTransaction($_FILES["proof"], $this->user->id, $params->category, 0, $params->value, $params->account, $params->date, $params->description, $params->to);
-        if ($_COOKIE['lang'] == "PT")
-            $_SESSION['alert'] = "Nova Despesa adicionada com sucesso";
-        else
-            $_SESSION['alert'] = "New Expense Successfully Added";
-        header("location: /CashManager/transactions");
+        if (AuthModel::checkLogin()) {
+            require "../app/core/translate.php";
+            session_start();
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = "revenue";
+
+            $curDate = date("Y-m-d");
+            $accountsInstance = new AccountModel();
+
+            $userId = $this->transactionModel->id;
+            $userCoin = $this->transactionModel->coin;
+
+            $accountsUser = $accountsInstance->getUserAccountsByPermission($userId, "add_transactions");
+
+            $data = [
+                "translate" => $translate,
+                "curDate" => $curDate,
+                "accountsUser" => $accountsUser,
+                "userCoin" => $userCoin
+            ];
+
+            return Controller::view("transactions/revenue", $data);
+        }
     }
-    function revenue()
+    public function viewTransaction($params)
     {
-        $curDate = date("Y-m-d");
-        $accountsInstance = new Account($this->conn->conn);
-        $accountsUser = $accountsInstance->getUserAccounts($this->user->id);
-        Controller::view("transactions/revenue", ["curDate" => $curDate, "accountsUser" => $accountsUser]);
+        if (AuthModel::checkLogin()) {
+            require "../app/core/functions.php";
+            session_start();
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = "view transaction";
+
+
+            $accountInstance = new AccountModel();
+            $transactionId = $params->id;
+            $transaction = $this->transactionModel->getTransaction($transactionId);
+            $data = ["transaction" => $transaction];
+            Controller::view("transactions/view-transaction", $data);
+        }
     }
-    function store_revenue($params)
+
+    function getUserTransactionsWithMinDate($params)
     {
-        session_start();
-        $this->transactionModel->addTransaction(0, $this->user->id, 0, 1, $params->value, $params->account, $params->date, $params->description, $params->to);
-        if ($_COOKIE['lang'] == "PT")
-            $_SESSION['alert'] = "Nova Receita adicionada com sucesso";
-        else
-            $_SESSION['alert'] = "New Revenue Successfully Added";
-        header("location: /CashManager/transactions");
+        print_r($params);
     }
+
     function edit()
     {
         Controller::view("transactions/edit-transaction");
@@ -118,10 +170,52 @@ class TransactionController
         }
         header("location: /CashManager/transactions");
     }
-    function view()
+
+
+    // Backend
+    public function addExpense($params)
     {
-        Controller::view("transactions/view-transaction");
+        if (AuthModel::checkLogin()) {
+            $accountId = $params->account;
+
+            $accountUserInstance = new AccountUserModel();
+            $userRole = $accountUserInstance->getUserRole($accountId, $this->transactionModel->id);
+
+
+            if (hasPerm($userRole, "add_transactions")) {
+                $this->transactionModel->addTransaction($_FILES["proof"], $this->transactionModel->id, $params->category, "expense", $params->value, $params->account, $params->date, $params->description, $params->to);
+                if ($_COOKIE['lang'] == "PT")
+                    $_SESSION['alert'] = "Nova Despesa adicionada com sucesso";
+                else
+                    $_SESSION['alert'] = "New Expense Successfully Added";
+                header("location: ../../transactions");
+            }
+        }
     }
+    public function addRevenue($params)
+    {
+        if (AuthModel::checkLogin()) {
+            $accountId = $params->account;
+
+            $accountUserInstance = new AccountUserModel();
+
+            $userRoleId = $accountUserInstance->getUserRole($accountId, $this->transactionModel->id);
+            if (hasPerm($userRoleId, "add_transactions")) {
+                $userId = $this->transactionModel->id;
+
+                $this->transactionModel->addTransaction(0, $userId, 0, "revenue", $params->value, $params->account, $params->date, $params->description, $params->to);
+
+                if ($_COOKIE['lang'] == "PT")
+                    $_SESSION['alert'] = "Nova Receita adicionada com sucesso";
+                else
+                    $_SESSION['alert'] = "New Revenue Successfully Added";
+
+                header("location: ../../transactions");
+            } else
+                header("location: revenue");
+        }
+    }
+
     function schedule_expense()
     {
         $curDate = date("Y-m-d");

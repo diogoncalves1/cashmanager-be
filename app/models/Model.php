@@ -3,14 +3,23 @@
 namespace app\Models;
 
 use app\Models\Database;
+use PDO;
 
 abstract class Model
 {
     protected $conn;
+    public $id;
+    public $name;
+    public $coin;
 
     public function __construct()
     {
-
+        if (isset($_COOKIE["user"])) {
+            $data = unserialize($_COOKIE["user"]);
+            $this->id = (int) $data["id"];
+            $this->name = $data["name"];
+            $this->coin = $_COOKIE["coin_symbol"];
+        }
         $this->conn = Database::getConn();
     }
 
@@ -25,7 +34,7 @@ abstract class Model
         $instance = self::createInstance();
         $stmt = $instance->conn->prepare("SELECT * FROM {$instance->table} WHERE 1");
         $stmt->execute();
-        return $stmt;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 

@@ -1,5 +1,5 @@
 <?php
-require __DIR__ .  "/../vendor/autoload.php";
+require "../vendor/autoload.php";
 require "../routes/router.php";
 
 try {
@@ -16,5 +16,6 @@ try {
     $controler = $router[$request][$uri];
     $controler();
 } catch (Exception $e) {
-    echo $e->getMessage();
+    if (processRequest($method, $uri))
+        echo $e->getMessage();
 }

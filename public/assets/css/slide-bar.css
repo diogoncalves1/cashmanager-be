@@ -50,6 +50,22 @@
     -webkit-overflow-scrolling: touch;
 }
 
+[data-bs-theme=dark] {
+    --bs-link-hover-color: #00b309;
+    --bs-link-color: #0a720f;
+}
+
+:root,
+[data-bs-theme=light] {
+    --bs-link-hover-color: #0a720f;
+    --bs-link-color: #02a00a;
+}
+
+.nav {
+    --bs-nav-link-color: var(--bs-link-color);
+    --bs-nav-link-hover-color: var(--bs-link-hover-color);
+}
+
 .bd-mode-toggle {
     z-index: 1500;
 }

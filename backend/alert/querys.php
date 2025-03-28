@@ -1,17 +1,4 @@
 <?php
-
-// GET
-function get_alert($conn, $user_id)
-{
-    $date = new DateTime("now"); // PEGA A DATA ATUAL
-    $date = $date->format("Y-m-01"); // FORMATA
-    $query = "SELECT * FROM alert WHERE user_id = $user_id AND date >= '$date'"; // QUERY
-    if ($_SESSION['page'] != "home")  // SE A PÁGINA ATUA NÃO FOR O "HOME" RETORNAR APENAS AS "NÃO LIDAS"
-        $query .= " AND readed = 0"; // ATUALIZAÇÃO DA QUERY
-    $result = $conn->query($query); // QUERY A DB
-    return $result; // RETORNA O RESULT
-}
-
 // SETS
 function set_readed_alert($id) // FUNÇÃO QUE ATUALIZA O ESTADO DO ALERTA PARA "LIDO"
 {

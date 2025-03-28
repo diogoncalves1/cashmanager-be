@@ -1,10 +1,3 @@
-<?php
-session_start();
-
-if (isset($_COOKIE["user"])) {
-    header("location:index.php");
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,11 +14,6 @@ if (isset($_COOKIE["user"])) {
 </head>
 
 <body>
-    <?php
-    require_once("../backend/language.php");
-    $_SESSION['path'] = $_SERVER['REQUEST_URI'];
-    ?>
-
     <div class="loader-div" id="loader-div">
         <div class="loader">
         </div>

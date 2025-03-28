@@ -11,9 +11,275 @@
 		<EN>Name</EN>
 	</word>
 	<word>
+		<name>rate</name>
+		<PT>Taxa</PT>
+		<EN>Rate</EN>
+	</word>
+	<word>
+		<name>installment</name>
+		<PT>Parcelamento</PT>
+		<EN>Installment</EN>
+	</word>
+	<word>
+		<name>compound_interest</name>
+		<PT>Juros Compostos</PT>
+		<EN>Compound Interest</EN>
+	</word>
+	<word>
+		<name>number_installments</name>
+		<PT>Número de Parcelas</PT>
+		<EN>Number Installments</EN>
+	</word>
+	<word>
 		<name>symbol</name>
 		<PT>Símbolo</PT>
 		<EN>Symbol</EN>
+	</word>
+	<word>
+		<name>value_installments</name>
+		<PT>Valor das Parcelas</PT>
+		<EN>Value Installments</EN>
+	</word>
+	<word>
+		<name>investing_in_the_objective</name>
+		<PT>Investir no Objetivo</PT>
+		<EN>Investing in the Objective</EN>
+	</word>
+	<word>
+		<name>view_objectives</name>
+		<PT>Ver Objetivos</PT>
+		<EN>View Objectives</EN>
+	</word>
+	<word>
+		<name>missing_amount</name>
+		<PT>Valor em Falta</PT>
+		<EN>Missing Amount</EN>
+	</word>
+	<word>
+		<name>cancel</name>
+		<PT>Cancelar</PT>
+		<EN>Cancel</EN>
+	</word>
+	<word>
+		<name>error</name>
+		<PT>Erro</PT>
+		<EN>Error</EN>
+	</word>
+	<word>
+		<name>deleted</name>
+		<PT>Apagado!</PT>
+		<EN>Deleted!</EN>
+	</word>
+	<word>
+		<name>deletedF</name>
+		<PT>Apagada!</PT>
+		<EN>Deleted!</EN>
+	</word>
+	<word>
+		<name>status</name>
+		<PT>Estado</PT>
+		<EN>Status</EN>
+	</word>
+	<word>
+		<name>edited</name>
+		<PT>Editado!</PT>
+		<EN>Edited!</EN>
+	</word>
+	<word>
+		<name>editedF</name>
+		<PT>Editada!</PT>
+		<EN>Edited!</EN>
+	</word>
+	<word>
+		<name>payment_control</name>
+		<PT>Controlo de Pagamento</PT>
+		<EN>Payment Control</EN>
+	</word>
+	<word>
+		<name>creditor</name>
+		<PT>Credor</PT>
+		<EN>Creditor</EN>
+	</word>
+	<word>
+		<name>paid_value</name>
+		<PT>Valor Pago</PT>
+		<EN>Paid Value</EN>
+	</word>
+	<word>
+		<name>total_value</name>
+		<PT>Valor Total</PT>
+		<EN>Total Value</EN>
+	</word>
+	<word>
+		<name>summary_debts</name>
+		<PT>Sumário Dívidas</PT>
+		<EN>Summary Debts</EN>
+	</word>
+	<word>
+		<name>due_date</name>
+		<PT>Data de Vencimento</PT>
+		<EN>Due Date</EN>
+	</word>
+	<word>
+		<name>financial_goal_edited</name>
+		<PT>A sua meta financeira foi editada.</PT>
+		<EN>Your financial goal has been edited.</EN>
+	</word>
+	<word>
+		<name>created</name>
+		<PT>Criado!</PT>
+		<EN>Created!</EN>
+	</word>
+	<word>
+		<name>addedF</name>
+		<PT>Adicionada!</PT>
+		<EN>Added!</EN>
+	</word>
+	<word>
+		<name>edit_financial_goal</name>
+		<PT>Editar Meta Fianceira</PT>
+		<EN>Edit Financial Goal</EN>
+	</word>
+	<word>
+		<name>financial_goal_added</name>
+		<PT>A sua meta financeira foi adicionada.</PT>
+		<EN>Your financial goal has been added.</EN>
+	</word>
+	<word>
+		<name>objective_created</name>
+		<PT>O seu objetivo foi criado.</PT>
+		<EN>Your objective has been created.</EN>
+	</word>
+	<word>
+		<name>fill_all_details</name>
+		<PT>Preencha todos os dados!</PT>
+		<EN>Fill in all the details!</EN>
+	</word>
+	<word>
+		<name>objective_edited</name>
+		<PT>O seu objetivo foi editado.</PT>
+		<EN>Your objective has been edited.</EN>
+	</word>
+	<word>
+		<name>priority</name>
+		<PT>Prioridade</PT>
+		<EN>Priority</EN>
+	</word>
+	<word>
+		<name>add_financial_goal</name>
+		<PT>Adicionar Meta Financeira</PT>
+		<EN>Add Financial Goal</EN>
+	</word>
+	<word>
+		<name>initial_date</name>
+		<PT>Data Inicial</PT>
+		<EN>Initial Date</EN>
+	</word>
+	<word>
+		<name>final_date</name>
+		<PT>Data Final</PT>
+		<EN>Final Date</EN>
+	</word>
+	<word>
+		<name>objective_deleted</name>
+		<PT>O seu objetivo foi apagado.</PT>
+		<EN>Your objective has been deleted.</EN>
+	</word>
+	<word>
+		<name>financial_goal_deleted</name>
+		<PT>A sua meta financeira foi apagado.</PT>
+		<EN>Your financial goal has been deleted.</EN>
+	</word>
+	<word>
+		<name>yes_delete</name>
+		<PT>Sim, apagar!</PT>
+		<EN>Yes, delete it!</EN>
+	</word>
+	<word>
+		<name>are_delete_fiancial_goal</name>
+		<PT>Tem a certeza de que pretende eliminar esta meta financeira?</PT>
+		<EN>Are you sure you want delete this financial goal?</EN>
+	</word>
+	<word>
+		<name>are_delete_objective</name>
+		<PT>Tem a certeza de que pretende eliminar este objetivo?</PT>
+		<EN>Are you sure you want delete this objective?</EN>
+	</word>
+	<word>
+		<name>you_do_not_revert_this</name>
+		<PT>Você não será capaz de reverter isso!</PT>
+		<EN>You won't be able to revert this!</EN>
+	</word>
+	<word>
+		<name>error_marking_objective_complete</name>
+		<PT>Erro ao marcar o objetivo como concluído</PT>
+		<EN>Error marking the objective as complete</EN>
+	</word>
+	<word>
+		<name>objective_marked_completed</name>
+		<PT>O seu objectivo foi marcado como concluído</PT>
+		<EN>Your objective has been marked as completed</EN>
+	</word>
+	<word>
+		<name>progress</name>
+		<PT>Progresso</PT>
+		<EN>Progress</EN>
+	</word>
+	<word>
+		<name>mark_as_complete</name>
+		<PT>Marcar como Concluído</PT>
+		<EN>Mark as Complete</EN>
+	</word>
+	<word>
+		<name>objective_value</name>
+		<PT>Valor Objetivo</PT>
+		<EN>Objective Value</EN>
+	</word>
+	<word>
+		<name>amount_invested</name>
+		<PT>Valor Investido</PT>
+		<EN>Amount Invested</EN>
+	</word>
+	<word>
+		<name>edit_objective</name>
+		<PT>Editar Objetivo</PT>
+		<EN>Edit Objective</EN>
+	</word>
+
+	<word>
+		<name>category</name>
+		<PT>Categoria</PT>
+		<EN>Category</EN>
+	</word>
+	<word>
+		<name>to</name>
+		<PT>Para</PT>
+		<EN>To</EN>
+	</word>
+	<word>
+		<name>transactions</name>
+		<PT>Transações</PT>
+		<EN>Transactions</EN>
+	</word>
+	<word>
+		<name>debts</name>
+		<PT>Dívidas</PT>
+		<EN>Debts</EN>
+	</word>
+	<word>
+		<name>optional</name>
+		<PT>Opcional</PT>
+		<EN>Optional</EN>
+	</word>
+	<word>
+		<name>description</name>
+		<PT>Descrição</PT>
+		<EN>Description</EN>
+	</word>
+	<word>
+		<name>proof_of_payment</name>
+		<PT>Comprovante de Pagamento</PT>
+		<EN>Proof of Payment</EN>
 	</word>
 	<word>
 		<name>add_coin</name>
@@ -44,6 +310,11 @@
 		<name>Dram</name>
 		<PT>Dram</PT>
 		<EN>Dram</EN>
+	</word>
+	<word>
+		<name>value</name>
+		<PT>Valor</PT>
+		<EN>Value</EN>
 	</word>
 	<word>
 		<name>permissions</name>
@@ -200,6 +471,21 @@
 		<EN>Account</EN>
 	</word>
 	<word>
+		<name>accounts</name>
+		<PT>Contas</PT>
+		<EN>Accounts</EN>
+	</word>
+	<word>
+		<name>objectives</name>
+		<PT>Objetivos</PT>
+		<EN>Objectives</EN>
+	</word>
+	<word>
+		<name>manage_accounts</name>
+		<PT>Gerir Contas</PT>
+		<EN>Manage Accounts</EN>
+	</word>
+	<word>
 		<name>light</name>
 		<PT>Claro</PT>
 		<EN>Light</EN>
@@ -301,13 +587,43 @@
 	</word>
 	<word>
 		<name>home</name>
-		<PT>Casa</PT>
+		<PT>Início</PT>
 		<EN>Home</EN>
+	</word>
+	<word>
+		<name>last_transactions</name>
+		<PT>Últimas Transações</PT>
+		<EN>Last Transactions</EN>
+	</word>
+	<word>
+		<name>add_expense</name>
+		<PT>Adicionar Despesa</PT>
+		<EN>Add Expense</EN>
+	</word>
+	<word>
+		<name>monthly_summary</name>
+		<PT>Sumário Mensal</PT>
+		<EN>Monthly Summary</EN>
+	</word>
+	<word>
+		<name>add_revenue</name>
+		<PT>Adicionar Receita</PT>
+		<EN>Add Revenue</EN>
 	</word>
 	<word>
 		<name>income</name>
 		<PT>Renda</PT>
 		<EN>Income</EN>
+	</word>
+	<word>
+		<name>revenue</name>
+		<PT>Receita</PT>
+		<EN>Revenue</EN>
+	</word>
+	<word>
+		<name>type</name>
+		<PT>Tipo</PT>
+		<EN>Type</EN>
 	</word>
 	<word>
 		<name>electricity_bill</name>
@@ -435,6 +751,11 @@
 		<EN>Expenses</EN>
 	</word>
 	<word>
+		<name>expense</name>
+		<PT>Despesa</PT>
+		<EN>Expense</EN>
+	</word>
+	<word>
 		<name>total</name>
 		<PT>Total</PT>
 		<EN>Total</EN>
@@ -448,6 +769,51 @@
 		<name>this</name>
 		<PT>Este</PT>
 		<EN>This</EN>
+	</word>
+	<word>
+		<name>logout</name>
+		<PT>Sair</PT>
+		<EN>Logout</EN>
+	</word>
+	<word>
+		<name>settings</name>
+		<PT>Definições</PT>
+		<EN>Settings</EN>
+	</word>
+	<word>
+		<name>actions</name>
+		<PT>Ações</PT>
+		<EN>Actions</EN>
+	</word>
+	<word>
+		<name>create_new_account</name>
+		<PT>Criar Nova Conta</PT>
+		<EN>Create New Account</EN>
+	</word>
+	<word>
+		<name>initial_cash</name>
+		<PT>Valor Inicial</PT>
+		<EN>Initial Cash</EN>
+	</word>
+	<word>
+		<name>create_reminder</name>
+		<PT>Criar Lembrete</PT>
+		<EN>Create Reminder</EN>
+	</word>
+	<word>
+		<name>this_week</name>
+		<PT>Esta Semana</PT>
+		<EN>This Week</EN>
+	</word>
+	<word>
+		<name>this_month</name>
+		<PT>Este Mês</PT>
+		<EN>This Month</EN>
+	</word>
+	<word>
+		<name>this_year</name>
+		<PT>Este Ano</PT>
+		<EN>This Year</EN>
 	</word>
 	<word>
 		<name>year</name>
@@ -470,9 +836,39 @@
 		<EN>Friend</EN>
 	</word>
 	<word>
-		<name>Casa</name>
+		<name>house</name>
 		<PT>Casa</PT>
 		<EN>House</EN>
+	</word>
+	<word>
+		<name>date</name>
+		<PT>Data</PT>
+		<EN>Date</EN>
+	</word>
+	<word>
+		<name>from</name>
+		<PT>De</PT>
+		<EN>From</EN>
+	</word>
+	<word>
+		<name>loans</name>
+		<PT>Empréstimos</PT>
+		<EN>Loans</EN>
+	</word>
+	<word>
+		<name>tools</name>
+		<PT>Ferramentas</PT>
+		<EN>Tools</EN>
+	</word>
+	<word>
+		<name>budgets</name>
+		<PT>Orçamentos</PT>
+		<EN>Budgets</EN>
+	</word>
+	<word>
+		<name>financial_goals</name>
+		<PT>Metas Financeiras</PT>
+		<EN>Financial Goals</EN>
 	</word>
 	<word>
 		<name>savings_and_emergencies</name>

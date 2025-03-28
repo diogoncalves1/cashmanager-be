@@ -3,7 +3,11 @@
 namespace app\Controllers;
 
 use app\Controllers\Controller;
-use app\Models\Debt;
+use app\Models\AuthModel;
+use app\Models\DebtModel;
+
+require "../app/core/functions.php";
+session_start();
 
 class DebtController
 {
@@ -11,16 +15,72 @@ class DebtController
 
     public function __construct()
     {
-        $this->debtModel = new Debt();
+        $this->debtModel = new DebtModel();
     }
-    function index()
+
+    // Views
+    public function showUserDebts()
     {
-        Controller::view("debts/manage-debts");
+        if (AuthModel::checkLogin()) {
+            require "../app/core/translate.php";
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = "manage debts";
+
+            $userId = $this->debtModel->id;
+            $userCoin = $this->debtModel->coin;
+            $userDebts = $this->debtModel->getUserDebts($userId);
+
+            $data = [
+                "translate" => $translate,
+                "userDebts" => $userDebts,
+                "userCoin" => $userCoin,
+            ];
+
+            Controller::view("debts/manage-debts", $data);
+        }
     }
-    function add()
+    public function showAddDebtForm()
     {
-        Controller::view("debts/add-debt");
+        if (AuthModel::checkLogin()) {
+            require "../app/core/translate.php";
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = "add debt";
+
+            $userCoin = $this->debtModel->coin;
+
+            $data = [
+                "translate" => $translate,
+                "userCoin" => $userCoin,
+            ];
+
+            Controller::view("debts/add-debt", $data);
+        }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Backend
+
+
+
+
+
+
+
+
+
     function store($p)
     {
         session_start();

@@ -47,13 +47,15 @@ function changeMode(value) {
     console.log(ICON_MODE_BTN)
     console.log(value);
     if (value == "light") {
+
+        console.log(ICON_MODE_BTN);
         ICON_MODE_BTN.setAttribute("href", "#sun-fill");
     }
     else
         ICON_MODE_BTN.setAttribute("href", "#moon-stars-fill");
- REQUEST_MODE.onreadystatechange = () => {
-    console.log(REQUEST_MODE.response);
- }
+    REQUEST_MODE.onreadystatechange = () => {
+        console.log(REQUEST_MODE.response);
+    }
 
     REQUEST_MODE.open("POST", url);
     REQUEST_MODE.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -171,5 +173,43 @@ function sortArr(arr, arr2 = 0, arr3 = 0, arr4 = 0, arr5 = 0, order) {
 
             }
         }
+    }
+}
+
+function getCookie(name) {
+    let cookies = document.cookie;
+    var cookiesArr = cookies.split(";");
+    for (i = 0; i < cookiesArr.length; i++) {
+        let cookie = cookiesArr[i].trim();
+        if (cookie.indexOf(name) === 0) {
+            cookie = cookie.split("=");
+            return decodeURIComponent(cookie[1]);
+        }
+    }
+}
+
+
+async function getWordXml(word) {
+    try {
+        const response = await fetch('/CashManager/app/core/translate.xml');
+
+        const data = await response.text();
+
+        const lang = getCookie("lang");
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(data, "application/xml");
+
+        const palavras = xmlDoc.getElementsByTagName("word");
+
+        for (let i = 0; i < palavras.length; i++) {
+            if (palavras[i].getElementsByTagName("name")[0].innerHTML === word) {
+                return palavras[i].getElementsByTagName(lang)[0].innerHTML;
+            }
+        }
+
+        throw new Error(`Palavra não encontrada: ${word}`); // Se não encontrar a palavra, lança erro
+    } catch (error) {
+        console.error(error);
+        throw error;  // Rejeita o erro
     }
 }

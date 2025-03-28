@@ -12,7 +12,7 @@
                 class="accordion-button sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase"
                 type="button" data-bs-toggle="collapse" data-bs-target="#panel-home" aria-expanded="true"
                 aria-controls="panelsStayOpen-collapseOne">
-                <span><?php echo $home; ?></span>
+                <span><?= $translate["home"]; ?></span>
             </button>
             <div id="panel-home" class="accordion-collapse collapse <?php if ($_SESSION['page'] == "expenses summary" || $_SESSION['page'] == "home" || $_SESSION['page'] == "monthly comparison" || $_SESSION['page'] == "year comparison" || $_SESSION['page'] == "monthly summary")
                                                                         echo "show"; ?>">
@@ -23,7 +23,7 @@
                             <svg class="bi">
                                 <use xlink:href="#house<?= $_SESSION['page'] == "home" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $home; ?>
+                            <?= $translate["home"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -32,7 +32,7 @@
                                 <use
                                     xlink:href="#graph<?= $_SESSION['page'] == "monthly comparison" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $monthly_comparison; ?>
+                            <?= $translate["monthly_comparison"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -40,7 +40,7 @@
                             <svg class="bi">
                                 <use xlink:href="#graph<?= $_SESSION['page'] == "year comparison" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $year_comparison; ?>
+                            <?= $translate["year_comparison"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -49,7 +49,7 @@
                                 <use
                                     xlink:href="#graph-pie<?= $_SESSION['page'] == "monthly summary" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $monthly_summary; ?>
+                            <?= $translate["monthly_summary"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -58,7 +58,7 @@
                                 <use
                                     xlink:href="#graph-pie<?= $_SESSION['page'] == "expenses summary" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $expenses_summary; ?>
+                            <?= $translate["expenses_summary"]; ?>
                         </a>
                     </li>
                 </ul>
@@ -68,7 +68,7 @@
                 class="accordion-button sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase"
                 type="button" data-bs-toggle="collapse" data-bs-target="#panel-account" aria-expanded="true"
                 aria-controls="panelsStayOpen-collapseOne">
-                <span><?php echo $accounts; ?></span>
+                <span><?= $translate["accounts"]; ?></span>
             </button>
             <div id="panel-account" class="accordion-collapse collapse <?php if ($_SESSION['page'] == "edit account" || $_SESSION['page'] == "account comparison" || $_SESSION['page'] == "create account" || $_SESSION['page'] == "manage accounts")
                                                                             echo "show"; ?>">
@@ -79,7 +79,7 @@
                                 <use
                                     xlink:href="#file-earmark-text<?= $_SESSION['page'] == "manage accounts" || $_SESSION['page'] == "create account" || $_SESSION['page'] == "edit account" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $manage_account; ?>
+                            <?= $translate["manage_accounts"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -88,7 +88,7 @@
                                 <use
                                     xlink:href="#graph<?= $_SESSION['page'] == "account comparison" ? "-fill" : ""  ?>" />
                             </svg>
-                            <?= $words["account_comparison"]; ?>
+                            <?= $translate["account_comparison"]; ?>
                         </a>
                     </li>
                 </ul>
@@ -98,7 +98,7 @@
                 class="accordion-button sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase"
                 type="button" data-bs-toggle="collapse" data-bs-target="#panel-goals" aria-expanded="true"
                 aria-controls="panelsStayOpen-collapseOne">
-                <span><?php echo $goals; ?></span>
+                <span><?= $translate["objectives"]; ?></span>
             </button>
             <div id="panel-goals" class="accordion-collapse collapse <?php if ($_SESSION['page'] == "create objective" || $_SESSION['page'] == "investing" || $_SESSION['page'] == "goals" || $_SESSION['page'] == "claimed goals" || $_SESSION['page'] == "manage goals")
                                                                             echo "show"; ?>">
@@ -108,7 +108,7 @@
                             <svg class="bi">
                                 <use xlink:href="#line-graph<?= $_SESSION['page'] == "investing" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $investing; ?>
+                            <?= $translate["investing_in_the_objective"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -116,7 +116,7 @@
                             <svg class="bi">
                                 <use xlink:href="#goals<?= $_SESSION['page'] == "goals" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $goals; ?>
+                            <?= $translate["view_objectives"];; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -124,7 +124,7 @@
                             <svg class="bi">
                                 <use xlink:href="#star<?= $_SESSION['page'] == "claimed goals" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $completed_objectives; ?>
+                            <?= $translate["completed_objectives"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -133,7 +133,7 @@
                                 <use
                                     xlink:href="#file-earmark-text<?= $_SESSION['page'] == "manage goals" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $manage_goals; ?>
+                            <?= $translate["objectives"]; ?>
                         </a>
                     </li>
                 </ul>
@@ -143,7 +143,7 @@
                 class="accordion-button sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase"
                 type="button" data-bs-toggle="collapse" data-bs-target="#panel-transactions" aria-expanded="true"
                 aria-controls="panelsStayOpen-collapseOne">
-                <span><?php echo $transactions; ?></span>
+                <span><?= $translate["transactions"]; ?></span>
             </button>
             <div id="panel-transactions" class="accordion-collapse collapse <?php if ($_SESSION['page'] == "view transaction" || $_SESSION['page'] == "edit transaction" || $_SESSION['page'] == "scheduled expenses" || $_SESSION['page'] == "schedule expense" || $_SESSION['page'] == "expense" || $_SESSION['page'] == "revenue" || $_SESSION['page'] == "manage transactions")
                                                                                 echo "show"; ?>">
@@ -154,7 +154,7 @@
                             <svg class="bi">
                                 <use xlink:href="#expense-icon<?= $_SESSION['page'] == "expense" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $new_expense; ?>
+                            <?= $translate["add_expense"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -163,7 +163,7 @@
                             <svg class="bi">
                                 <use xlink:href="#revenue-icon<?= $_SESSION['page'] == "revenue" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $new_revenue; ?>
+                            <?= $translate["add_revenue"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -172,7 +172,7 @@
                                 <use
                                     xlink:href="#file-earmark-text<?= $_SESSION['page'] == "manage transactions" || $_SESSION["page"] == "view transaction" || $_SESSION["page"] == "edit transaction" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $manage_transaction; ?>
+                            <?= $translate["transactions"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -200,7 +200,7 @@
                 class="accordion-button sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase"
                 type="button" data-bs-toggle="collapse" data-bs-target="#panel-debts" aria-expanded="true"
                 aria-controls="panelsStayOpen-collapseOne">
-                <span><?php echo $debts; ?></span>
+                <span><?= $translate["debts"]; ?></span>
             </button>
             <div id="panel-debts" class="accordion-collapse collapse <?php if ($_SESSION['page'] == "add debt" || $_SESSION['page'] == "manage debts" ||  $_SESSION['page'] == "summary debts" || $_SESSION['page'] == "edit debt")
                                                                             echo "show"; ?>">
@@ -211,7 +211,7 @@
                                 <use
                                     xlink:href="#file-earmark-text<?= $_SESSION['page'] == "manage debts" || $_SESSION["page"] == "view transaction" || $_SESSION["page"] == "edit transaction" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $manage_debts; ?>
+                            <?= $translate["debts"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -219,7 +219,7 @@
                             <svg class="bi">
                                 <use xlink:href="#cash" />
                             </svg>
-                            <?= $payment_control; ?>
+                            <?= $translate["payment_control"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -227,7 +227,7 @@
                             <svg class="bi">
                                 <use xlink:href="#wallet<?= $_SESSION['page'] == "summary debts" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?= $summary_debts; ?>
+                            <?= $translate["summary_debts"]; ?>
                         </a>
                     </li>
                 </ul>
@@ -236,7 +236,7 @@
                 class="accordion-button sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase"
                 type="button" data-bs-toggle="collapse" data-bs-target="#panel-loans" aria-expanded="true"
                 aria-controls="panelsStayOpen-collapseOne">
-                <span><?= $loans; ?></span>
+                <span><?= $translate["loans"]; ?></span>
             </button>
             <div id="panel-loans" class="accordion-collapse collapse <?php if ($_SESSION['page'] == "add loan" || $_SESSION['page'] == "manage loans" || $_SESSION['page'] == "edit loan" || $_SESSION['page'] == "simulate loan")
                                                                             echo "show"; ?>">
@@ -273,7 +273,7 @@
                 class="accordion-button sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase"
                 type="button" data-bs-toggle="collapse" data-bs-target="#panel-limits" aria-expanded="true"
                 aria-controls="panelsStayOpen-collapseOne">
-                <span><?php echo $limits; ?></span>
+                <span><?= $translate["budgets"]; ?></span>
             </button>
             <div id="panel-limits" class="accordion-collapse collapse <?php if ($_SESSION['page'] == "add limits" || $_SESSION['page'] == "manage limits")
                                                                             echo "show"; ?>">
@@ -303,27 +303,18 @@
                 class="accordion-button sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase"
                 type="button" data-bs-toggle="collapse" data-bs-target="#panel-financial-goals" aria-expanded="true"
                 aria-controls="panelsStayOpen-collapseOne">
-                <span><?php echo $financial_goals; ?></span>
+                <span><?= $translate["financial_goals"]; ?></span>
             </button>
             <div id="panel-financial-goals" class="accordion-collapse collapse <?php if ($_SESSION['page'] == "add financial goal" || $_SESSION['page'] == "financial goals" || $_SESSION['page'] == "manage financial goals")
                                                                                     echo "show"; ?>">
                 <ul class="nav flex-column mb-auto">
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2" href="/CashManager/financial-goals/add">
-                            <svg class="bi">
-                                <use
-                                    xlink:href="#revenue-icon<?= $_SESSION['page'] == "add financial goal" ? "-fill" : ""; ?>" />
-                            </svg>
-                            <?php echo $add_financial_goals; ?>
-                        </a>
-                    </li>
                     <li class="nav-item">
                         <a class="nav-link d-flex align-items-center gap-2" href="/CashManager/financial-goals">
                             <svg class="bi">
                                 <use
                                     xlink:href="#file-earmark-text<?= $_SESSION['page'] == "manage financial goals" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?php echo $manage_financial_goals; ?>
+                            <?= $translate["financial_goals"]; ?>
                         </a>
                     </li>
                 </ul>
@@ -335,7 +326,7 @@
                 class="accordion-button sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase"
                 type="button" data-bs-toggle="collapse" data-bs-target="#panel-social" aria-expanded="true"
                 aria-controls="panelsStayOpen-collapseOne">
-                <span><?= $words["social"]; ?></span>
+                <span><?= $translate["social"]; ?></span>
             </button>
             <div id="panel-social"
                 class="accordion-collapse collapse <?php if ($_SESSION['page'] == "shares" || $_SESSION['page'] == "share" || $_SESSION['page'] == "sent requests" || $_SESSION['page'] == "requests" || $_SESSION['page'] == "friends" || $_SESSION['page'] == "add friend")                                                                           echo "show"; ?>">
@@ -362,7 +353,7 @@
                                 <use
                                     xlink:href="#envelope-arrow-up<?= $_SESSION['page'] == "sent requests" ? "-fill" : ""; ?>" />
                             </svg>
-                            <?= $words["sent_requests"]; ?>
+                            <?= $translate["sent_requests"]; ?>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -372,7 +363,7 @@
                                 <use xlink:href="#mailbox<?= $_SESSION['page'] == "requests" ? "-fill" : ""; ?>" />
                             </svg>
                             <?php echo $share_requests; ?>
-                            <?php $numRequest = get_share_request($conn, $user_id,);
+                            <?php //$numRequest = get_share_request($conn, $user_id,);
                             if ($numRequest->num_rows > 0) { ?>
                             <span class="badge text-bg-secondary" id="requests-counter"><?= $numRequest->num_rows; ?>
                             </span>
@@ -395,7 +386,7 @@
                                     xlink:href="#people-plus<?= $_SESSION['page'] == "add friend" ? "-fill" : ""; ?>" />
                             </svg>
                             <?php echo $add_friend; ?>
-                            <?php $numRequest = get_friend_request($conn, $user_id, 0, 0);
+                            <?php //$numRequest = get_friend_request($conn, $user_id, 0, 0);
                             if ($numRequest->num_rows > 0) { ?>
                             <span class="badge text-bg-secondary"
                                 id="friend-request-counter"><?= $numRequest->num_rows; ?>
@@ -411,8 +402,7 @@
                         <svg class="bi">
                             <use xlink:href="#tools" />
                         </svg>
-                        <?php echo $tools; ?>
-
+                        <?= $translate["tools"]; ?>
                     </a>
                 </li>
                 <li class="nav-item ">
@@ -420,7 +410,7 @@
                         <svg class="bi">
                             <use xlink:href="#bell<?= $_SESSION['page'] == "create reminder" ? "-fill" : ""; ?>" />
                         </svg>
-                        <?php echo $create_reminder; ?>
+                        <?= $translate["create_reminder"]; ?>
                     </a>
                 </li>
                 <li class="nav-item ">
@@ -428,7 +418,7 @@
                         <svg class="bi">
                             <use xlink:href="#gear-wide<?= $_SESSION['page'] == "settings" ? "-connected" : ""; ?>" />
                         </svg>
-                        <?php echo $settings; ?>
+                        <?= $translate["settings"]; ?>
 
                     </a>
                 </li>
@@ -437,7 +427,7 @@
                         <svg class="bi">
                             <use xlink:href="#door-closed" />
                         </svg>
-                        Sign out
+                        <?= $translate["logout"]; ?>
                     </a>
                 </li>
             </ul>

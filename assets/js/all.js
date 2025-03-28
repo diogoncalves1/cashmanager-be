@@ -51,9 +51,9 @@ function changeMode(value) {
     }
     else
         ICON_MODE_BTN.setAttribute("href", "#moon-stars-fill");
- REQUEST_MODE.onreadystatechange = () => {
-    console.log(REQUEST_MODE.response);
- }
+    REQUEST_MODE.onreadystatechange = () => {
+        console.log(REQUEST_MODE.response);
+    }
 
     REQUEST_MODE.open("POST", url);
     REQUEST_MODE.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")

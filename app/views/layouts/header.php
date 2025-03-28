@@ -16,7 +16,7 @@ $alertDate = $alertDate->format("Y-m-d");
 <header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
     <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white" href="/CashManager/home">
         <img src="/CashManager/assets/logos/logo-transparent.png" alt="" height="50px">
-        Cash Manager | <?= $user_name; ?></a>
+        Cash Manager | <?= $userName; ?></a>
     <div class="d-none d-md-flex">
         <div class="btn-group me-3 col-lg-2">
             <div class="me-5">
@@ -77,7 +77,7 @@ $alertDate = $alertDate->format("Y-m-d");
     </ul>
 </header>
 
-<?php if ($_COOKIE['notifications'] == 1) { ?>
+<?php /*if ($_COOKIE['notifications'] == 1) { ?>
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <?php
         $alerts = $alertInstance->getUserAlerts($user_id, $curDate->format("Y-m-01"));
@@ -100,7 +100,7 @@ $alertDate = $alertDate->format("Y-m-d");
                 data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
     </div>
-    <?php }
+    <?php /*}
         $result = get_alert_scheduled($conn, $user_id);
         while ($alert = $result->fetch_assoc()) {
             if ($alertDate >= $alert['date']) { ?>
@@ -161,7 +161,4 @@ $alertDate = $alertDate->format("Y-m-d");
     </div>
     <?php } ?>
 </div>
-<?php } ?>
-
-<script src="/CashManager/assets/js/all.js"></script>
-<script src="/CashManager/assets/js/all.js"></script>
+<?php }*/ ?>

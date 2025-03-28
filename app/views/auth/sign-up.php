@@ -16,13 +16,6 @@
 
 <body>
     <?php
-    session_start();
-    if (!isset($_COOKIE['lang'])) {
-        $_COOKIE['lang'] = "PT";
-        setcookie("lang", "PT", time() + 10 * 365 * 24 * 60 * 60, "/");
-    }
-    $_SESSION['path'] = $_SERVER['REQUEST_URI'];
-    require_once("../backend/language.php");
     if (isset($_GET["e"]))
         $error = $_GET['e'];
     ?>

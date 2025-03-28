@@ -1,16 +1,6 @@
 <?php
 
-use backend\classes\User;
 // GETS
-function get_cash($conn, $user_id)
-{
-    $cash_query = "SELECT cash FROM users WHERE id = $user_id";
-    $result_cash = $conn->query($cash_query);
-    $row = $result_cash->fetch_assoc();
-    $cash = $row['cash'];
-    return $cash;
-}
-
 function get_shares($conn, $user_id, $type)
 {
     switch ($type) {
@@ -88,13 +78,6 @@ function get_user_name($conn, $id)
 }
 
 // UPDATES
-function update_cash($conn, $user_id, $cash)
-{
-    $query = "UPDATE users SET cash = $cash WHERE id = $user_id";
-    if ($conn->query($query))
-        return 1;
-    return 0;
-}
 
 function update_settings($conn, $user_id, $name, $email, $password, $coin_id, $light, $notif)
 {
@@ -116,26 +99,4 @@ function update_settings($conn, $user_id, $name, $email, $password, $coin_id, $l
     set_lights($light);
     set_notif($notif);
     return 1;
-}
-
-function add_cash($conn, $user_id, $value)
-{
-    $query = "SELECT cash FROM users WHERE id = $user_id";
-    $result = $conn->query($query);
-    $row = $result->fetch_assoc();
-    $cash = $row['cash'] + $value;
-    if (update_cash($conn, $user_id, $cash))
-        return 1;
-    return 0;
-}
-
-function remove_cash($conn, $user_id, $value)
-{
-    $query = "SELECT cash FROM users WHERE id = $user_id";
-    $result = $conn->query($query);
-    $row = $result->fetch_assoc();
-    $cash = $row['cash'] - $value;
-    if (update_cash($conn, $user_id, $cash))
-        return 1;
-    return 0;
 }

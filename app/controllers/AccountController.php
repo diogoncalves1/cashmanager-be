@@ -3,176 +3,262 @@
 namespace app\Controllers;
 
 use app\Controllers\Controller;
-use app\models\Account;
-use app\models\Database;
-use app\Models\User;
-use app\Models\AccountUser;
+use app\models\AccountModel;
+use app\Models\AuthModel;
+use app\Models\AccountUserModel;
+use app\Models\RoleModel;
 use app\Models\ShareRequest;
-use app\Models\Transaction;
+use app\Models\UserModel;
+use app\Models\TransactionModel;
 use DateTime;
-
-require "../app/core/functions.php";
 
 class AccountController
 {
-    private $conn;
-    private $user;
     private $accountModel;
 
     function __construct()
     {
-        $this->conn = Database::getConn();
-        $this->user = new User();
-        $this->accountModel = new Account();
+        $this->accountModel = new AccountModel();
     }
 
-    function index()
+    // Views
+    public function showUserAccounts()
     {
-        $accounts = $this->accountModel->getUserAccounts($this->user->id,);
-        return Controller::view("accounts/manage-accounts", ['userAccounts' => $accounts]);
+        require "../app/core/functions.php";
+
+        if (AuthModel::checkLogin()) {
+            session_start();
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = "manage accounts";
+            require "../app/core/translate.php";
+
+            $userAccounts = $this->accountModel->getUserAccounts($this->accountModel->id);
+
+            $userCoin = $this->accountModel->coin;
+
+            $data = [
+                "userAccounts" => $userAccounts,
+                "translate" => $translate,
+                "userCoin" => $userCoin
+            ];
+
+            Controller::view("accounts/manage-accounts", $data);
+        }
     }
-
-    function add_account()
+    public function showCreateAccountForm()
     {
-        return Controller::view("accounts/create-account");
+        require "../app/core/functions.php";
+
+        if (AuthModel::checkLogin()) {
+            session_start();
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = "create account";
+            require "../app/core/translate.php";
+
+            $userCoin = $this->accountModel->coin;
+
+            $data = [
+                "translate" => $translate,
+                "userCoin" => $userCoin
+            ];
+
+            return Controller::view("accounts/create-account", $data);
+        }
     }
-
-    private function addAccount(string $name, float $intialAmount)
+    public function showEditAccountForm($params)
     {
-        $createAt = $updateAt = date("Y-m-d H:i:s");
-        $conditions = ["name", "create_at", "update_at"];
-        $values = [$name, $createAt, $updateAt];
-        $accountId = Account::add($conditions, $values);
+        require "../app/core/functions.php";
 
+        if (AuthModel::checkLogin()) {
+            session_start();
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = "edit account";
+            require "../app/core/translate.php";
 
-        $conditions = ["account_id", "user_id", "role_id"];
-        $values = [$accountId, $this->user->id, 1];
-        AccountUser::add($conditions, $values);
+            $accountId = $params->id;
 
-        if ($intialAmount > 0) {
-            $date = date("Y-m-d");
-            $transactionModel = new Transaction();
-            $transactionModel->addTransaction("", $this->user->id, 0, 1, $intialAmount, $accountId, $date, "", "");
-            $this->accountModel->addCashAccount($accountId, $intialAmount);
+            $accountUserInstance = new AccountUserModel();
+            $userRole = $accountUserInstance->getUserRole($accountId, $userId);
+
+            if (hasPerm($userRole, "edit_account")) {
+                $userAccount = $this->accountModel->getAccount($accountId);
+            }
+
+            $data = [
+                "translate" => $translate,
+                "userAccount" => $userAccount
+            ];
+
+            return Controller::view("accounts/edit-account", $data);
+        }
+    }
+    public function showAccountComparison()
+    {
+        require("../app/core/functions.php");
+
+        if (AuthModel::checkLogin()) {
+            session_start();
+            $_SESSION['path'] = $_SERVER['REQUEST_URI'];
+            $_SESSION['page'] = 'account comparison';
+            require "../app/core/translate.php";
+
+            $accountsName = [];
+            $userAccounts = $this->accountModel->getUserAccounts($this->accountModel->id);
+            $dateComparison = [];
+            $accountsMonthsAmount = [];
+            $accountNumber = 0;
+
+            if ($userAccounts) {
+                foreach ($userAccounts as $account) {
+                    $accountsName[] = $account["name"];
+                    $transactions = $this->accountModel->getAccountTransactions($account["id"]);
+                    $lastDate = date("Y-m");
+                    if ($transactions) {
+                        foreach ($transactions as $transaction) {
+                            $transactionDate = new DateTime($transaction["date"]);
+                            $transactionDate = $transactionDate->format("Y-m");
+
+                            if ($lastDate != $transactionDate)
+                                if (!in_array($transactionDate, $dateComparison))
+                                    $dateComparison[] = $transactionDate;
+
+                            if ($transaction["type"]) {
+                                if (!isset($accountsMonthsAmount[$transactionDate][$accountNumber]))
+                                    $accountsMonthsAmount[$transactionDate][$accountNumber] = $transaction["value"];
+                                else
+                                    $accountsMonthsAmount[$transactionDate][$accountNumber] += $transaction["value"];
+                            } else {
+                                if (!isset($accountsMonthsAmount[$transactionDate][$accountNumber]))
+                                    $accountsMonthsAmount[$transactionDate][$accountNumber] = -$transaction["value"];
+                                else
+                                    $accountsMonthsAmount[$transactionDate][$accountNumber] -= $transaction["value"];
+                            }
+
+                            $lastDate = new DateTime($transaction["date"]);
+                            $lastDate = $lastDate->format("Y-m");
+                        }
+                        if (!in_array($lastDate, $dateComparison))
+                            $dateComparison[] = $lastDate;
+                    }
+                    $accountNumber++;
+                }
+            }
+
+            $data = [
+                "dateComparison" => $dateComparison,
+                "accountsMonthsAmount" => $accountsMonthsAmount,
+                "accountsName" => $accountsName,
+                "translate" => $translate
+            ];
+
+            return Controller::View("accounts/comparison-account", $data);
         }
     }
 
-    function store_account($p)
+    // Backend
+    public function addAccount($params)
     {
-        session_start();
-        $this->addAccount($p->name, $p->value);
-        if ($_COOKIE['lang'] == "PT")
-            $_SESSION["alert"] = "Sua Conta foi criada com sucesso";
-        else
-            $_SESSION["alert"] = "Your Account has been successfully created";
-        header("location: /CashManager/accounts");
+        require "../app/core/functions.php";
+
+        if (AuthModel::checkLogin()) {
+            $accountUserInstance = new AccountUserModel();
+            $accountName = $params->name;
+            $accountInitialValue = $params->value;
+            $userId = $this->accountModel->id;
+
+            $accountId = $this->accountModel->addAccount($accountName);
+            if ($accountId) {
+                $roleInstance = new RoleModel();
+                $roleId = $roleInstance->getRoleIdByName("creator");
+                if ($accountUserInstance->addAccountUser($accountId, $userId, $roleId)) {
+                    if ($accountInitialValue > 0) {
+                        $transactionInstance = new TransactionModel();
+                        $dateNow = date("Y-m-d");
+
+                        $transactionInstance->addTransaction(0, $userId, 0, "revenue", $accountInitialValue, $accountId, $dateNow, "", "");
+                    }
+                    header("location: ../accounts");
+                } else {
+                    header("location: add");
+                }
+            } else {
+                header("location: add");
+            }
+        }
     }
+    public function updateAccount($params)
+    {
+        require "../app/core/functions.php";
+
+        if (AuthModel::checkLogin()) {
+            $accountId = $params->id;
+
+            $accountUserInstance = new AccountUserModel();
+            $userRole = $accountUserInstance->getUserRole($accountId, $this->accountModel->id);
+
+            if (hasPerm($userRole, "edit_account")) {
+                $newAccountName = $params->name;
+
+                $this->accountModel->updateAccount($accountId, $newAccountName);
+                header("location: ../../accounts");
+            } else
+                header("location: " . $accountId);
+        }
+    }
+    public function deleteAccount($params)
+    {
+        require "../app/core/functions.php";
+
+        if (AuthModel::checkLogin()) {
+            $accountId = $params->id;
+            $userId = $this->accountModel->id;
+
+            $accountUserInstance = new AccountUserModel();
+            $userRoleId = $accountUserInstance->getUserRole($accountId, $userId);
+
+            if (hasPerm($userRoleId, "delete_account")) {
+                $account = $this->accountModel->getAccount($accountId);
+
+                if ($account) {
+                    $shareRequestInstance = new ShareRequest();
+                    $userInstance = new UserModel();
+
+                    $permission = "edit_user_cash";
+                    $cashAccount = $this->accountModel->getCashAccount($accountId);
+
+                    $users = $userInstance->getUsersCashByAccountPermission($accountId, $permission);
+
+                    if ($users) {
+                        foreach ($users as $user) {
+                            $userInstance->withdrawUserCash($user["id"], (float) $cashAccount);
+                        }
+                    }
+
+                    $shareRequestInstance->deleteSharesRequests("account", $accountId);
+                    $this->accountModel->deleteAccount($accountId);
+
+                    echo 1;
+                }
+            } else
+                echo 0;
+        }
+    }
+
 
     public function deleteShareAcc($p)
     {
-        $userId = $p->user_id;
-        $accountId = $p->acc_id;
-        $accountUserInstance = new AccountUser();
-        $roleId = $accountUserInstance->getUserRole($accountId, $userId);
-        if (hasPerm($this->conn, $roleId, "edit_user_cash")) {
-            $cashAccount = $this->accountModel->getCashAccount($accountId);
-            $userInstance = new User();
-            $userInstance->withdrawCash($userId, $cashAccount);
-        }
-
-        $accountUserInstance->removeUserAccount($accountId, $userId);
-    }
-
-    public function edit_account()
-    {
-        $accountId = $_GET["i"];
-        $userId = $this->user->id;
-        $accountUser = $this->accountModel->getAccount($accountId, $userId);
-        return Controller::view("accounts/edit", ["accountUser" => $accountUser]);
-    }
-
-    public function update_account($p)
-    {
-        $account_id = $_GET['i'];
-        $this->accountModel->updateAccount($account_id, $p->name);
-        header("location: /CashManager/accounts");
-    }
-
-    public function delete()
-    {
-        $accountId = $_GET["i"];
-        $userId = $this->user->id;
-        $account = $this->accountModel->getAccount($accountId, $userId);
-
-        if ($account) {
-            $permission = "edit_user_cash";
-            $cashAccount = $this->accountModel->getCashAccount($accountId);
-            $userInstance = new User();
-            $users = $userInstance->getUsersCashByAccountPermission($accountId, $permission);
-            if ($users)
-                foreach ($users as $user) {
-                    $userCash = $user['cash'] - $cashAccount;
-                    $userInstance->updateCash($user["id"], $userCash);
-                }
-
-            $accountUserInstance = new AccountUser();
-            $accountUserInstance->removeAllAccount($accountId);
-            $transactionInstance = new Transaction();
-            $transactionInstance->deleteAccountTransactions($accountId);
-            $shareRequestInstance = new ShareRequest();
-            $shareRequestInstance->deleteSharesRequests(1, $accountId);
-
-            $this->accountModel->deleteAccount($accountId);
-            echo 1;
-        } else {
-            echo null;
-        }
-    }
-
-    public function comparison()
-    {
-        $userAccounts = $this->accountModel->getUserAccounts($this->user->id);
-        $dateComparison = [];
-        $accountsMonthsAmount = [];
-        $accountNumber = 0;
-        if ($userAccounts) {
-            foreach ($userAccounts as $account) {
-                $accountsName[] = $account["name"];
-                $transactions = $this->accountModel->getAccountTransactions($account["id"]);
-                $lastDate = date("Y-m");
-                if ($transactions) {
-                    foreach ($transactions as $transaction) {
-                        $transactionDate = new DateTime($transaction["date"]);
-                        $transactionDate = $transactionDate->format("Y-m");
-
-                        if ($lastDate != $transactionDate)
-                            if (!in_array($transactionDate, $dateComparison))
-                                $dateComparison[] = $transactionDate;
-
-                        if ($transaction["type"]) {
-                            if (!isset($accountsMonthsAmount[$transactionDate][$accountNumber]))
-                                $accountsMonthsAmount[$transactionDate][$accountNumber] = $transaction["value"];
-                            else
-                                $accountsMonthsAmount[$transactionDate][$accountNumber] += $transaction["value"];
-                        } else {
-                            if (!isset($accountsMonthsAmount[$transactionDate][$accountNumber]))
-                                $accountsMonthsAmount[$transactionDate][$accountNumber] = -$transaction["value"];
-                            else
-                                $accountsMonthsAmount[$transactionDate][$accountNumber] -= $transaction["value"];
-                        }
-
-                        $lastDate = new DateTime($transaction["date"]);
-                        $lastDate = $lastDate->format("Y-m");
-                    }
-                    if (!in_array($lastDate, $dateComparison))
-                        $dateComparison[] = $lastDate;
-                }
-                $accountNumber++;
+        if (AuthModel::checkLogin()) {
+            $userId = $p->user_id;
+            $accountId = $p->acc_id;
+            $accountUserInstance = new AccountUserModel();
+            $roleId = $accountUserInstance->getUserRole($accountId, $userId);
+            if (hasPerm($roleId, "edit_user_cash")) {
+                $cashAccount = $this->accountModel->getCashAccount($accountId);
+                $userInstance = new UserModel();
+                $userInstance->withdrawUserCash($userId, $cashAccount);
             }
+
+            $accountUserInstance->removeUserAccount($accountId, $userId);
         }
-
-        $data = ["dateComparison" => $dateComparison, "accountsMonthsAmount" => $accountsMonthsAmount, "accountsName" => $accountsName];
-
-        Controller::View("accounts/comparison-account", $data);
     }
 }

@@ -1,12 +1,4 @@
 <?php
-function get_alert_scheduled($conn, $user_id)
-{
-    $query = "SELECT * FROM alert_scheduled WHERE user_id = $user_id";
-    if ($_SESSION['page'] != "home")  // SE A PÁGINA ATUA NÃO FOR O "HOME" RETORNAR APENAS AS "NÃO LIDAS"
-        $query .= " AND readed = 0";
-    $result = $conn->query($query);
-    return $result;
-}
 
 function delete_alert_scheduled($conn, $id)
 {

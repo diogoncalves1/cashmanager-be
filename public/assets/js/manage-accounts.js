@@ -1,7 +1,7 @@
 const BTN_CREATE = document.getElementById("add-account");
 
 function goToEdit(id) {
-    window.location.href = "/CashManager/accounts/edit?i=" + id;
+    window.location.href = "/CashManager/accounts/edit/" + id;
 }
 
 function goToView(id) {
@@ -23,7 +23,7 @@ function goToDelete(id) {
 
     var tr = document.getElementById("tr-" + id);
 
-    var url = "/CashManager/accounts/delete?i=" + id;
+    var url = "/CashManager/accounts/delete/" + id;
 
     httpRequest.onloadend = writeTable;
 

@@ -1,18 +1,8 @@
-<?php
-$this->layout("master");
-$_SESSION['path'] = $_SERVER['REQUEST_URI'];
-$_SESSION['page'] = 'account comparison';
-if (!isset($_COOKIE['user']))
-    header("location: /CashManager/public/sign-up");
-
-require_once "../backend/querys.php";
-require_once "../backend/language.php";
-require "../backend/translate.php";
-?>
+<?php $this->layout("master"); ?>
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
     <div
         class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2"><?= $words["account_comparison"]; ?></h1>
+        <h1 class="h2"><?= $translate["account_comparison"]; ?></h1>
         <div class="btn-toolbar mb-2 mb-md-0">
             <div class="btn-group me-2">
                 <button type="button" id="expense"
@@ -23,7 +13,7 @@ require "../backend/translate.php";
         </div>
     </div>
     <a data-bs-toggle="tooltip" data-bs-html="true"
-        data-bs-title="<?= $words["mensage_info_comparison_account_chart"]; ?>">
+        data-bs-title="<?= $translate["mensage_info_comparison_account_chart"]; ?>">
         <svg class="bi bi-3">
             <use xlink:href="#info-circle" />
         </svg>
@@ -39,9 +29,9 @@ require "../backend/translate.php";
         <table class="table table-sm table-bordered text-center align-middle">
             <thead>
                 <tr>
-                    <th scope="col" class="col-3"><?php echo $date; ?></th>
-                    <th scope="col" class="col-3"><?php echo $revenue; ?></th>
-                    <th scope="col" class="col-3"><?php echo $expense; ?></th>
+                    <th scope="col" class="col-3"><?= $translate["date"]; ?></th>
+                    <th scope="col" class="col-3"><?= $translate["revenue"]; ?></th>
+                    <th scope="col" class="col-3"><?= $translate["expense"]; ?></th>
                     <th scope="col" class="col-3">Total</th>
                 </tr>
             </thead>
