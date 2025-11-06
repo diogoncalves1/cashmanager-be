@@ -1,0 +1,11 @@
+{
+    "name": "ApiResponder",
+    "alias": "apiresponder",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ApiResponder\\Providers\\ApiResponderServiceProvider"
+    ],
+    "files": []
+}
