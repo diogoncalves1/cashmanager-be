@@ -1,0 +1,9 @@
+{
+    "ApiResponder": true,
+    "Category": true,
+    "Currency": true,
+    "User": true,
+    "Permission": true,
+    "SharedRoles": true,
+    "UserPreferences": true
+}
