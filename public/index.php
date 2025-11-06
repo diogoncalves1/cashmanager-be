@@ -1,21 +1,20 @@
 <?php
-require "../vendor/autoload.php";
-require "../routes/router.php";
 
-try {
-    $uri = parse_url($_SERVER["REQUEST_URI"])["path"];
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 
-    $request = $_SERVER["REQUEST_METHOD"];
-    if (!isset($router[$request])) {
-        throw new Exception("This route not exists");
-    }
-    if (!array_key_exists($uri, $router[$request])) {
-        throw new Exception("This route not exists");
-    }
+define('LARAVEL_START', microtime(true));
 
-    $controler = $router[$request][$uri];
-    $controler();
-} catch (Exception $e) {
-    if (processRequest($method, $uri))
-        echo $e->getMessage();
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
 }
+
+// Register the Composer autoloader...
+require __DIR__.'/../vendor/autoload.php';
+
+// Bootstrap Laravel and handle the request...
+/** @var Application $app */
+$app = require_once __DIR__.'/../bootstrap/app.php';
+
+$app->handleRequest(Request::capture());
