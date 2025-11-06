@@ -1,0 +1,11 @@
+{
+    "name": "SharedRoles",
+    "alias": "sharedroles",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\SharedRoles\\Providers\\SharedRolesServiceProvider"
+    ],
+    "files": []
+}
