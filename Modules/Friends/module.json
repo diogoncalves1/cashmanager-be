@@ -1,0 +1,11 @@
+{
+    "name": "Friends",
+    "alias": "friends",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Friends\\Providers\\FriendsServiceProvider"
+    ],
+    "files": []
+}
