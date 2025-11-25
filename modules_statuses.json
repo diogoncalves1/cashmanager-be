@@ -4,6 +4,7 @@
     "Category": true,
     "Currency": true,
     "Friends": true,
+    "Language": true,
     "Permission": true,
     "SharedRoles": true,
     "User": true,
