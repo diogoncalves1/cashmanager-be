@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Repositories;
 
 use Illuminate\Http\Request;
@@ -12,7 +11,7 @@ interface RepositoryApiInterface
 
     public function update(Request $request, string $id);
 
-    public function destroy(string $id, ?Request $request = null);
+    public function destroy(Request $request, string $id);
 
     public function show(string $id);
 }

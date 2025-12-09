@@ -1,7 +1,7 @@
-<aside class="main-sidebar elevation-4 sidebar-dark-primary">
+<aside class="main-sidebar elevation-4 sidebar-light-primary">
 
-    <a href="{{ route('admin.shared-roles.index') }}" class="brand-link bg-primary bg-indigo bg-dark bg-gray-dark">
-        <span class="brand-text font-weight-light">Cash Manager</span>
+    <a href="{{ route('admin.index') }}" class="brand-link bg-primary bg-light bg-gray-light">
+        <span class="brand-text font-weight-strong">Cash Manager</span>
     </a>
 
     <div
@@ -29,16 +29,16 @@
                         </div>
                         <div class="sidebar-search-results">
                             <div class="list-group"><a href="#" class="list-group-item">
-                                    <div class="search-title"><strong class="text-light"></strong>N<strong
-                                            class="text-light"></strong>o<strong class="text-light"></strong> <strong
-                                            class="text-light"></strong>e<strong class="text-light"></strong>l<strong
-                                            class="text-light"></strong>e<strong class="text-light"></strong>m<strong
-                                            class="text-light"></strong>e<strong class="text-light"></strong>n<strong
-                                            class="text-light"></strong>t<strong class="text-light"></strong> <strong
-                                            class="text-light"></strong>f<strong class="text-light"></strong>o<strong
-                                            class="text-light"></strong>u<strong class="text-light"></strong>n<strong
-                                            class="text-light"></strong>d<strong class="text-light"></strong>!<strong
-                                            class="text-light"></strong></div>
+                                    <div class="search-title"><strong class="text-dark"></strong>N<strong
+                                            class="text-dark"></strong>o<strong class="text-dark"></strong> <strong
+                                            class="text-dark"></strong>e<strong class="text-dark"></strong>l<strong
+                                            class="text-dark"></strong>e<strong class="text-dark"></strong>m<strong
+                                            class="text-dark"></strong>e<strong class="text-dark"></strong>n<strong
+                                            class="text-dark"></strong>t<strong class="text-dark"></strong> <strong
+                                            class="text-dark"></strong>f<strong class="text-dark"></strong>o<strong
+                                            class="text-dark"></strong>u<strong class="text-dark"></strong>n<strong
+                                            class="text-dark"></strong>d<strong class="text-dark"></strong>!<strong
+                                            class="text-dark"></strong></div>
                                     <div class="search-path"></div>
                                 </a></div>
                         </div>
@@ -48,107 +48,141 @@
                         <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent" data-widget="treeview"
                             role="menu" data-accordion="false">
 
-                            @can('authorization', 'viewCategoryDefault')
                             <li class="nav-item">
-                                <a href="{{ route('admin.categories.index') }}"
-                                    class="nav-link {!!  Illuminate\Support\Str::contains(\Request::route()->getName(), 'categories') ? 'active' : '' !!}">
-                                    <i class="nav-icon fas fa-list"></i>
+                                <a href="{{ route('admin.index') }}" class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'admin.index') &&
+                                !Illuminate\Support\Str::contains(\Request::route()->getName(), '')
+                                    ? 'active'
+                                    : '' !!}">
+                                    <i class="nav-icon fas fa-home"></i>
                                     <p>
-                                        Categorias
+                                        Dashboard
                                     </p>
                                 </a>
                             </li>
+
+                            @can('authorization', 'viewCategoryDefault')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.categories.index') }}"
+                                        class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'categories') ? 'active' : '' !!}">
+                                        <i class="nav-icon fas fa-list"></i>
+                                        <p>
+                                            Categorias
+                                        </p>
+                                    </a>
+                                </li>
                             @endcan
 
                             @can('authorization', 'viewCurrency')
-                            <li class="nav-item">
-                                <a href="{{ route('admin.currencies.index') }}"
-                                    class="nav-link {!!  Illuminate\Support\Str::contains(\Request::route()->getName(), 'currencies') ? 'active' : '' !!}">
-                                    <i class="nav-icon fas fa-coins"></i>
-                                    <p>
-                                        Currencies
-                                    </p>
-                                </a>
-                            </li>
-                            @endcan
-
-                            <li class="nav-header">UTILIZADORES</li>
-                            @can('authorization', 'viewSharedRole')
-                            <li class="nav-item">
-                                <a href="{{ route('admin.shared-roles.index') }}"
-                                    class="nav-link {!!  Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-roles') ? 'active' : '' !!}">
-                                    <i class="nav-icon fas fa-user-shield"></i>
-                                    <p>
-                                        Papeis de partilha
-                                    </p>
-                                </a>
-                            </li>
-                            @endcan
-
-                            @can('authorization', 'viewSharedPermission')
-                            <li class="nav-item">
-                                <a href="{{ route('admin.shared-permissions.index') }}"
-                                    class="nav-link {!!  Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions') ? 'active' : '' !!}">
-                                    <i class="nav-icon fas fa-user-shield"></i>
-                                    <p>
-                                        Permissoes de partilha
-                                    </p>
-                                </a>
-                            </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.currencies.index') }}"
+                                        class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'currencies') ? 'active' : '' !!}">
+                                        <i class="nav-icon fas fa-coins"></i>
+                                        <p>
+                                            Moedas
+                                        </p>
+                                    </a>
+                                </li>
                             @endcan
 
                             @can('authorization', 'viewUser')
-                            <li class="nav-item">
-                                <a href="{{ route('admin.users.index') }}"
-                                    class="nav-link {!!  Illuminate\Support\Str::contains(\Request::route()->getName(), 'users') ? 'active' : '' !!}">
-                                    <i class="nav-icon fas fa-user-shield"></i>
-                                    <p>
-                                        Utilizadores
-                                    </p>
-                                </a>
-                            </li>
+                                <li class="nav-header">UTILIZADORES</li>
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.users.index') }}" class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'users') ? 'active' : '' !!}">
+                                        <i class="nav-icon fas fa-users"></i>
+                                        <p>
+                                            Utilizadores
+                                        </p>
+                                    </a>
+                                </li>
+                            @endcan
+                            @can('authorization', 'viewSharedRole')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.shared-roles.index') }}"
+                                        class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-roles') ? 'active' : '' !!}">
+                                        <i class="nav-icon fas fa-user-shield"></i>
+                                        <p>
+                                            Papeis de partilha
+                                        </p>
+                                    </a>
+                                </li>
                             @endcan
 
+
+
                             @can('authorization', 'superAdmin')
-                            <li class="nav-header">SUPER ADMIN</li>
-                            <li class="nav-item {!!  Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') || Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles') ? 'menu-open' : '' !!} ">
-                                <a href="#" class="nav-link {!!  Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') || Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles') ? 'active' : '' !!} ">
-                                    <i class="nav-icon fas fa-user-shield"></i>
-                                    <p>
-                                        Administration
-                                        <i class="fas fa-angle-left right"></i>
-                                    </p>
-                                </a>
-                                <ul class="nav nav-treeview">
-                                    <li class="nav-item">
-                                        <a href="{{ route('admin.permissions.index') }}"
-                                            class="nav-link {!!  Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') ? 'active' : '' !!}">
-                                            <i class="nav-icon fas fa-user-shield"></i>
-                                            <p>
-                                                Permissions
-                                            </p>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('admin.roles.index') }}"
-                                            class="nav-link {!!  Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles') ? 'active' : '' !!}">
-                                            <i class="nav-icon fas fa-user-shield"></i>
-                                            <p>
-                                                Roles
-                                            </p>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('telescope', 'requests') }}"
-                                            class="nav-link">
-                                            <i class="nav-icon fas fa-user-shield"></i>
-                                            <p>
-                                                Telescope
-                                            </p>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
+                                <li class="nav-header">SUPER ADMIN</li>
+                                <li class="nav-item {!! (Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') ||
+                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles') ||
+                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'languages') ||
+                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions')) &&
+                                !Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-roles')
+                                    ? 'menu-open'
+                                    : '' !!} ">
+                                    <a href="#" class="nav-link {!! (Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') ||
+                                        Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles')) &&
+                                    !Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared')
+                                        ? 'active'
+                                        : '' !!} ">
+                                        <i class="nav-icon fas fa-user-shield"></i>
+                                        <p>
+                                            Administration
+                                            <i class="fas fa-angle-left right"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview">
+                                        <li class="nav-item">
+                                            <a href="{{ route('admin.permissions.index') }}"
+                                                class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') &&
+                                                !Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared')
+                                                    ? 'active'
+                                                    : '' !!}">
+                                                <i class="nav-icon fas fa-user-shield"></i>
+                                                <p>
+                                                    Permissões
+                                                </p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{{ route('admin.shared-permissions.index') }}"
+                                                class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions') ? 'active' : '' !!}">
+                                                <i class="nav-icon fas fa-user-shield"></i>
+                                                <p>
+                                                    Permissões de Partilha
+                                                </p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{{ route('admin.roles.index') }}"
+                                                class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles') &&
+                                                !Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared')
+                                                    ? 'active'
+                                                    : '' !!}">
+                                                <i class="nav-icon fas fa-user-shield"></i>
+                                                <p>
+                                                    Papéis
+                                                </p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{{ route('admin.languages.index') }}"
+                                                class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'languages') ? 'active' : '' !!}">
+                                                <i class="nav-icon fas fa-language"></i>
+                                                <p>
+                                                    Idiomas
+                                                </p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{{ route('telescope', 'requests') }}" target="__blank"
+                                                class="nav-link">
+                                                <i class="nav-icon fas fa-user-shield"></i>
+                                                <p>
+                                                    Telescope
+                                                </p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
                             @endcan
                         </ul>
                     </nav>

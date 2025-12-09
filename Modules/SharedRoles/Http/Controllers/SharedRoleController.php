@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\SharedRoles\Http\Controllers;
 
 use App\Http\Controllers\ApiController;
@@ -7,21 +6,24 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
-use Modules\SharedRoles\Http\Requests\SharedRoleRequest;
-use Modules\SharedRoles\Repositories\SharedRoleRepository;
+use Modules\Language\Repositories\LanguageRepository;
 use Modules\SharedRoles\DataTables\SharedRoleDataTable;
 use Modules\SharedRoles\Http\Requests\SharedRolePermissionsRequest;
+use Modules\SharedRoles\Http\Requests\SharedRoleRequest;
 use Modules\SharedRoles\Repositories\SharedPermissionRepository;
+use Modules\SharedRoles\Repositories\SharedRoleRepository;
 
 class SharedRoleController extends ApiController
 {
-    protected SharedRoleRepository $sharedRoleRepository;
+    protected SharedRoleRepository $repository;
     private SharedPermissionRepository $sharedPermissionRepository;
+    private LanguageRepository $languageRepository;
 
-    public function __construct(SharedRoleRepository $sharedRoleRepository, SharedPermissionRepository $sharedPermissionRepository)
+    public function __construct(SharedRoleRepository $repository, SharedPermissionRepository $sharedPermissionRepository, LanguageRepository $languageRepository)
     {
-        $this->sharedRoleRepository = $sharedRoleRepository;
+        $this->repository                 = $repository;
         $this->sharedPermissionRepository = $sharedPermissionRepository;
+        $this->languageRepository         = $languageRepository;
     }
 
     /**
@@ -46,14 +48,13 @@ class SharedRoleController extends ApiController
     {
         $this->allowedAction('createSharedRole');
 
-        $languages = config('languages');
+        $languages = $this->languageRepository->all();
 
         return view("sharedroles::shared-roles.create", compact('languages'));
     }
 
     /**
      * Store a newly created resource in storage.
-     *
      * @param SharedRoleRequest $request
      * @return RedirectResponse
      * @throws AuthorizationException
@@ -62,7 +63,7 @@ class SharedRoleController extends ApiController
     {
         $this->allowedAction('createSharedRole');
 
-        $this->sharedRoleRepository->store($request);
+        $this->repository->store($request);
 
         return redirect()->route('admin.shared-roles.index');
     }
@@ -76,8 +77,8 @@ class SharedRoleController extends ApiController
     {
         $this->allowedAction('editSharedRole');
 
-        $languages = config('languages');
-        $sharedRole = $this->sharedRoleRepository->show($id);
+        $languages  = $this->languageRepository->all();
+        $sharedRole = $this->repository->show($id);
 
         return view("sharedroles::shared-roles.create", compact('languages', 'sharedRole'));
     }
@@ -93,7 +94,7 @@ class SharedRoleController extends ApiController
     {
         $this->allowedAction('editSharedRole');
 
-        $this->sharedRoleRepository->update($request, $id);
+        $this->repository->update($request, $id);
 
         return redirect()->route('admin.shared-roles.index');
     }
@@ -108,7 +109,7 @@ class SharedRoleController extends ApiController
         try {
             $this->allowedAction('destroySharedRole');
 
-            $sharedRole = $this->sharedRoleRepository->destroy($id);
+            $sharedRole = $this->repository->destroy($id);
 
             return $this->ok(message: "Papel de partilha {$sharedRole->name->en} apagado com sucesso!");
         } catch (\Exception $e) {
@@ -126,7 +127,7 @@ class SharedRoleController extends ApiController
     {
         $this->allowedAction('manageSharedRolePermission');
 
-        $sharedRole = $this->sharedRoleRepository->show($id);
+        $sharedRole               = $this->repository->show($id);
         $sharedPermissionsGrouped = $this->sharedPermissionRepository->allGroupedByCategory();
 
         $SharedRolePermissionsIds = $sharedRole->permissions->pluck('id')->toArray();
@@ -145,7 +146,7 @@ class SharedRoleController extends ApiController
     {
         $this->allowedAction('manageSharedRolePermission');
 
-        $this->sharedRoleRepository->updateRolePermissions($request, $id);
+        $this->repository->updateRolePermissions($request, $id);
 
         return redirect()->route('admin.shared-roles.index');
     }

@@ -4,6 +4,7 @@ namespace Modules\Accounts\DataTables;
 use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\AccountsView;
 use Modules\Accounts\Repositories\AccountRepository;
+use Modules\User\Http\Resources\UserShareCollection;
 use Yajra\DataTables\Services\DataTable;
 
 class AccountDataTable extends DataTable
@@ -26,6 +27,7 @@ class AccountDataTable extends DataTable
             ->addColumn('typeTranslated', fn(AccountsView $account) => __('accounts::attributes.accounts.type.' . $account->type))
             ->addColumn('balanceFormated', fn(AccountsView $account) => Helpers::formatMoneyWithSymbolAndCurrency($account->balance, $account->currencyCode, $account->currencySymbol))
             ->addColumn('statusTranslated', fn(AccountsView $account) => __("accounts::attributes.accounts.status." . ($account->status ? 'active' : 'disabled')))
+            ->addColumn('users', fn(AccountsView $account) => new UserShareCollection($account->users))
             ->addColumn('actions', function (AccountsView $account) use ($user) {
                 $account    = $this->repository->show($account->id);
                 $sharedRole = $account->userSharedRole($account, $user->id);
@@ -56,14 +58,6 @@ class AccountDataTable extends DataTable
             $query->active($request->get('status') == 'active' ? 1 : 0);
         }
 
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere("balance", 'like', "%{$search}%");
-            });
-        }
-
         return $query;
     }
-
 }

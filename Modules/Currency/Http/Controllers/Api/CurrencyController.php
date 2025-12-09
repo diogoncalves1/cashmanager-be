@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\Currency\Http\Controllers\Api;
 
 use App\Http\Controllers\ApiController;
@@ -8,10 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Modules\Currency\Http\Requests\CheckCurrencyCodeRequest;
-use Modules\Currency\Repositories\CurrencyRepository;
 use Modules\Currency\Http\Requests\CurrencyRequest;
 use Modules\Currency\Http\Resources\CurrencyCollection;
 use Modules\Currency\Http\Resources\CurrencyResource;
+use Modules\Currency\Repositories\CurrencyRepository;
 
 class CurrencyController extends ApiController
 {

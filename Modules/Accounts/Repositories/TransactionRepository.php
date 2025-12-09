@@ -66,7 +66,7 @@ class TransactionRepository implements RepositoryApiInterface
             if ($request->get("date") > Carbon::now() && $request->get("status") == "completed") {
                 throw new InvalidTransactionDateException();
             }
-            if (! $sharedRole->hasPermission("editTransaction")) {
+            if (! $sharedRole || ! $sharedRole->hasPermission("editTransaction")) {
                 throw new \Modules\Accounts\Exceptions\Transactions\UnauthorizedUpdateTransactionException();
             }
 
@@ -81,16 +81,16 @@ class TransactionRepository implements RepositoryApiInterface
         });
     }
 
-    public function destroy(Request $request, string $id)
+    public function destroy(Request $request, string $id, bool $checkPermission = true)
     {
-        return DB::transaction(function () use ($request, $id) {
+        return DB::transaction(function () use ($request, $id, $checkPermission) {
             $transaction = $this->show($id);
 
             $user       = $request->user();
             $account    = $transaction->account;
             $sharedRole = $account->userSharedRole($transaction->account, $user->id);
 
-            if (! $sharedRole->hasPermission("destroyTransaction")) {
+            if ($checkPermission && (! $sharedRole || ! $sharedRole->hasPermission("destroyTransaction"))) {
                 throw new \Modules\Accounts\Exceptions\Transactions\UnauthorizedDeletedTransactionException();
             }
             if ($transaction->status == "completed" && $transaction->account) {
@@ -103,16 +103,16 @@ class TransactionRepository implements RepositoryApiInterface
         });
     }
 
-    public function confirm(Request $request, string $id)
+    public function confirm(Request $request, string $id, bool $checkPermission = true)
     {
-        return DB::transaction(function () use ($request, $id) {
+        return DB::transaction(function () use ($request, $id, $checkPermission) {
             $transaction = $this->show($id);
 
             $user       = $request->user();
             $account    = $transaction->account;
             $sharedRole = $account->userSharedRole($transaction->account, $user->id);
 
-            if (! $sharedRole->hasPermission("confirmTransaction")) {
+            if ($checkPermission && (! $sharedRole || ! $sharedRole->hasPermission("confirmTransaction"))) {
                 throw new \Modules\Accounts\Exceptions\Transactions\UnauthorizedConfirmTransactionException();
             }
             if ($transaction->status == "completed") {

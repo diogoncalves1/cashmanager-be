@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\UserPreferences\Http\Middleware;
 
 use Carbon\Carbon;
@@ -8,25 +7,34 @@ use Error;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cookie;
-use Modules\UserPreferences\Entities\UserPrefence;
+use Modules\Language\Repositories\LanguageRepository;
 
 class SetLocale
 {
+    protected LanguageRepository $languageRepository;
+
+    public function __construct(LanguageRepository $languageRepository)
+    {
+        $this->languageRepository = $languageRepository;
+    }
+
     /**
      * Handle an incoming request.
      */
     public function handle(Request $request, Closure $next)
     {
-        if (!auth()->user() && !$request->user())
+        if (! auth()->user() && ! $request->user()) {
             throw new Error('Não está logado');
+        }
 
-        $user = auth()->user() ? auth()->user() : $request->user();
+        $user     = auth()->user() ? auth()->user() : $request->user();
         $userLang = $user->preferences->lang;
 
-        $supportedLocales = config('languages');
+        $supportedLocales = $this->languageRepository->allCodes();
 
-        if (!$userLang || !in_array($userLang, $supportedLocales))
+        if (! $userLang || ! in_array($userLang, $supportedLocales)) {
             $userLang = 'en';
+        }
 
         Cookie::queue('lang', $userLang, 60 * 24 * 365);
 

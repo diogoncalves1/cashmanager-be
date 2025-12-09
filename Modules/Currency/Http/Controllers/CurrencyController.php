@@ -1,19 +1,21 @@
 <?php
-
 namespace Modules\Currency\Http\Controllers;
 
-use Modules\Currency\Repositories\CurrencyRepository;
 use App\Http\Controllers\AppController;
 use Illuminate\Contracts\Support\Renderable;
 use Modules\Currency\DataTables\CurrencyDataTable;
+use Modules\Currency\Repositories\CurrencyRepository;
+use Modules\Language\Repositories\LanguageRepository;
 
 class CurrencyController extends AppController
 {
-    private CurrencyRepository $currencyRepository;
+    private CurrencyRepository $repository;
+    private LanguageRepository $languageRepository;
 
-    public function __construct(CurrencyRepository $currencyRepository)
+    public function __construct(CurrencyRepository $repository, LanguageRepository $languageRepository)
     {
-        $this->currencyRepository = $currencyRepository;
+        $this->repository         = $repository;
+        $this->languageRepository = $languageRepository;
     }
 
     /**
@@ -36,7 +38,7 @@ class CurrencyController extends AppController
     {
         $this->allowedAction('createCurrency');
 
-        $languages = config('languages');
+        $languages = $this->languageRepository->all();
 
         return view('currency::create', compact('languages'));
     }
@@ -51,8 +53,8 @@ class CurrencyController extends AppController
     {
         $this->allowedAction('editCurrency');
 
-        $currency = $this->currencyRepository->show($id);
-        $languages = config('languages');
+        $currency  = $this->repository->show($id);
+        $languages = $this->languageRepository->all();
 
         return view('currency::create', compact('currency', 'languages'));
     }

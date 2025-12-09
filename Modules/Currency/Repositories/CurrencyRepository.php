@@ -1,16 +1,23 @@
 <?php
-
 namespace Modules\Currency\Repositories;
 
-use Modules\Currency\Entities\Currency;
+use App\Repositories\RepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Repositories\RepositoryInterface;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Modules\Currency\Entities\Currency;
+use Modules\Language\Repositories\LanguageRepository;
 
 class CurrencyRepository implements RepositoryInterface
 {
+    protected LanguageRepository $languageRepository;
+
+    public function __construct(LanguageRepository $languageRepository)
+    {
+        $this->languageRepository = $languageRepository;
+    }
+
     public function all()
     {
         return Currency::all();
@@ -21,13 +28,13 @@ class CurrencyRepository implements RepositoryInterface
         return DB::transaction(function () use ($request) {
             $input = $request->only(['code', 'symbol']);
 
-            $languages = config('languages');
+            $languages = $this->languageRepository->allCodes();
 
             foreach ($languages as $language) {
                 $name[$language] = $request->get($language);
             }
 
-            $input["name"] = (object) $name;
+            $input["name"] = $name;
 
             $apiToken = config('currency.services.external.api_key');
             $response = Http::get("https://v6.exchangerate-api.com/v6/$apiToken/latest/USD");
@@ -35,10 +42,12 @@ class CurrencyRepository implements RepositoryInterface
             if ($response->successful()) {
                 $data = $response->json();
 
-                if (isset($data['conversion_rates'][$request->get('code')]))
+                if (isset($data['conversion_rates'][$request->get('code')])) {
                     $input['rate'] = $data['conversion_rates'][$request->get('code')];
-                else
+                } else {
                     $input['rate'] = 0.5;
+                }
+
             }
 
             $currency = Currency::create($input);
@@ -56,13 +65,13 @@ class CurrencyRepository implements RepositoryInterface
 
             $input = $request->only(['code', 'symbol']);
 
-            $languages = config('languages');
+            $languages = $this->languageRepository->allCodes();
 
             foreach ($languages as $language) {
                 $info[$language] = $request->get($language);
             }
 
-            $input["name"] = json_encode($info);
+            $input["name"] = $info;
 
             $currency->update($input);
 
@@ -93,8 +102,9 @@ class CurrencyRepository implements RepositoryInterface
     {
         $query = Currency::code($request->get('code'));
 
-        if ($request->get("id"))
+        if ($request->get("id")) {
             $query->where('id', '!=', $request->get('id'));
+        }
 
         return $query->exists();
     }

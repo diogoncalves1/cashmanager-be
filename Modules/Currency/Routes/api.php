@@ -7,17 +7,17 @@ Route::group([
     'prefix' => 'v1',
 ], function () {
     Route::group([
-        "middleware" => ["auth", "web"]
+        "middleware" => ["auth", "web"],
     ], function () {
         Route::apiResource('currencies', CurrencyController::class, ['except' => ['index', 'show']]);
         Route::group([
             'prefix' => 'currencies',
-            'as' => 'currencies.'
+            'as'     => 'currencies.',
         ], function () {
             Route::get("check-code", [CurrencyController::class, "checkCode"])->name('check-code');
             Route::get("update-rates", [CurrencyController::class, "updateRates"])->name('update-rates');
         });
     });
 
-    Route::apiResource('currencies', CurrencyController::class, ['except' => ['store', 'update', 'destroy']]);
+    Route::middleware(["setlocale", "auth:sanctum"])->apiResource('currencies', CurrencyController::class, ['except' => ['store', 'update', 'destroy']]);
 });

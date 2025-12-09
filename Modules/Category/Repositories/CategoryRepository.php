@@ -1,21 +1,20 @@
 <?php
-
 namespace Modules\Category\Repositories;
 
 use App\Http\Controllers\ApiController;
 use App\Repositories\RepositoryApiInterface;
 use Illuminate\Auth\Access\AuthorizationException;
-use Modules\Category\Exceptions\CannotDeleteDefaultCategoryException;
-use Modules\Category\Exceptions\CannotDeleteOthersCategoryException;
-use Modules\Category\Exceptions\CannotUpdateDefaultCategoryException;
-use Modules\Category\Exceptions\CannotUpdateOthersCategoryException;
-use Modules\Category\Exceptions\UnauthorizedDefaultCategoryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\Category\Entities\Category;
+use Modules\Category\Exceptions\CannotDeleteDefaultCategoryException;
+use Modules\Category\Exceptions\CannotDeleteOthersCategoryException;
+use Modules\Category\Exceptions\CannotUpdateDefaultCategoryException;
+use Modules\Category\Exceptions\CannotUpdateOthersCategoryException;
 use Modules\Category\Exceptions\DefaultCategoryNameTranslationRequiredException;
+use Modules\Category\Exceptions\UnauthorizedDefaultCategoryException;
 use Modules\User\Entities\User;
 
 class CategoryRepository extends ApiController implements RepositoryApiInterface
@@ -32,7 +31,7 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
 
     public function allUser(User $user)
     {
-        $categories =  Category::default(1)
+        $categories = Category::default(1)
             ->orWhere('user_id', $user->id)
             ->get();
 
@@ -55,11 +54,14 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
 
             $input["name"] = $request->get('name');
 
-            if (!$request->get('default')) {
+            if (! $request->get('is_default')) {
                 $input['user_id'] = $user->id;
             } else {
-                if (!$user || !$user->can('authorization', 'createCategoryDefault')) throw new UnauthorizedDefaultCategoryException();
-                $input['default'] = 1;
+                if (! $user || ! $user->can('authorization', 'createCategoryDefault')) {
+                    throw new UnauthorizedDefaultCategoryException();
+                }
+                $input['code']       = $request->get('code');
+                $input['is_default'] = 1;
             }
 
             $category = Category::create($input);
@@ -74,16 +76,22 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
         return DB::transaction(function () use ($request, $id) {
             $category = $this->show($id);
 
-            $input = $request->only(['type', 'icon', 'color', 'parent_id']);
+            $input = $request->only(['type', 'icon', 'name', 'color', 'parent_id']);
+            $user  = Auth::user() !== null ? Auth::user() : $request->user();
 
-            if ($category->default && !is_array($request->get('name'))) throw new DefaultCategoryNameTranslationRequiredException();
+            if ($category->is_default) {
+                if (! is_array($request->get('name'))) {
+                    throw new DefaultCategoryNameTranslationRequiredException();
+                }
+                if (! $user->can('authorization', 'editCategoryDefault')) {
+                    throw new CannotUpdateDefaultCategoryException();
+                }
+                $input['code'] = $request->get('code');
+            }
 
-            $input["name"] = $request->get('name');
-
-            $user = Auth::user() !== null ? Auth::user() : $request->user();
-
-            if (!$user || !$category->default  && $category->user_id != $user->id) throw new CannotUpdateOthersCategoryException();
-            if ($category->default && !$user->can('authorization', 'editCategoryDefault')) throw new CannotUpdateDefaultCategoryException();
+            if (! $user || ! $category->is_default && $category->user_id != $user->id) {
+                throw new CannotUpdateOthersCategoryException();
+            }
 
             $category->update($input);
 
@@ -91,15 +99,20 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
         });
     }
 
-    public function destroy(string $id, ?Request $request = null)
+    public function destroy(Request $request, string $id)
     {
         return DB::transaction(function () use ($id, $request) {
             $category = $this->show($id);
 
             $user = Auth::user() !== null ? Auth::user() : $request->user();
 
-            if (!$user || !$category->default  && $category->user_id != $user->id) throw new CannotDeleteOthersCategoryException();
-            if ($category->default && !$user->can('authorization', 'destroyCategoryDefault')) throw new CannotDeleteDefaultCategoryException();
+            if (! $user || ! $category->is_default && $category->user_id != $user->id) {
+                throw new CannotDeleteOthersCategoryException();
+            }
+
+            if ($category->is_default && ! $user->can('authorization', 'destroyCategoryDefault')) {
+                throw new CannotDeleteDefaultCategoryException();
+            }
 
             $category->delete();
 
@@ -118,8 +131,9 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
 
         $category = $this->show($id);
 
-        if (!$category->default && $user->id !== $category->user_id)
+        if (! $category->is_default && $user->id !== $category->user_id) {
             throw new AuthorizationException('This action is unauthorized');
+        }
 
         return $category;
     }

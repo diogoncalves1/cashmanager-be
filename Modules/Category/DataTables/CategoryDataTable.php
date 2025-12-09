@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\Category\DataTables;
 
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +20,7 @@ class CategoryDataTable extends DataTable
     {
         $user = Auth::user();
 
-        $canEditDefault = $user->can('authorization', 'editCategoryDefault');
+        $canEditDefault    = $user->can('authorization', 'editCategoryDefault');
         $canDestroyDefault = $user->can('authorization', 'destroyCategoryDefault');
 
         return datatables()
@@ -72,7 +71,7 @@ class CategoryDataTable extends DataTable
     {
         $query = $model->newQuery();
 
-        $query->distinct()->where('default', 1);
+        $query->distinct()->where('is_default', 1);
 
         return $query;
     }
@@ -90,11 +89,11 @@ class CategoryDataTable extends DataTable
             ->minifiedAjax()
             ->postAjax()
             ->language('/vendor/datatables-portuguese.json')
-            ->orderBy(1, 'asc')
+            ->orderBy(0, 'asc')
             ->dom('Bfrtip')
             ->drawCallback(" function () {
                     $('[data-toggle=\"tooltip\"]').tooltip();
-                }   
+                }
                  ");
     }
 
@@ -107,6 +106,7 @@ class CategoryDataTable extends DataTable
     {
         return [
             Column::make('name')->title('Name'),
+            Column::make('code')->title('Código'),
             Column::make('type')->title('Tipo'),
             Column::make('icon')->title('Icone'),
             Column::make('parent')->title('Parente'),

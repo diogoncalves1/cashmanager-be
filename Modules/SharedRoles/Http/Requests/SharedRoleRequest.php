@@ -1,13 +1,19 @@
 <?php
-
 namespace Modules\SharedRoles\Http\Requests;
 
-use Modules\SharedRoles\Enums\Language;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Modules\Language\Repositories\LanguageRepository;
 
 class SharedRoleRequest extends FormRequest
 {
+    protected LanguageRepository $languageRepo;
+
+    public function __construct(LanguageRepository $languageRepo)
+    {
+        $this->languageRepo = $languageRepo;
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -24,15 +30,16 @@ class SharedRoleRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'name' => 'required|array'
+            'name' => 'required|array',
         ];
 
-        if ($this->get("shared_role_id"))
+        if ($this->get("shared_role_id")) {
             $rules['code'] = ['required', Rule::unique('shared_roles')->ignore($this->get("shared_role_id")), 'max:191'];
-        else
+        } else {
             $rules['code'] = "required|unique:shared_roles|max:191";
+        }
 
-        $languages = config('languages');
+        $languages = $this->languageRepo->allCodes();
 
         foreach ($languages as $language) {
             $rules['name.' . $language] = "required|string|max:100";

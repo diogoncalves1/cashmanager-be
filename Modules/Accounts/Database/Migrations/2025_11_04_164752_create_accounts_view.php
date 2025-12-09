@@ -16,6 +16,7 @@ return new class extends Migration
                 a.name AS name,
                 c.symbol AS currencySymbol,
                 c.code AS currencyCode,
+                c.id AS currencyId,
                 a.type AS type,
                 a.id AS id,
                 a.balance AS balance,

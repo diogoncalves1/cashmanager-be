@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\Category\DataTables;
 
 use Modules\Category\Entities\Category;
@@ -20,8 +19,8 @@ class CategoryApiDataTable extends DataTable
             ->addColumn('parent', fn(Category $category) => $category->parent)
             ->addColumn('actions', function (Category $category) use ($user) {
 
-                $canEdit = $category->default ? $user->can('authorization', 'editCategoryDefault') : $user->id == $category->id;
-                $canDestroy = $category->default ? $user->can('authorization', 'destroyCategoryDefault') : $user->id == $category->id;
+                $canEdit    = $category->is_default ? $user->can('authorization', 'editCategoryDefault') : $user->id == $category->id;
+                $canDestroy = $category->is_default ? $user->can('authorization', 'destroyCategoryDefault') : $user->id == $category->id;
 
                 return ['edit' => $canEdit, 'destroy' => $canDestroy];
             })
@@ -37,6 +36,6 @@ class CategoryApiDataTable extends DataTable
 
         return $model->newQuery()
             ->userId($user->id)
-            ->orWhere('default', 1);
+            ->orWhere('is_default', 1);
     }
 }

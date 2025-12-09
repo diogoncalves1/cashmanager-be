@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\Category\Http\Controllers\Api;
 
 use App\Http\Controllers\ApiController;
@@ -96,7 +95,7 @@ class CategoryController extends ApiController
     public function destroy(Request $request, string $id): JsonResponse
     {
         try {
-            $category = $this->repository->destroy($id, $request);
+            $category = $this->repository->destroy($request, $id);
 
             return $this->ok(message: __('category::messages.categories.destroy', ['name' => $category->name]));
         } catch (\Exception $e) {

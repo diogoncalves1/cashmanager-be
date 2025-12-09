@@ -1,24 +1,27 @@
 <?php
-
 namespace Modules\Category\Http\Controllers\Admin;
 
 use App\Http\Controllers\ApiController;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use Modules\Category\Repositories\CategoryRepository;
 use Modules\Category\DataTables\CategoryDataTable;
 use Modules\Category\Http\Requests\CategoryRequest;
+use Modules\Category\Repositories\CategoryRepository;
+use Modules\Language\Repositories\LanguageRepository;
 
 class CategoryController extends ApiController
 {
     private CategoryRepository $repository;
+    private LanguageRepository $languageRepository;
 
-    public function __construct(CategoryRepository $categoryRepository)
+    public function __construct(CategoryRepository $categoryRepository, LanguageRepository $languageRepository)
     {
-        $this->repository = $categoryRepository;
+        $this->repository         = $categoryRepository;
+        $this->languageRepository = $languageRepository;
     }
 
     /**
@@ -42,7 +45,7 @@ class CategoryController extends ApiController
         $this->allowedAction('createCategoryDefault');
 
         $categories = $this->repository->allAdmin();
-        $languages = config('languages');
+        $languages  = $this->languageRepository->all();
 
         return view('category::admin.create', compact('categories', 'languages'));
     }
@@ -74,9 +77,9 @@ class CategoryController extends ApiController
     {
         $this->allowedAction('editCategoryDefault');
 
-        $category = $this->repository->show($id);
+        $category   = $this->repository->show($id);
         $categories = $this->repository->allAdmin();
-        $languages = config('languages');
+        $languages  = $this->languageRepository->all();
 
         return view('category::admin.create', compact('category', 'categories', 'languages'));
     }
@@ -101,14 +104,15 @@ class CategoryController extends ApiController
     /**
      * Remove the specified resource from storage.
      * @param string $id
+     * @param Request $request
      * @return JsonResponse
      */
-    public function destroy(string $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
         try {
             $this->allowedAction('destroyCategoryDefault');
 
-            $category = $this->repository->destroy($id);
+            $category = $this->repository->destroy($request, $id);
 
             return $this->ok(message: __('category::messages.categories.destroy', ['name' => $category->name->{app()->getLocale()}]));
         } catch (\Exception $e) {

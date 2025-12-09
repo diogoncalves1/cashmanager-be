@@ -3,12 +3,12 @@ return [
     // Accounts
     'accounts'             => [
         'store'   => 'Conta :name adicionada com sucesso!',
-        'update'  => 'Conta :name actualizada com sucesso!',
+        'update'  => 'Conta :name atualizada com sucesso!',
         'destroy' => 'Conta :name eliminada com sucesso!',
 
         'errors'  => [
             'store'   => 'Erro ao tentar adicionar a conta.',
-            'update'  => 'Erro ao tentar actualizar a conta.',
+            'update'  => 'Erro ao tentar atualizar a conta.',
             'destroy' => 'Erro ao tentar eliminar a conta.',
         ],
     ],

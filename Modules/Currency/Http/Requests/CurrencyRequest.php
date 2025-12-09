@@ -1,12 +1,19 @@
 <?php
-
 namespace Modules\Currency\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Modules\Language\Repositories\LanguageRepository;
 
 class CurrencyRequest extends FormRequest
 {
+    protected LanguageRepository $languageRepository;
+
+    public function __construct(LanguageRepository $languageRepository)
+    {
+        $this->languageRepository = $languageRepository;
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -26,17 +33,17 @@ class CurrencyRequest extends FormRequest
             'symbol' => 'required|string|max:50',
         ];
 
-        $languages = config('languages');
+        $languages = $this->languageRepository->allCodes();
 
         foreach ($languages as $language) {
             $rules[$language] = "required|string|max:191";
         }
 
-        if ($this->get('currency_id'))
+        if ($this->get('currency_id')) {
             $rules['code'] = ['required', 'string', Rule::unique('currencies', 'code')->ignore($this->get('currency_id')), 'size:3'];
-        else
+        } else {
             $rules['code'] = 'required|string|unique:currencies,code|size:3';
-
+        }
 
         return $rules;
     }

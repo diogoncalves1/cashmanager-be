@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\SharedRoles\Http\Controllers;
 
 use App\Http\Controllers\ApiController;
@@ -7,17 +6,17 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
+use Modules\SharedRoles\DataTables\SharedPermissionDataTable;
 use Modules\SharedRoles\Http\Requests\SharedPermissionRequest;
 use Modules\SharedRoles\Repositories\SharedPermissionRepository;
-use Modules\SharedRoles\DataTables\SharedPermissionDataTable;
 
 class SharedPermissionController extends ApiController
 {
-    private SharedPermissionRepository $sharedPermissionRepository;
+    private SharedPermissionRepository $repository;
 
-    public function __construct(SharedPermissionRepository $sharedPermissionRepository)
+    public function __construct(SharedPermissionRepository $repository)
     {
-        $this->sharedPermissionRepository = $sharedPermissionRepository;
+        $this->repository = $repository;
     }
 
     /**
@@ -56,7 +55,7 @@ class SharedPermissionController extends ApiController
     {
         $this->allowedAction('createSharedPermission');
 
-        $this->sharedPermissionRepository->store($request);
+        $this->repository->store($request);
 
         return redirect()->route('admin.shared-permissions.index');
     }
@@ -70,11 +69,9 @@ class SharedPermissionController extends ApiController
     {
         $this->allowedAction('editSharedPermission');
 
-        $sharedPermission = $this->sharedPermissionRepository->show($id);
+        $sharedPermission = $this->repository->show($id);
 
-        $languages = config('languages');
-
-        return view("sharedroles::shared-permissions.create", compact('languages', 'sharedPermission'));
+        return view("sharedroles::shared-permissions.create", compact('sharedPermission'));
     }
 
     /**
@@ -88,7 +85,7 @@ class SharedPermissionController extends ApiController
     {
         $this->allowedAction('editSharedPermission');
 
-        $this->sharedPermissionRepository->update($request, $id);
+        $this->repository->update($request, $id);
 
         return redirect()->route('admin.shared-permissions.index');
     }
@@ -103,7 +100,7 @@ class SharedPermissionController extends ApiController
         try {
             $this->allowedAction('destroySharedPermission');
 
-            $sharedPermission = $this->sharedPermissionRepository->destroy($id);
+            $sharedPermission = $this->repository->destroy($id);
 
             return $this->ok(message: "Permissão de partilha {$sharedPermission->name} apagada com sucesso!");
         } catch (\Exception $e) {

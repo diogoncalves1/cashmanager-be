@@ -1,19 +1,28 @@
 <?php
-
 namespace Modules\ApiResponder\Traits;
 
 use Modules\ApiResponder\Services\ApiResponse;
 
 trait RespondsWithApi
 {
-    protected function ok($data = null, string $message = '', int $code = 200, ?array $additionals = null)
+    protected function ok($data = null, string $message = '', mixed $code = 200, ?array $additionals = null)
     {
+        $code = $this->isCodeAccepted($code, 200);
         return ApiResponse::success($data, $message, $code, $additionals);
     }
 
-    protected function fail(string $message, $errors = null, $code = 400, ?array $additionals = null)
+    protected function fail(string $message, $errors = null, mixed $code = 400, ?array $additionals = null)
     {
-        $exceptionCodes = [0, 23000, '42S02', '42S22'];
-        return ApiResponse::error($message, $errors, in_array($code, $exceptionCodes) ? 400 : $code, $additionals);
+        $code = $this->isCodeAccepted($code, 400);
+        return ApiResponse::error($message, $errors, $code, $additionals);
+    }
+
+    private function isCodeAccepted(mixed $code, int $default): int
+    {
+        if (! is_numeric($code) || $code < 100 || $code > 511) {
+            return $default;
+        }
+
+        return $code;
     }
 }

@@ -4,6 +4,7 @@ namespace Modules\Accounts\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\Accounts\Core\Helpers;
+use Modules\User\Http\Resources\UserShareCollection;
 
 class AccountViewResource extends JsonResource
 {
@@ -24,13 +25,14 @@ class AccountViewResource extends JsonResource
             'name'             => $this->name,
             'currencySymbol'   => $this->currencySymbol,
             'currencyCode'     => $this->currencyCode,
+            'currencyId'       => $this->currencyId,
             'type'             => $this->type,
             'typeTranslated'   => $typeTranslated,
             'balance'          => (float) $this->balance,
             'balanceFormated'  => $balanceFormated,
             'status'           => $this->status,
             'statusTranslated' => $statusTranslated,
-            'users'            => new \Modules\User\Http\Resources\UserShareCollection($this->users),
+            'users'            => new UserShareCollection($this->users),
         ];
     }
 }

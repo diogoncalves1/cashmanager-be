@@ -1,9 +1,9 @@
 <?php
-
 namespace Modules\Category\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryResource extends JsonResource
 {
@@ -12,14 +12,18 @@ class CategoryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $userLang = app()->getLocale();
+        $user = $request->user() ? $request->user : Auth::user();
+
+        $lang = $user?->preferences?->lang ?? 'en';
 
         return [
-            'name' => $this->default ? $this->name->{$userLang} : $this->name,
-            'type' => __('category::attributes.categories.type.' . $this->type),
-            'icon' => $this->icon,
-            'color' => $this->color,
-            'parent' => $this->parent
+            'id'             => $this->id,
+            'name'           => $this->is_default ? $this->name->{$lang} : $this->name,
+            'typeTranslated' => __('category::attributes.categories.type.' . $this->type),
+            'type'           => $this->type,
+            'icon'           => $this->icon,
+            'color'          => $this->color,
+            'parent'         => $this->whenNotNull($this->parent ? new CategoryResource($this->parent) : null),
         ];
     }
 }

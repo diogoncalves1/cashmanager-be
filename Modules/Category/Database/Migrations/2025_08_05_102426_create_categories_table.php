@@ -18,7 +18,8 @@ return new class extends Migration
             $table->enum('type', ['revenue', 'expense']);
             $table->string('icon', 255)->nullable();
             $table->string('color', 255)->nullable();
-            $table->boolean('default')->default(0);
+            $table->string('code')->nullable();
+            $table->boolean('is_default')->default(0);
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
@@ -35,7 +36,7 @@ return new class extends Migration
         ];
 
         foreach ($permissions as $permission) {
-            $id = DB::table('permissions')->insertGetId($permission);
+            $id                = DB::table('permissions')->insertGetId($permission);
             $rolePermissions[] = ['permission_id' => $id, 'role_id' => 1];
         }
 

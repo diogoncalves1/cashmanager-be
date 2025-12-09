@@ -1,9 +1,9 @@
 <?php
-
 namespace Modules\SharedRoles\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 class SharedRoleResource extends JsonResource
 {
@@ -12,6 +12,13 @@ class SharedRoleResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        $user = $request->user() ? $request->user() : Auth::user();
+
+        $lang = $user->preferences?->lang ?? 'en';
+
+        return [
+            'name' => $this->name->$lang,
+            'code' => $this->code,
+        ];
     }
 }
