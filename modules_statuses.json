@@ -1,6 +1,7 @@
 {
     "Accounts": true,
     "ApiResponder": true,
+    "Asset": true,
     "Category": true,
     "Currency": true,
     "Friends": true,

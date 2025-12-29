@@ -83,6 +83,16 @@
                                     </a>
                                 </li>
                             @endcan
+                            @can('authorization', 'viewAsset')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.assets.index') }}" class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'assets') ? 'active' : '' !!}">
+                                        <i class="nav-icon fas fa-chart-line"></i>
+                                        <p>
+                                            Assets
+                                        </p>
+                                    </a>
+                                </li>
+                            @endcan
 
                             @can('authorization', 'viewUser')
                                 <li class="nav-header">UTILIZADORES</li>
