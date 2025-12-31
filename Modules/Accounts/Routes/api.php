@@ -20,6 +20,8 @@ Route::group([
                 'prefix' => 'accounts',
                 'as'     => 'accounts.',
             ], function () {
+                Route::patch('/{id}/status', [AccountController::class, 'status']);
+
                 // Invites
                 Route::post('/{id}/invite/{userId}', [AccountUserInviteController::class, 'invite']);
                 Route::post('/{id}/accept', [AccountUserInviteController::class, 'accept']);

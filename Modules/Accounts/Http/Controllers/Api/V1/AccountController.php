@@ -9,6 +9,9 @@ use Modules\Accounts\DataTables\AccountDataTable;
 use Modules\Accounts\Http\Requests\AccountRequest;
 use Modules\Accounts\Http\Resources\AccountResource;
 use Modules\Accounts\Http\Resources\AccountViewResource;
+use Modules\Accounts\Http\Resources\CategorySummaryCollection;
+use Modules\Accounts\Http\Resources\MonthlyResumeCollection;
+use Modules\Accounts\Http\Resources\TransactionViewCollection;
 use Modules\Accounts\Repositories\AccountRepository;
 
 /**
@@ -66,7 +69,19 @@ class AccountController extends ApiController
         try {
             $account = $this->repository->showToUser($request, $id);
 
-            return $this->ok(new AccountViewResource($account));
+            $lastTransactions = $this->repository->showLastTransactions($id);
+            $monthlyResume    = $this->repository->showMonthlyResume($id);
+            $categorySummary  = $this->repository->showCategorySummary($id);
+
+            return $this->ok(new AccountViewResource($account), additionals: [
+                'transactions'    => new TransactionViewCollection($lastTransactions),
+                'monthlyResume'   => new MonthlyResumeCollection($monthlyResume),
+                'categorySummary' =>
+                [
+                    'data'          => new CategorySummaryCollection($categorySummary['data']),
+                    'total'         => $categorySummary['total'],
+                    'totalFormated' => $categorySummary['totalFormated'],
+                ]]);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -108,4 +123,23 @@ class AccountController extends ApiController
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
+
+    /**
+     * Update status the specified resource from storage.
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function status(Request $request, string $id): JsonResponse
+    {
+        try {
+            $account = $this->repository->status($request, $id);
+
+            return $this->ok(new AccountResource($account), __('accounts::messages.accounts.status', ['name' => $account->name, 'status' => __('accounts::attributes.accounts.status.' . ($account->active ? 'activated' : 'inactivated'))]));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
 }

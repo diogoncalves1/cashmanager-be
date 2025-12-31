@@ -4,6 +4,7 @@ namespace Modules\Accounts\Repositories;
 use App\Repositories\RepositoryApiInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\Account;
 use Modules\Accounts\Entities\AccountsView;
 use Modules\Accounts\Entities\AccountUser;
@@ -55,6 +56,26 @@ class AccountRepository implements RepositoryApiInterface
             $input = $request->only('name', 'type', 'currency_id', 'active');
 
             $account->update($input);
+
+            return $account;
+        });
+    }
+
+    public function status(Request $request, string $id)
+    {
+        return DB::transaction(function () use ($request, $id) {
+            $account = $this->show($id);
+
+            $user = $request->user();
+
+            $sharedRole = $account->userSharedRole($account, $user->id);
+            if (! $sharedRole || ! $sharedRole->hasPermission("editAccount")) {
+                throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedUpdateAccountException();
+            }
+
+            $account->active = ! $account->active;
+
+            $account->save();
 
             return $account;
         });
@@ -114,6 +135,61 @@ class AccountRepository implements RepositoryApiInterface
         }
 
         return $account;
+    }
+
+    public function showLastTransactions(int $id, int $limit = 3)
+    {
+        $account = $this->show($id);
+
+        return $account->transactionsView()->orderBy('date', 'desc')->limit($limit)->get();
+    }
+
+    public function showMonthlyResume(int $id)
+    {
+        $account = $this->show($id);
+
+        return $account->transactionsView()
+            ->selectRaw("
+                SUM(CASE WHEN type = 'revenue' AND status = 'completed' THEN amount ELSE 0 END) AS totalRevenue,
+                SUM(CASE WHEN type = 'expense' AND status = 'completed' THEN amount ELSE 0 END) AS totalExpense,
+                DATE_FORMAT(date, '%Y-%m') AS month,
+                MAX(currencyCode) AS currencyCode,
+                MAX(currencySymbol) AS currencySymbol
+            ")
+            ->groupByRaw("DATE_FORMAT(date, '%Y-%m')")
+            ->orderBy('month', 'asc')
+            ->get();
+
+    }
+
+    public function showCategorySummary(int $id)
+    {
+        $account = $this->show($id);
+
+        $total = (float) $account->transactionsView()
+            ->where('categoryType', 'expense')
+            ->where('status', 'completed')
+            ->sum('amount');
+
+        $totalFormated = Helpers::formatMoneyWithCurrency($total, $account->currency->code, $account->currency->symbol);
+
+        return [
+            'data'          => $account->transactionsView()
+                ->selectRaw("
+                SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) AS value,
+                categoryName AS category,
+                categoryColor AS color,
+                MAX(currencyCode) AS currencyCode,
+                MAX(currencySymbol) AS currencySymbol
+            ")
+                ->groupByRaw("categoryId")
+                ->where('categoryType', 'expense')
+                ->get(),
+
+            'total'         => $total,
+            'totalFormated' => $totalFormated,
+
+        ];
     }
 
     // Extra methods

@@ -28,6 +28,10 @@ class Account extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+    public function transactionsView()
+    {
+        return $this->hasMany(TransactionsView::class, 'accountId');
+    }
     public function currency()
     {
         return $this->belongsTo(Currency::class);
