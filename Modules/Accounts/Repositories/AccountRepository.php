@@ -150,13 +150,14 @@ class AccountRepository implements RepositoryApiInterface
 
         return $account->transactionsView()
             ->selectRaw("
-                SUM(CASE WHEN type = 'revenue' AND status = 'completed' THEN amount ELSE 0 END) AS totalRevenue,
-                SUM(CASE WHEN type = 'expense' AND status = 'completed' THEN amount ELSE 0 END) AS totalExpense,
+                SUM(CASE WHEN type = 'revenue' THEN amount ELSE 0 END) AS totalRevenue,
+                SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) AS totalExpense,
                 DATE_FORMAT(date, '%Y-%m') AS month,
                 MAX(currencyCode) AS currencyCode,
                 MAX(currencySymbol) AS currencySymbol
             ")
             ->groupByRaw("DATE_FORMAT(date, '%Y-%m')")
+            ->where('status', 'completed')
             ->orderBy('month', 'asc')
             ->get();
 
