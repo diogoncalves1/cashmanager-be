@@ -33,7 +33,7 @@ class TransactionRepository implements RepositoryApiInterface
             $account    = $this->accountRepository->show($request->get('account_id'));
             $sharedRole = $account->userSharedRole($account, $user->id);
 
-            if ($request->get("date") > Carbon::now() && $request->get("status") == "completed" || ($request->get("date") < Carbon::now() && $request->get('status') == 'pending')) {
+            if ($request->get("date") > Carbon::now() && $request->get("status") == "completed" || (Carbon::parse($request->get("date"))->isBefore(Carbon::today()) && $request->get('status') == 'pending')) {
                 throw new \Modules\Accounts\Exceptions\Transactions\InvalidTransactionPendingDateException();
             }
             if (! $sharedRole || ! $sharedRole->hasPermission('createTransaction')) {

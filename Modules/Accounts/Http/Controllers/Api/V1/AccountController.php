@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Modules\Accounts\DataTables\AccountDataTable;
 use Modules\Accounts\Http\Requests\AccountRequest;
+use Modules\Accounts\Http\Resources\AccountBasicViewCollection;
 use Modules\Accounts\Http\Resources\AccountResource;
 use Modules\Accounts\Http\Resources\AccountViewResource;
 use Modules\Accounts\Http\Resources\CategorySummaryCollection;
@@ -136,6 +137,23 @@ class AccountController extends ApiController
             $account = $this->repository->status($request, $id);
 
             return $this->ok(new AccountResource($account), __('accounts::messages.accounts.status', ['name' => $account->name, 'status' => __('accounts::attributes.accounts.status.' . ($account->active ? 'activated' : 'inactivated'))]));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Display a listing of the resource.
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function allUser(Request $request): JsonResponse
+    {
+        try {
+            $accounts = $this->repository->allUser($request);
+
+            return $this->ok(new AccountBasicViewCollection($accounts));
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

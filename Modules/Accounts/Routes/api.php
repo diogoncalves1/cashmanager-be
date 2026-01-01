@@ -20,6 +20,8 @@ Route::group([
                 'prefix' => 'accounts',
                 'as'     => 'accounts.',
             ], function () {
+                Route::get('/all', [AccountController::class, 'allUser']);
+
                 Route::patch('/{id}/status', [AccountController::class, 'status']);
 
                 // Invites

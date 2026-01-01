@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\Account;
+use Modules\Accounts\Entities\AccountBasicView;
 use Modules\Accounts\Entities\AccountsView;
 use Modules\Accounts\Entities\AccountUser;
 use Modules\Accounts\Entities\Transaction;
@@ -17,6 +18,13 @@ class AccountRepository implements RepositoryApiInterface
     public function all()
     {
         return Account::all();
+    }
+
+    public function allUser(Request $request)
+    {
+        $user = $request->user();
+
+        return AccountBasicView::query()->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])->get();
     }
 
     public function store(Request $request)
@@ -158,7 +166,7 @@ class AccountRepository implements RepositoryApiInterface
             ")
             ->groupByRaw("DATE_FORMAT(date, '%Y-%m')")
             ->where('status', 'completed')
-            ->orderBy('month', 'asc')
+            ->orderBy('month', 'desc')
             ->get();
 
     }
