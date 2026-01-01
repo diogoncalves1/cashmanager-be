@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\UserPreferences\Http\Resources;
 
 use Illuminate\Http\Request;
@@ -13,10 +12,9 @@ class UserPreferecesResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'lang' => $this->lang,
+            'lang'        => $this->lang,
             'currency_id' => $this->currency_id,
-            'currency' => $this->currency,
-            'user' => $this->user,
+            'currency'    => $this->currency,
         ];
     }
 }
