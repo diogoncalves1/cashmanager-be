@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -10,7 +10,7 @@ use Modules\User\Http\Requests\UserRequest;
 use Modules\User\Http\Resources\UserResource;
 use Modules\User\Repositories\UserRepository;
 
-class AuthController extends Controller
+class AuthController extends ApiController
 {
     private $userRepository;
 
@@ -46,5 +46,12 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logout realizado com successo']);
+    }
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        return $this->ok(new UserResource($user));
     }
 }
