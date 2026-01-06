@@ -7,10 +7,6 @@ class AccountsView extends Account
     protected $casts = [
         'balance' => 'float',
     ];
-    public function account()
-    {
-        return $this->belongsTo(Account::class, "id", "id");
-    }
 
     public function scopeType($query, $type)
     {
