@@ -18,6 +18,13 @@ class AccountViewResource extends JsonResource
         $balanceFormatedWithoutSymbol = Helpers::formatMoneyWithCurrency($this->balance, $this->currencyCode, $this->currencySymbol);
         $statusTranslated             = __("accounts::attributes.accounts.status." . ($this->status ? 'active' : 'disabled'));
 
+        $user = $request->user();
+
+        $account    = $this->account;
+        $sharedRole = $account->userSharedRole($account, $user->id);
+
+        $actions = ['view' => $sharedRole?->hasPermission("viewAccount"), 'edit' => $sharedRole?->hasPermission("editAccount"), 'destroy' => $sharedRole?->hasPermission("destroyAccount"), 'manage' => $sharedRole?->hasPermission("manageAccountUsers"), 'addTransaction' => $sharedRole?->hasPermission("createTransaction")];
+
         foreach ($this->users as &$user) {
             $user->sharedRole = $user->pivot->sharedRole;
         }
@@ -39,6 +46,7 @@ class AccountViewResource extends JsonResource
             'totalExpenses'                => Helpers::formatMoneyWithCurrency($this->totalExpenses, $this->currencyCode, $this->currencySymbol, true),
             'createdAt'                    => $this->createdAt,
             'users'                        => new UserShareCollection($this->users),
+            'actions'                      => $actions,
         ];
     }
 }
