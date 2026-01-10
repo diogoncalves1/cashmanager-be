@@ -39,7 +39,7 @@ class TransactionDataTable extends DataTable
 
                 return ['view' => $canView, 'confirm' => $canConfirm, 'edit' => $canEdit, 'destroy' => $canDestroy];
             })
-            ->editColumn('categoryName', fn(TransactionsView $transaction) => isset($transaction->categoryName->$user->preferences->lang) ? $transaction->categoryName->{$user->preferences->lang} : $transaction->categoryName->en);
+            ->editColumn('categoryName', fn(TransactionsView $transaction) => $transaction->category->name->{$user->preferences->lang} ? $transaction->category->name->{$user->preferences->lang} : $transaction->category->name->en);
     }
 
     public function query(TransactionsView $model)
@@ -59,8 +59,8 @@ class TransactionDataTable extends DataTable
         if ($request->has('accountId')) {
             $query->account($request->get('accountId'));
         }
-        if ($request->has("user")) {
-            $query->user($request->get("user"));
+        if ($request->has("userId")) {
+            $query->user($request->get("userId"));
         }
 
         return $query;

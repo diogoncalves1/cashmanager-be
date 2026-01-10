@@ -12,15 +12,17 @@ class TransactionResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'          => $this->id,
-            'accountId'   => (int) $this->account_id,
-            'type'        => $this->type,
-            'amount'      => (float) $this->amount,
-            'date'        => $this->date,
-            'description' => $this->description,
-            'status'      => $this->status,
-            'categoryId'  => (int) $this->category_id,
-            'userId'      => (int) $this->user_id,
+            'id'               => $this->id,
+            'accountId'        => (int) $this->account_id,
+            'type'             => $this->type,
+            'typeTransalated'  => __('accounts::attributes.transactions.type.' . $this->type),
+            'amount'           => (float) $this->amount,
+            'date'             => $this->date,
+            'description'      => $this->description,
+            'status'           => $this->status,
+            'statusTranslated' => __('accounts::attributes.transactions.status.' . $this->status),
+            'categoryId'       => (int) $this->category_id,
+            'userId'           => (int) $this->user_id,
         ];
     }
 }

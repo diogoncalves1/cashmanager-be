@@ -17,7 +17,7 @@ class AccountResource extends JsonResource
             'currencyId' => $this->currency_id,
             'type'       => $this->type,
             'balance'    => (float) $this->balance,
-            'status'     => $this->status,
+            'active'     => $this->active,
         ];
     }
 }

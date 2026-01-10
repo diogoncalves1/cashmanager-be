@@ -5,6 +5,7 @@ return [
         'store'   => 'Conta :name adicionada com sucesso!',
         'update'  => 'Conta :name atualizada com sucesso!',
         'destroy' => 'Conta :name eliminada com sucesso!',
+        'status'  => 'Conta :name :status com sucesso!',
 
         'errors'  => [
             'store'   => 'Erro ao tentar adicionar a conta.',
