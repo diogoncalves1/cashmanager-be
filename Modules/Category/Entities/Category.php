@@ -39,4 +39,8 @@ class Category extends Model
     {
         return $query->where('user_id', $userId);
     }
+    public function scopeType($query, $type)
+    {
+        return $query->where('type', $type);
+    }
 }
