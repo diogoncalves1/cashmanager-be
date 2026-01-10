@@ -1,16 +1,16 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Modules\User\Entities\User;
 use Modules\User\Http\Requests\UserRequest;
+use Modules\User\Http\Resources\UserResource;
 use Modules\User\Repositories\UserRepository;
 
-class AuthController extends Controller
+class AuthController extends ApiController
 {
     private $userRepository;
 
@@ -32,13 +32,13 @@ class AuthController extends Controller
     {
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages(['email' => ['Credenciais invalidas.']]);
         }
 
         $token = $user->createToken('web-token')->plainTextToken;
 
-        return response()->json(['user' => $user, 'token' => $token], 201);
+        return response()->json(['user' => new UserResource($user), 'token' => $token], 201);
     }
 
     public function logout(Request $request)
@@ -46,5 +46,12 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logout realizado com successo']);
+    }
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        return $this->ok(new UserResource($user));
     }
 }

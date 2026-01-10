@@ -3,6 +3,7 @@ namespace Modules\User\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\UserPreferences\Http\Resources\UserPreferecesResource;
 
 class UserResource extends JsonResource
 {
@@ -12,11 +13,12 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'         => $this->id,
-            'name'       => $this->name,
-            'email'      => $this->email,
-            'roles'      => $this->whenLoaded('roles'),
-            'sharedRole' => $this->whenHas('sharedRole', new \Modules\SharedRoles\Http\Resources\SharedRoleResource($this->sharedRole)),
+            'id'          => $this->id,
+            'name'        => $this->name,
+            'email'       => $this->email,
+            'roles'       => $this->whenLoaded('roles'),
+            'sharedRole'  => $this->whenHas('sharedRole', new \Modules\SharedRoles\Http\Resources\SharedRoleResource($this->sharedRole)),
+            'preferences' => new UserPreferecesResource($this->preferences),
         ];
     }
 }
