@@ -1,0 +1,11 @@
+{
+    "name": "FinancialGoal",
+    "alias": "financialgoal",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FinancialGoal\\Providers\\FinancialGoalServiceProvider"
+    ],
+    "files": []
+}
