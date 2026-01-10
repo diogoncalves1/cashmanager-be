@@ -27,6 +27,7 @@ class TransactionDataTable extends DataTable
         return datatables()
             ->eloquent($query)
             ->addColumn('statusTranslated', fn(TransactionsView $transaction) => __('accounts::attributes.transactions.status.' . $transaction->status))
+            ->addColumn('accountTypeTranslated', fn(TransactionsView $transaction) => __('accounts::attributes.accounts.type.' . $transaction->accountType))
             ->addColumn('amountFormated', fn(TransactionsView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
             ->addColumn('actions', function (TransactionsView $transaction) use ($user) {
                 $account    = $this->accountRepository->show($transaction->accountId);
@@ -55,6 +56,9 @@ class TransactionDataTable extends DataTable
 
         if ($request->has('type')) {
             $query->type($request->get('type'));
+        }
+        if ($request->has('status')) {
+            $query->status($request->get('status'));
         }
         if ($request->has('accountId')) {
             $query->account($request->get('accountId'));

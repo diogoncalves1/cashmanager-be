@@ -27,6 +27,7 @@ return new class extends Migration
                 u.name AS userName,
                 a.id AS accountId,
                 a.name AS accountName,
+                a.type AS accountType,
                 c.symbol AS currencySymbol,
                 c.code AS currencyCode
                 FROM transactions AS t
