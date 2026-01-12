@@ -24,7 +24,7 @@ class AccountRepository implements RepositoryApiInterface
     {
         $user = $request->user();
 
-        return AccountBasicView::query()->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])->get();
+        return AccountBasicView::query()->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])->active(true)->get();
     }
 
     public function store(Request $request)
