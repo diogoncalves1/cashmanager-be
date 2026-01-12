@@ -24,7 +24,14 @@ class AccountRepository implements RepositoryApiInterface
     {
         $user = $request->user();
 
-        return AccountBasicView::query()->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])->get();
+        return AccountBasicView::query()->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])
+            ->join("account_users", "account_users.account_id", '=', 'account_basic_view.id')
+            ->join("shared_roles", "shared_roles.id", '=', "account_users.shared_role_id")
+            ->join('shared_permission_roles', "shared_permission_roles.shared_role_id", '=', 'shared_roles.id')
+            ->join('shared_permissions', "shared_permissions.id", '=', 'shared_permission_roles.shared_permission_id')
+            ->where("account_users.user_id", $user->id)
+            ->where('shared_permissions.code', 'createTransaction')
+            ->select("account_basic_view.*")->get();
     }
 
     public function store(Request $request)

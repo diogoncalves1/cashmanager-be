@@ -8,6 +8,11 @@ class AccountsView extends Account
         'balance' => 'float',
     ];
 
+    public function account()
+    {
+        return $this->belongsTo(Account::class, 'id', 'id');
+    }
+
     public function scopeType($query, $type)
     {
         return $query->where('accounts_view.type', $type);
