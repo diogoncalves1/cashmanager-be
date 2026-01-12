@@ -5,7 +5,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\Accounts\Core\Helpers;
 use Modules\FinancialGoal\Core\Helpers as CoreHelpers;
-use Modules\FinancialGoal\Entities\UserFinancialGoalContributionsView;
 
 class FinancialGoalViewResource extends JsonResource
 {
@@ -35,7 +34,6 @@ class FinancialGoalViewResource extends JsonResource
             'userNames'                => $this->userNames,
             'description'              => $this->description,
             'percentageCompeted'       => CoreHelpers::percentage($this->totalAmount, $this->contributedAmount),
-            'userContributions'        => new UserFinancialGoalContributionViewCollection(UserFinancialGoalContributionsView::where('goalId', $this->id)->get()),
             'users'                    => new \Modules\User\Http\Resources\UserShareCollection($this->users),
             'completedAt'              => $this->whenNotNull('completedAt'),
             'canceledAt'               => $this->whenNotNull('canceledAt'),
