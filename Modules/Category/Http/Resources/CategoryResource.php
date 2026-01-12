@@ -12,7 +12,7 @@ class CategoryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $user = $request->user() ? $request->user : Auth::user();
+        $user = $request->user ? $request->user : Auth::user();
 
         $lang = $user?->preferences?->lang ?? 'en';
 
