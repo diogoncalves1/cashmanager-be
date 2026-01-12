@@ -34,9 +34,12 @@ class CategoryApiDataTable extends DataTable
         $request = request();
         $user    = $request->user();
 
+        $exceptions = ['financialGoalContribution', 'financialGoalWithdrawal'];
+
         $query = $model->newQuery()
             ->userId($user->id)
-            ->orWhere('is_default', 1);
+            ->orWhere('is_default', 1)
+            ->whereNotIn('code', $exceptions);
 
         if ($request->has('type')) {
             $query->type($request->get('type'));

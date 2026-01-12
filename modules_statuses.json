@@ -9,5 +9,6 @@
     "Permission": true,
     "SharedRoles": true,
     "User": true,
-    "UserPreferences": true
+    "UserPreferences": true,
+    "FinancialGoal": true
 }
