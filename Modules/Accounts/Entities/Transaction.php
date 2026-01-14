@@ -46,7 +46,7 @@ class Transaction extends Model
 
     public function scopeType($query, $type)
     {
-        return $query->where('type', $type);
+        return $query->where('transactions.type', $type);
     }
     public function scopeAccount($query, $accountId)
     {
@@ -54,11 +54,11 @@ class Transaction extends Model
     }
     public function scopeStatus($query, $status)
     {
-        return $query->where('status', $status);
+        return $query->where('transactions.status', $status);
     }
     public function scopeUser($query, $userId)
     {
-        return $query->where('user_id', $userId);
+        return $query->where('transactions.user_id', $userId);
     }
     public function scopeCategory($query, $categoryId)
     {
