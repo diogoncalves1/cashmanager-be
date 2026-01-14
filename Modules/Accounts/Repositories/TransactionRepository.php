@@ -165,4 +165,107 @@ class TransactionRepository implements RepositoryApiInterface
 
         return $transaction;
     }
+
+    public function getUserConvertedSum(string $userId, string $type, ?string $maxDate = null, string $status = "completed")
+    {
+        $query = Transaction::query()
+            ->join("accounts", "accounts.id", "=", "transactions.account_id")
+            ->join("currencies as tx_currency", "tx_currency.id", '=', "accounts.currency_id")
+            ->join("user_preferences", "user_preferences.user_id", '=', "transactions.user_id")
+            ->join("currencies as user_currency", "user_currency.id", '=', "user_preferences.currency_id")
+            ->user($userId);
+
+        if ($type) {
+            $query->type($type);
+        }
+
+        if ($maxDate) {
+            $query->where("transactions.date", "<=", $maxDate);
+        }
+
+        if ($status) {
+            $query->status($status);
+        }
+
+        return floatval($query->sum(DB::raw("(transactions.amount * (user_currency.rate / tx_currency.rate))")));
+    }
+
+    public function getChartsData(Request $request)
+    {
+        $user = $request->user();
+
+        $query = Transaction::query()->user($user->id)
+            ->join("accounts", "accounts.id", "=", "transactions.account_id")
+            ->join("currencies as tx_currency", "tx_currency.id", '=', 'accounts.currency_id')
+            ->join("user_preferences", "user_preferences.user_id", '=', 'transactions.user_id')
+            ->join("currencies as user_currency", "user_currency.id", '=', "user_preferences.currency_id");
+
+        $queryMonthly = clone $query;
+        if ($request->filled('min_date')) {
+            $queryMonthly->where('transactions.date', '>=', $request->get('min_date'));
+        }
+
+        $monthlyData = $queryMonthly->status("completed")
+            ->selectRaw(
+                "SUM(CASE WHEN transactions.type = 'revenue' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as revenues,
+                SUM(CASE WHEN transactions.type = 'expense' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as expenses,
+                CONCAT(MONTH(transactions.date), ' ', YEAR(transactions.date)) as month,
+                CONCAT(YEAR(transactions.date), MONTH(transactions.date), '') as monthOrder
+                "
+            )
+            ->groupBy("month", "monthOrder")
+            ->orderBy("monthOrder", "asc")
+            ->get();
+
+        $queryQuarter = clone $query;
+
+        $quarterData = $queryQuarter->selectRaw(
+            "CONCAT('Q', QUARTER(transactions.date), ' ' ,  YEAR(transactions.date)) as quarter,
+                CONCAT(YEAR(transactions.date), QUARTER(transactions.date), '') as quarterOrder,
+                SUM(CASE WHEN transactions.type = 'revenue' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as revenues,
+                SUM(CASE WHEN transactions.type = 'expense' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as expenses "
+        )
+            ->groupBy("quarter", "quarterOrder")
+            ->orderBy("quarterOrder", 'asc')
+            ->get();
+
+        $queryAnnualy = clone $query;
+
+        $annualyData = $queryAnnualy->selectRaw(
+            "YEAR(transactions.date) as year,
+                SUM(CASE WHEN transactions.type = 'revenue' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as revenues,
+                SUM(CASE WHEN transactions.type = 'expense' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as expenses "
+        )
+            ->groupBy("year")
+            ->orderBy("year", 'asc')
+            ->get();
+
+        $userTotalQuery = clone $query;
+
+        $userTotalData = $userTotalQuery
+            ->selectRaw("
+                            CONCAT(MONTH(transactions.date), ' ', YEAR(transactions.date)) as monthYear,
+                            SUM(
+                                SUM(
+                                    CASE
+                                        WHEN transactions.type = 'revenue'
+                                        THEN (transactions.amount * (user_currency.rate / tx_currency.rate))
+                                        ELSE -(transactions.amount * (user_currency.rate / tx_currency.rate))
+                                    END
+                                )
+                            ) OVER (ORDER BY MIN(transactions.date)) as balance
+                        ")
+            ->where('transactions.status', 'completed')
+            ->groupByRaw("monthYear")
+            ->orderByRaw("MIN(transactions.date)")
+            ->get();
+
+        return [
+            'annualy'   => $annualyData,
+            'monthly'   => $monthlyData,
+            'quarterly' => $quarterData,
+            'userTotal' => $userTotalData,
+        ];
+
+    }
 }

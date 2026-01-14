@@ -10,5 +10,6 @@
     "SharedRoles": true,
     "User": true,
     "UserPreferences": true,
-    "FinancialGoal": true
+    "FinancialGoal": true,
+    "DashboardCharts": true
 }
