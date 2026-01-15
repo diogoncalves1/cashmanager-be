@@ -137,4 +137,9 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
 
         return $category;
     }
+
+    public function getByCode(string $code)
+    {
+        return Category::where('code', $code)->first();
+    }
 }

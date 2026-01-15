@@ -161,7 +161,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
             if (! $this->checkStatus($financialGoalTransaction->status, 'pending')) {
                 throw new \Modules\FinancialGoal\Exceptions\FinancialGoalTransactions\ContributionNotScheduledException();
             }
-            if ($financialGoalTransaction->date < Carbon::now()) {
+            if ($financialGoalTransaction->date < Carbon::now()->format('Y-m-d')) {
                 throw new ContributionBeforeCurrentDateException();
             }
 
