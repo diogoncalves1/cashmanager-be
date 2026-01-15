@@ -16,6 +16,18 @@ class FinancialGoalTransactionView extends FinancialGoalTransaction
 
     public function scopeStatus($query, $status)
     {
-        return $query->where('status', $status);
+        return $query->where('financial_goal_transaction_view.status', $status);
+    }
+    public function scopeType($query, $type)
+    {
+        return $query->where('financial_goal_transaction_view.type', $type);
+    }
+    public function scopeUser($query, $userId)
+    {
+        return $query->where('financial_goal_transaction_view.userId', $userId);
+    }
+    public function scopeFinancialGoal($query, $financialGoalId)
+    {
+        return $query->where('financial_goal_transaction_view.financialGoalId', $financialGoalId);
     }
 }

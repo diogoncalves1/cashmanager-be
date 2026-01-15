@@ -48,6 +48,10 @@ class FinancialGoal extends Model
     {
         return $this->hasMany(FinancialGoalTransaction::class);
     }
+    public function transactionsView()
+    {
+        return $this->hasMany(FinancialGoalTransactionView::class, 'financialGoalId');
+    }
 
     public function scopeJoinSharedRoles($query)
     {

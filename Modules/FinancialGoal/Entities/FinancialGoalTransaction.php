@@ -33,4 +33,9 @@ class FinancialGoalTransaction extends Model
     {
         return $this->belongsTo(Transaction::class);
     }
+
+    public function scopeFinancialGoal($query, $financialGoalId)
+    {
+        return $query->where("financial_goal_transactions.financial_goal_id", $financialGoalId);
+    }
 }

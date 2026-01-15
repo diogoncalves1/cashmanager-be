@@ -10,6 +10,11 @@ class FinancialGoalView extends FinancialGoal
         'contributedAmount' => 'float',
     ];
 
+    public function financialGoal()
+    {
+        return $this->belongsTo(FinancialGoal::class, "id", "id");
+    }
+
     public function scopeStatus($query, $status)
     {
         return $query->where('status', $status);

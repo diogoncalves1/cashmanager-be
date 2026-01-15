@@ -5,7 +5,6 @@ use Carbon\Carbon;
 use Modules\Accounts\Core\Helpers;
 use Modules\FinancialGoal\Entities\FinancialGoalTransactionView;
 use Modules\FinancialGoal\Repositories\FinancialGoalTransactionRepository;
-use Modules\User\Entities\User;
 use Yajra\DataTables\Services\DataTable;
 
 class FinancialGoalTransactionDataTable extends DataTable
@@ -31,11 +30,12 @@ class FinancialGoalTransactionDataTable extends DataTable
             ->addColumn('actions', function (FinancialGoalTransactionView $transaction) use ($user) {
                 $sharedRole = $transaction->financialGoal->userSharedRole($transaction->financialGoal, $user->id);
 
+                $canView    = $sharedRole->hasPermission('viewFinancialGoalTransaction');
                 $canEdit    = $sharedRole->hasPermission('updateFinancialGoalTransaction');
                 $canDestroy = $sharedRole->hasPermission('destroyFinancialGoalTransaction');
                 $canConfirm = ($transaction->status == 'pending' && $transaction->date < Carbon::now()) && $sharedRole->hasPermission('confirmScheduledFinancialGoalTransactions');
 
-                return ['edit' => $canEdit, 'destroy' => $canDestroy, 'confirm' => $canConfirm];
+                return ['view' => $canView, 'edit' => $canEdit, 'destroy' => $canDestroy, 'confirm' => $canConfirm];
             })
             ->removeColumn('currencyId')
             ->removeColumn('financialGoalId')
@@ -53,6 +53,19 @@ class FinancialGoalTransactionDataTable extends DataTable
             ->join('financial_goal_view AS fgv', 'fgv.id', '=', 'financial_goal_transaction_view.financialGoalId')
             ->whereRaw("FIND_IN_SET(?, REPLACE(fgv.userIds, ' ', ''))", [$user->id])
             ->select('financial_goal_transaction_view.*');
+
+        if ($request->has('userId')) {
+            $query->user($request->get("userId"));
+        }
+        if ($request->has('financialGoalId')) {
+            $query->financialGoal($request->get('financialGoalId'));
+        }
+        if ($request->has('type')) {
+            $query->type($request->get('type'));
+        }
+        if ($request->has('status')) {
+            $query->status($request->get('status'));
+        }
 
         return $query;
     }

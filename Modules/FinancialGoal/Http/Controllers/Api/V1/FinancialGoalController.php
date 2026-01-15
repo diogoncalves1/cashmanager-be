@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Modules\FinancialGoal\DataTables\FinancialGoalDataTable;
 use Modules\FinancialGoal\Http\Requests\FinancialGoalRequest;
+use Modules\FinancialGoal\Http\Resources\Charts\FinancialGoalMonthlyResumeCollection;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalResource;
+use Modules\FinancialGoal\Http\Resources\FinancialGoalTransactionViewCollection;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalViewResource;
 use Modules\FinancialGoal\Repositories\FinancialGoalRepository;
 
@@ -64,9 +66,14 @@ class FinancialGoalController extends ApiController
     public function show(Request $request, string $id): JsonResponse
     {
         try {
-            $financialGoal = $this->repository->showToUser($request, $id);
+            $financialGoal    = $this->repository->showToUser($request, $id);
+            $lastTransactions = $this->repository->showLastTransactions($id);
+            $monthlySummary   = $this->repository->showMonthlyResume($id);
 
-            return $this->ok(new FinancialGoalViewResource($financialGoal));
+            return $this->ok(new FinancialGoalViewResource($financialGoal), additionals: [
+                'transactions'   => new FinancialGoalTransactionViewCollection($lastTransactions),
+                'monthlySummary' => new FinancialGoalMonthlyResumeCollection($monthlySummary),
+            ]);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
