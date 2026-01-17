@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\Friends\Http\Controllers\Api;
 
 use App\Http\Controllers\ApiController;
