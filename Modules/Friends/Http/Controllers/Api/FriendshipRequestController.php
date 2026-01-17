@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\Friends\Http\Controllers\Api;
 
 use App\Http\Controllers\ApiController;
@@ -74,10 +73,53 @@ class FriendshipRequestController extends ApiController
         }
     }
 
-    public function listPending(FriendshipRequestDataTable $dataTable)
+    /**
+     * Cancel a friend request.
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function cancel(Request $request, string $id)
     {
         try {
-            $dataTable->type = 'pending';
+            $friendshipRequest = $this->repository->cancel($request, $id);
+
+            return $this->ok(new FriendshipResource($friendshipRequest), __('friends::messages.friendship-requests.cancel', ['name' => $friendshipRequest->receiver->name]));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage() ?? __('friends::messages.friend-requests.errors.cancel'), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * List sent friend requests.
+     * @param FriendshipRequestDataTable $request
+     * @return JsonResponse
+     */
+    public function listSent(FriendshipRequestDataTable $dataTable)
+    {
+        try {
+            $dataTable->type   = 'sent';
+            $dataTable->status = 'pending';
+
+            return $dataTable->ajax();
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Cancel a friend request.
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function listReceived(FriendshipRequestDataTable $dataTable)
+    {
+        try {
+            $dataTable->type   = 'received';
+            $dataTable->status = 'pending';
 
             return $dataTable->ajax();
         } catch (\Exception $e) {

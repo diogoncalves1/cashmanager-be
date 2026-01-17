@@ -1,9 +1,7 @@
 <?php
-
 namespace Modules\Friends\DataTables;
 
 use Modules\Friends\Entities\FriendshipRequestModel;
-use Modules\Friends\Repositories\FriendshipRepository;
 use Modules\Friends\Repositories\FriendshipRequestRepository;
 use Modules\User\Http\Resources\UserResource;
 use Yajra\DataTables\Services\DataTable;
@@ -12,11 +10,13 @@ class FriendshipRequestDataTable extends DataTable
 {
     protected FriendshipRequestRepository $repository;
     public $type;
+    public $status;
 
-    public function __construct(FriendshipRequestRepository $repository, string $type = 'pending')
+    public function __construct(FriendshipRequestRepository $repository, string $status = 'pending', ?string $type = null)
     {
         $this->repository = $repository;
-        $this->type = $type;
+        $this->type       = $type;
+        $this->status     = $status;
     }
 
     public function dataTable($query)
@@ -31,7 +31,7 @@ class FriendshipRequestDataTable extends DataTable
                 return ($friendship->sender_id == $user->id) ? new UserResource($friendship->receiver) : new UserResource($friendship->sender);
             })
             ->addColumn('actions', function () {
-                return ($this->type == 'pending') ? ['accept' => true, 'decline' => true] : [];
+                return ($this->status == 'pending') ? ['accept' => true, 'decline' => true] : [];
             })
             ->removeColumn('sender_id')
             ->removeColumn('receiver_id');
@@ -43,8 +43,36 @@ class FriendshipRequestDataTable extends DataTable
 
         $user = $request->user();
 
-        return $model->newQuery()->where(function ($query) use ($user) {
-            return $query->sender($user->id)->orWhere('receiver_id', $user->id);
-        })->status($this->type);
+        $query = $model->newQuery()->status($this->status);
+
+        if ($this->type == 'sent') {
+            $query->sender($user->id);
+        } elseif ($this->type == 'received') {
+            $query->receiver($user->id);
+        } else {
+            $query->where(function ($query) use ($user) {
+                return $query->sender($user->id)->orWhere('receiver_id', $user->id);
+            });
+        }
+
+        if ($request->has('search') && ! empty($request->get('search')['value'])) {
+            $search = $request->get('search')['value'];
+
+            $query->where(function ($q) use ($search, $user) {
+                $q->whereHas('sender', function ($q2) use ($search, $user) {
+                    $q2->where('id', '!=', $user->id)
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('id', 'like', "%{$search}%");
+                })
+                    ->orWhereHas('receiver', function ($q2) use ($search, $user) {
+                        $q2->where('id', '!=', $user->id)
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('id', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query;
+
     }
 }
