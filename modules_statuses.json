@@ -11,5 +11,6 @@
     "User": true,
     "UserPreferences": true,
     "FinancialGoal": true,
-    "DashboardCharts": true
+    "DashboardCharts": true,
+    "Debts": true
 }
