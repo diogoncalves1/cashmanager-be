@@ -1,0 +1,28 @@
+<?php
+namespace Modules\Debts\Core;
+
+class Helpers
+{
+    public static function debtInterestValue(float $totalAmount, float $monthlyInterestRate, int $months)
+    {
+        return $totalAmount * (($monthlyInterestRate / 100) * $months);
+    }
+    public static function debtTotalAmount(float $totalAmount, float $monthlyInterestRate, int $months)
+    {
+        return $totalAmount + self::debtInterestValue($totalAmount, $monthlyInterestRate, $months);
+    }
+
+    public static function debtRemainingAmount(float $totalAmount, float $paidAmount, float $monthlyInterestRate, int $months)
+    {
+        return (self::debtTotalAmount($totalAmount, $monthlyInterestRate, $months) - $paidAmount);
+    }
+
+    public static function percentage(float $totalAmount, float $contributedAmount, int $decimals = 2): float
+    {
+        if ($contributedAmount == 0 || $totalAmount == 0) {
+            return 0;
+        }
+
+        return (float) number_format(($contributedAmount / $totalAmount) * 100, $decimals);
+    }
+}

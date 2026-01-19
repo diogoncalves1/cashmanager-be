@@ -1,0 +1,11 @@
+{
+    "name": "Debts",
+    "alias": "debts",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Debts\\Providers\\DebtsServiceProvider"
+    ],
+    "files": []
+}
