@@ -1,23 +1,24 @@
 <?php
 return [
     'debts'             => [
+
         'status' => [
-            'pending' => 'Pending',
-            'paid'    => 'Paid',
+            'pending' => 'Pendente',
+            'paid'    => 'Pago',
         ],
     ],
 
     'debt-user-invites' => [
         'status' => [
-            'pending' => 'Pending',
-            'revoked' => 'Revoked',
+            'pending' => 'Pendente',
+            'revoked' => 'Revogado',
         ],
     ],
 
     'debt-payments'     => [
         'status' => [
-            'completed' => 'Completed',
-            'pending'   => 'Scheduled',
+            'completed' => 'Concluído',
+            'pending'   => 'Agendado',
         ],
     ],
 ];
