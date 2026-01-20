@@ -5,6 +5,7 @@ use Modules\Accounts\Core\Helpers;
 use Modules\Debts\Core\Helpers as DebtHelpers;
 use Modules\Debts\Entities\DebtsView;
 use Modules\Debts\Repositories\DebtRepository;
+use Modules\User\Http\Resources\UserShareCollection;
 use Yajra\DataTables\Services\DataTable;
 
 class DebtDataTable extends DataTable
@@ -30,18 +31,19 @@ class DebtDataTable extends DataTable
             ->addColumn('totalAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->totalAmount, $debt->currencyCode, $debt->currencySymbol))
             ->addColumn('paidAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->paidAmount, $debt->currencyCode, $debt->currencySymbol))
             ->addColumn('monthlyAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->monthlyAmount, $debt->currencyCode, $debt->currencySymbol))
-            ->addColumn('typeTranslated', fn(DebtsView $debt) => __('debts::attributes.debts.type.' . $debt->type))
             ->addColumn('statusTranslated', fn(DebtsView $debt) => __("debts::attributes.debts.status." . $debt->status))
-            ->addColumn('actions', function (DebtsView $debt) use ($user) {
-                $debt       = $this->repository->show($debt->id);
+            ->addColumn('users', fn(DebtsView $debt) => new UserShareCollection($debt->users))
+            ->addColumn('actions', function (DebtsView $debtV) use ($user) {
+                $debt       = $this->repository->show($debtV->id);
                 $sharedRole = $debt->userSharedRole($debt, $user->id);
 
-                $canView    = $sharedRole?->hasPermission("viewDebt");
-                $canEdit    = $sharedRole?->hasPermission("editDebt");
-                $canDestroy = $sharedRole?->hasPermission("destroyDebt");
-                $canManage  = $sharedRole?->hasPermission("manageDebtUsers");
+                $canView     = $sharedRole?->hasPermission("viewDebt");
+                $canEdit     = $sharedRole?->hasPermission("editDebt");
+                $canDestroy  = $sharedRole?->hasPermission("destroyDebt");
+                $canManage   = $sharedRole?->hasPermission("manageDebtUsers");
+                $canMarkPaid = $canEdit && ($debtV->status == 'pending') && ($debtV->paidAmount >= $debtV->totalAmount);
 
-                return ['view' => $canView, 'edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage];
+                return ['view' => $canView, 'edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'markPaid' => $canMarkPaid];
             })
             ->removeColumn('user_ids');
     }
@@ -55,9 +57,6 @@ class DebtDataTable extends DataTable
         $query = $model->newQuery()
             ->whereRaw("FIND_IN_SET(?, REPLACE(userIds, ' ', ''))", [$user->id]);
 
-        if ($request->has('type')) {
-            $query->type($request->get('type'));
-        }
         if ($request->has('status')) {
             $query->status($request->get('status'));
         }
