@@ -61,4 +61,9 @@ class FinancialGoalDataTable extends DataTable
 
         return $query;
     }
+
+    public function getQuery()
+    {
+        return $this->query(new FinancialGoalView());
+    }
 }
