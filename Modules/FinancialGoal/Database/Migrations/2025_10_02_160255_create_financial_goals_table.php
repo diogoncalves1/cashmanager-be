@@ -34,6 +34,7 @@ return new class extends Migration
             ['name' => 'Ver Meta Financeira', 'code' => 'viewFinancialGoal', 'category' => 'Metas Financeiras'],
             ['name' => 'Editar Meta Financeira', 'code' => 'updateFinancialGoal', 'category' => 'Metas Financeiras'],
             ['name' => 'Apagar Meta Financeira', 'code' => 'destroyFinancialGoal', 'category' => 'Metas Financeiras'],
+            ['name' => 'Apagar Meta Financeira', 'code' => 'manageFinancialGoal', 'category' => 'Metas Financeiras'],
         ];
 
         foreach ($permissions as $permission) {

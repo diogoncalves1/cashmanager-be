@@ -8,14 +8,12 @@ use Illuminate\Support\Facades\Log;
 use Modules\FinancialGoal\DataTables\FinancialGoalDataTable;
 use Modules\FinancialGoal\Http\Requests\FinancialGoalRequest;
 use Modules\FinancialGoal\Http\Resources\Charts\FinancialGoalMonthlyResumeCollection;
+use Modules\FinancialGoal\Http\Resources\FinancialGoalBasicViewCollection;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalResource;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalTransactionViewCollection;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalViewResource;
 use Modules\FinancialGoal\Repositories\FinancialGoalRepository;
 
-/**
- * [x]
- */
 class FinancialGoalController extends ApiController
 {
     protected FinancialGoalRepository $repository;
@@ -27,13 +25,18 @@ class FinancialGoalController extends ApiController
 
     /**
      * Display a listing of the resource.
+     * @param Request $request
      * @param FinancialGoalDataTable $dataTable
      * @return JsonResponse
      */
-    public function index(FinancialGoalDataTable $dataTable): JsonResponse
+    public function index(Request $request, FinancialGoalDataTable $dataTable): JsonResponse
     {
         try {
-            return $dataTable->ajax();
+            $stats = $this->repository->getStats($request);
+
+            $data = $dataTable->ajax()->getData(true);
+
+            return response()->json(array_merge($data, ['stats' => $stats]));
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, 500);
@@ -164,6 +167,24 @@ class FinancialGoalController extends ApiController
             $financialGoal = $this->repository->reset($request, $id);
 
             return $this->ok(new FinancialGoalResource($financialGoal), __('financialgoal::messages.financial-goals.reset', ['name' => $financialGoal->name]));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return a resume of all user financial goals.
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function allUser(Request $request): JsonResponse
+    {
+        try {
+            $financialGoals = $this->repository->allUser($request);
+
+            return $this->ok(new FinancialGoalBasicViewCollection($financialGoals));
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

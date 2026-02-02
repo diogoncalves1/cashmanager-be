@@ -65,9 +65,8 @@ class FinancialGoalViewResource extends JsonResource
             'totalWithdrawals'                       => $this->totalWithdrawals,
             'totalWithdrawalsFormated'               => Helpers::formatMoneyWithCurrency($this->totalWithdrawals, $this->currencyCode, $this->currencySymbol, true),
 
-            'users'                                  => new \Modules\User\Http\Resources\UserShareCollection($this->users),
+            'users'                                  => new \Modules\FinancialGoal\Http\Resources\UserFinancialGoalContributionViewCollection($this->users),
             'totalTransactions'                      => $this->totalTransactions,
-            'totalContributions'                     => $this->totalContributions,
 
             'completedAt'                            => $this->completedAt,
             'canceledAt'                             => $this->canceledAt,

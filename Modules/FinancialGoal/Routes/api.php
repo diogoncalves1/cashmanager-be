@@ -20,6 +20,8 @@ Route::group([
                 'as'     => 'financial-goals.',
                 'prefix' => 'financial-goals',
             ], function () {
+                Route::get('/all', [FinancialGoalController::class, 'allUser']);
+
                 // Updates
                 Route::post('/{id}/cancel', [FinancialGoalController::class, 'cancel']);
                 Route::post('/{id}/complete', [FinancialGoalController::class, 'complete']);

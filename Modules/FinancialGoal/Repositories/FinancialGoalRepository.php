@@ -5,7 +5,9 @@ use App\Repositories\RepositoryApiInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Accounts\Core\Helpers;
 use Modules\FinancialGoal\Entities\FinancialGoal;
+use Modules\FinancialGoal\Entities\FinancialGoalBasicView;
 use Modules\FinancialGoal\Entities\FinancialGoalTransaction;
 use Modules\FinancialGoal\Entities\FinancialGoalUser;
 use Modules\FinancialGoal\Entities\FinancialGoalView;
@@ -29,6 +31,21 @@ class FinancialGoalRepository implements RepositoryApiInterface
     public function all()
     {
         return FinancialGoal::all();
+    }
+
+    public function allUser(Request $request)
+    {
+        $user = $request->user();
+
+        return FinancialGoalBasicView::query()->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])
+            ->join("financial_goal_users", "financial_goal_users.financial_goal_id", '=', 'financial_goal_basic_view.id')
+            ->join("shared_roles", "shared_roles.id", '=', "financial_goal_users.shared_role_id")
+            ->join('shared_permission_roles', "shared_permission_roles.shared_role_id", '=', 'shared_roles.id')
+            ->join('shared_permissions', "shared_permissions.id", '=', 'shared_permission_roles.shared_permission_id')
+            ->where("financial_goal_users.user_id", $user->id)
+            ->where('shared_permissions.code', 'createTransaction')
+            ->status("in_progress")
+            ->select("financial_goal_basic_view.*")->get();
     }
 
     public function store(Request $request)
@@ -243,6 +260,40 @@ class FinancialGoalRepository implements RepositoryApiInterface
         $financialGoal->contributed_amount -= $transaction->type == 'contribution' ? $transaction->amount : -$transaction->amount;
 
         $financialGoal->save();
+    }
+
+    public function getStats(Request $request)
+    {
+        $user = $request->user();
+
+        $currency = $user->preferences->currency;
+
+        $totalQuery = FinancialGoalView::query()
+            ->from('financial_goal_view as fg')
+            ->join('currencies as goal_currency', 'fg.currencyId', '=', 'goal_currency.id')
+            ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
+            ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
+            ->whereRaw("FIND_IN_SET(?, REPLACE(fg.userIds, ' ', ''))", [$user->id])
+            ->selectRaw("
+        SUM(fg.totalAmount * (user_currency.rate / goal_currency.rate)) as total_target,
+        SUM(fg.contributedAmount * (user_currency.rate / goal_currency.rate)) as total_saved
+    ")
+            ->first();
+
+        $stats = [
+            'totalGoals'         => DB::table('financial_goal_view')
+                ->whereRaw("FIND_IN_SET(?, REPLACE(userIds, ' ', ''))", [$user->id])
+                ->count(),
+            'activeGoals'        => DB::table('financial_goal_view')
+                ->where('status', 'in_progress')
+                ->whereRaw("FIND_IN_SET(?, REPLACE(userIds, ' ', ''))", [$user->id])
+                ->count(),
+            'totalTarget'        => $totalQuery->total_target,
+            'totalSavedFormated' => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->total_saved ?? 0, $currency->code, $currency->symbol),
+            'totalSaved'         => $totalQuery->total_saved,
+        ];
+
+        return $stats;
     }
 
     // Private methods
