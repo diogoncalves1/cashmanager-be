@@ -39,7 +39,8 @@ class FinancialGoalDataTable extends DataTable
             ->removeColumn('currencyId')
             ->removeColumn('currencyCode')
             ->removeColumn('canceledAt')
-            ->removeColumn('completedAt');
+            ->removeColumn('completedAt')
+            ->rawColumns(['name']);
 
     }
 
