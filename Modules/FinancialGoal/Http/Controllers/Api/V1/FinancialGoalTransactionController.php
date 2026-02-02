@@ -85,7 +85,7 @@ class FinancialGoalTransactionController extends ApiController
 
             $financialGoalTransaction = $this->repository->update($request, $id);
 
-            return $this->ok(new FinancialGoalTransactionResource($financialGoalTransaction), __('financialgoal::messages.financial-goals-transactions.update', ['name' => $financialGoalTransaction->financialGoal->name]));
+            return $this->ok(new FinancialGoalTransactionResource($financialGoalTransaction), __('financialgoal::messages.financial-goal-transactions.update', ['name' => $financialGoalTransaction->financialGoal->name]));
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

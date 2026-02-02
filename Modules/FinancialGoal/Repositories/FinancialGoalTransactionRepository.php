@@ -111,11 +111,12 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
             $this->transactionRepository->update($request, (string) $financialGoalTransaction->transaction_id);
 
             $input = $request->only(['amount', 'date', 'description']);
-            $financialGoalTransaction->update($input);
 
             if ($this->checkStatus($financialGoalTransaction->status, 'completed')) {
                 $this->financialGoalRepository->updateContributedAmount($financialGoalTransaction, $financialGoalTransaction->amount - $request->get('amount'));
             }
+
+            $financialGoalTransaction->update($input);
 
             return $financialGoalTransaction;
         });
