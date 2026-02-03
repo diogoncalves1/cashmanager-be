@@ -6,9 +6,11 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
+use Modules\Debts\Core\Helpers as CoreHelpers;
 use Modules\FinancialGoal\Entities\FinancialGoal;
 use Modules\FinancialGoal\Entities\FinancialGoalBasicView;
 use Modules\FinancialGoal\Entities\FinancialGoalTransaction;
+use Modules\FinancialGoal\Entities\FinancialGoalTransactionView;
 use Modules\FinancialGoal\Entities\FinancialGoalUser;
 use Modules\FinancialGoal\Entities\FinancialGoalView;
 use Modules\FinancialGoal\Exceptions\FinancialGoal\FinancialGoalInProgressException;
@@ -16,6 +18,7 @@ use Modules\FinancialGoal\Exceptions\FinancialGoal\FinancialGoalNotFullyFundedEx
 use Modules\FinancialGoal\Exceptions\FinancialGoal\FinancialGoalNotInProgressException;
 use Modules\FinancialGoal\Exceptions\FinancialGoal\UnauthorizedUpdateFinancialGoal;
 use Modules\FinancialGoal\Exceptions\FinancialGoal\UnauthorizedViewFinancialGoal;
+use Modules\FinancialGoal\Http\Resources\FinancialGoalTransactionViewCollection;
 use Modules\SharedRoles\Entities\SharedRole;
 use Modules\SharedRoles\Repositories\SharedRoleRepository;
 
@@ -296,7 +299,83 @@ class FinancialGoalRepository implements RepositoryApiInterface
         return $stats;
     }
 
-    // Private methods
+    public function getFormStats(Request $request)
+    {
+        $user = $request->user();
+
+        $currency = $user->preferences->currency;
+
+        $totalQuery = FinancialGoalView::query()
+            ->from('financial_goal_view as fg')
+            ->join('currencies as goal_currency', 'fg.currencyId', '=', 'goal_currency.id')
+            ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
+            ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
+            ->whereRaw("FIND_IN_SET(?, REPLACE(fg.userIds, ' ', ''))", [$user->id])
+            ->selectRaw("
+                SUM(fg.totalAmount * (user_currency.rate / goal_currency.rate)) as total_target,
+                SUM(fg.contributedAmount * (user_currency.rate / goal_currency.rate)) as total_saved
+            ")
+            ->first();
+
+        $statsValues = FinancialGoalTransaction::query()
+            ->from('financial_goal_transactions as fgt')
+            ->join('financial_goal_view as fg', 'fgt.financial_goal_id', '=', 'fg.id')
+            ->join('currencies as goal_currency', 'fg.currencyId', '=', 'goal_currency.id')
+            ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
+            ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
+            ->whereRaw("FIND_IN_SET(?, REPLACE(fg.userIds, ' ', ''))", [$user->id])
+            ->selectRaw("
+                    SUM(
+                        CASE
+                            WHEN YEAR(fgt.date) = YEAR(CURDATE())
+                            AND MONTH(fgt.date) = MONTH(CURDATE())
+                            AND fgt.status = 'completed'
+                            THEN
+                                CASE
+                                    WHEN fgt.type = 'contribution'
+                                    THEN fgt.amount * (user_currency.rate / goal_currency.rate)
+                                    ELSE -(fgt.amount * (user_currency.rate / goal_currency.rate))
+                                END
+                            ELSE 0
+                        END
+                    ) as thisMonth,
+
+                    SUM(
+                        CASE
+                            WHEN YEAR(fgt.date) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+                            AND MONTH(fgt.date) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+                            AND fgt.status = 'completed'
+                            THEN
+                                CASE
+                                    WHEN fgt.type = 'contribution'
+                                    THEN fgt.amount * (user_currency.rate / goal_currency.rate)
+                                    ELSE -(fgt.amount * (user_currency.rate / goal_currency.rate))
+                                END
+                            ELSE 0
+                        END
+                    ) as lastMonth
+            ")
+            ->first();
+        // FinancialGoalTransaction::where("user_id", $user->id)->whereRaw("YEAR(date) = YEAR(NOW())")->whereRaw("MONTH(date) = MONTH(NOW())")->sum('amount'),
+
+        $stats = [
+            'transactionSummary' => [
+                'totalGoals'                   => DB::table('financial_goal_view')
+                    ->whereRaw("FIND_IN_SET(?, REPLACE(userIds, ' ', ''))", [$user->id])
+                    ->count(),
+                'totalSaved'                   => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->total_saved ?? 0, $currency->code, $currency->symbol),
+                'currentYearTotalTransactions' => FinancialGoalTransaction::where("user_id", $user->id)->whereRaw("YEAR(date) = YEAR(NOW())")->count(),
+                'thisMonth'                    => Helpers::formatMoneyWithSymbolAndCurrency($statsValues->thisMonth ?? 0, $currency->code, $currency->symbol),
+                'lastMonth'                    => Helpers::formatMoneyWithSymbolAndCurrency($statsValues->lastMonth ?? 0, $currency->code, $currency->symbol),
+                'difLastMonth'                 => CoreHelpers::percentage($statsValues->lastMonth, $statsValues->thisMonth - $statsValues->lastMonth),
+            ],
+            'recentTransactions' => new FinancialGoalTransactionViewCollection(FinancialGoalTransactionView::where("userId", $user->id)->limit(3)->orderBy("date", "desc")->get()),
+        ];
+
+        return $stats;
+    }
+
+// Private methods
     private function showView(string $id)
     {
         $view = FinancialGoalView::where('id', $id)->first();
