@@ -26,10 +26,23 @@ return new class extends Migration
                 c.symbol AS currencySymbol,
                 c.code AS currencyCode,
                 c.id AS currencyId,
-                a.name AS accountName
+                a.name AS accountName,
+                a.type AS accountType,
+                sr.name AS sharedRoleName,
+                (
+                    SELECT SUM(fgt2.amount)
+                    FROM financial_goal_transactions fgt2
+                    WHERE fgt2.date <= fgt.date
+                    AND fgt2.id < fgt.id
+                    AND fgt2.financial_goal_id = fgt.financial_goal_id
+                    ORDER BY fgt2.date DESC
+                    LIMIT 1
+                ) AS balanceBefore
                 FROM financial_goal_transactions AS fgt
                 JOIN financial_goals AS fg ON fg.id = fgt.financial_goal_id
                 JOIN currencies AS c ON c.id = fg.currency_id
+                JOIN financial_goal_users fgu ON fgu.user_id = fgt.user_id
+                JOIN shared_roles sr ON sr.id = fgu.shared_role_id
                 JOIN users AS u ON u.id = fgt.user_id
                 LEFT JOIN transactions t ON t.id = fgt.transaction_id
                 LEFT JOIN accounts a ON a.id = t.account_id
@@ -47,6 +60,7 @@ return new class extends Migration
                     c.symbol,
                     c.code,
                     c.id,
+                    fgu.shared_role_id,
                     a.name;
             ");
     }
