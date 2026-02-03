@@ -31,6 +31,7 @@ class AccountRepository implements RepositoryApiInterface
             ->join('shared_permissions', "shared_permissions.id", '=', 'shared_permission_roles.shared_permission_id')
             ->where("account_users.user_id", $user->id)
             ->where('shared_permissions.code', 'createTransaction')
+            ->active(true)
             ->select("account_basic_view.*")->get();
     }
 
