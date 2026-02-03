@@ -10,6 +10,7 @@ use Modules\Category\Repositories\CategoryRepository;
 use Modules\FinancialGoal\Entities\FinancialGoalTransaction;
 use Modules\FinancialGoal\Entities\FinancialGoalTransactionView;
 use Modules\FinancialGoal\Exceptions\FinancialGoalTransactions\ContributionBeforeCurrentDateException;
+use Modules\User\Entities\User;
 
 class FinancialGoalTransactionRepository implements RepositoryApiInterface
 {

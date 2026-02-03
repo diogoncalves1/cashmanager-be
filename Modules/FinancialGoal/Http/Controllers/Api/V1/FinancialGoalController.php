@@ -10,6 +10,7 @@ use Modules\FinancialGoal\Http\Requests\FinancialGoalRequest;
 use Modules\FinancialGoal\Http\Resources\Charts\FinancialGoalMonthlyResumeCollection;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalBasicViewCollection;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalResource;
+use Modules\FinancialGoal\Http\Resources\FinancialGoals\FinancialGoalStatsResource;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalTransactionViewCollection;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalViewResource;
 use Modules\FinancialGoal\Repositories\FinancialGoalRepository;
@@ -185,6 +186,24 @@ class FinancialGoalController extends ApiController
             $financialGoals = $this->repository->allUser($request);
 
             return $this->ok(new FinancialGoalBasicViewCollection($financialGoals));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return a stats of all user financial goals.
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function getStats(Request $request): JsonResponse
+    {
+        try {
+            $stats = $this->repository->getFormStats($request);
+
+            return $this->ok(new FinancialGoalStatsResource($stats));
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
