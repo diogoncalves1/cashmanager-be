@@ -45,7 +45,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
             if ($financialGoal->status !== 'in_progress') {
                 throw new \Modules\FinancialGoal\Exceptions\FinancialGoal\FinancialGoalNotInProgressException();
             }
-            if ($request->get("date") > Carbon::now() && $request->get("status") == "completed" || ($request->get("date") < Carbon::now() && $request->get('status') == 'pending')) {
+            if ($request->get("date") > Carbon::now() && $request->get("status") == "completed" || (Carbon::parse($request->get("date"))->isBefore(Carbon::today()) && $request->get('status') == 'pending')) {
                 throw new ContributionBeforeCurrentDateException();
             }
 
