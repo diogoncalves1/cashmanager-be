@@ -1,9 +1,10 @@
 <?php
 namespace Modules\FinancialGoal\Entities;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
+use Modules\SharedRoles\Entities\SharedRole;
 
-class UserFinancialGoalContributionsView extends Model
+class UserFinancialGoalContributionsView extends Pivot
 {
     protected $table = "user_financial_goal_contributions_view";
 
@@ -14,5 +15,10 @@ class UserFinancialGoalContributionsView extends Model
     public function financialGoal()
     {
         return $this->belongsTo(FinancialGoal::class, 'goalId');
+    }
+
+    public function sharedRole()
+    {
+        return $this->belongsTo(SharedRole::class, 'sharedRoleId');
     }
 }

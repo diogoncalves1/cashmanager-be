@@ -19,6 +19,7 @@ return new class extends Migration
                     u.name AS userName,
                     c.symbol AS currencySymbol,
                     c.code AS currencyCode,
+                    fgu.shared_role_id,
                     SUM(
                         CASE
                             WHEN fgt.status = 'completed' AND fgt.type = 'contribution'
@@ -40,6 +41,7 @@ return new class extends Migration
                     u.name,
                     c.symbol,
                     c.code,
+                    fgu.shared_role_id,
                     c.id;
        ");
     }

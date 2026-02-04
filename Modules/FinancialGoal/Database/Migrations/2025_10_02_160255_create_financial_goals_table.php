@@ -52,7 +52,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('financial_goals');
 
-        $permissions = ['viewFinancialGoal', 'updateFinancialGoal', 'destroyFinancialGoal', "manageFinancialGoalUsers"];
+        $permissions = ['viewFinancialGoal', 'updateFinancialGoal', 'destroyFinancialGoal', "manageFinancialGoal"];
 
         foreach ($permissions as $permission) {
             DB::table('shared_permissions')->where('code', $permission)->delete();

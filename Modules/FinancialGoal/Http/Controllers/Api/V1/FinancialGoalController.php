@@ -5,6 +5,7 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Modules\ActivityLog\DataTables\ActivityLogDataTable;
 use Modules\FinancialGoal\DataTables\FinancialGoalDataTable;
 use Modules\FinancialGoal\Http\Requests\FinancialGoalRequest;
 use Modules\FinancialGoal\Http\Resources\Charts\FinancialGoalMonthlyResumeCollection;
@@ -204,6 +205,29 @@ class FinancialGoalController extends ApiController
             $stats = $this->repository->getFormStats($request);
 
             return $this->ok(new FinancialGoalStatsResource($stats));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return a activity of financial goal.
+     * @param ActivityLogDataTable $dataTable
+     * @param Request $request
+     * @param string $id
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function activity(ActivityLogDataTable $dataTable, Request $request, string $id): JsonResponse
+    {
+        try {
+            $this->repository->showToUser($request, $id);
+
+            $dataTable->type = 'financial_goal';
+            $dataTable->id   = $id;
+
+            return $dataTable->ajax();
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

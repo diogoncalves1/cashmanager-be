@@ -3,6 +3,7 @@ namespace Modules\FinancialGoal\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\Accounts\Core\Helpers;
 
 class UserFinancialGoalContributionViewResource extends JsonResource
 {
@@ -12,10 +13,10 @@ class UserFinancialGoalContributionViewResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'             => $this->id,
-            'name'           => $this->name,
-            'contrubuttions' => '',
-            'sharedRole'     => $this->whenHas('sharedRole', new \Modules\SharedRoles\Http\Resources\SharedRoleResource($this->sharedRole)),
+            'id'           => $this->id,
+            'name'         => $this->name,
+            'contribution' => Helpers::formatMoneyWithSymbolAndCurrency($this->totalContributed, $this->currencyCode, $this->currencySymbol),
+            'sharedRole'   => $this->whenHas('sharedRole', new \Modules\SharedRoles\Http\Resources\SharedRoleResource($this->sharedRole)),
         ];
     }
 }

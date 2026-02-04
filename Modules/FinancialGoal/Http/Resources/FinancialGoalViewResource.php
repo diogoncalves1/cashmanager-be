@@ -13,8 +13,11 @@ class FinancialGoalViewResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        foreach ($this->users as &$user) {
-            $user->sharedRole = $user->pivot->sharedRole;
+        foreach ($this->userContributions as &$user) {
+            $user->sharedRole       = $user->pivot->sharedRole;
+            $user->totalContributed = $user->pivot->totalContributed;
+            $user->currencyCode     = $user->pivot->currencyCode;
+            $user->currencySymbol   = $user->pivot->currencySymbol;
         }
 
         $missingAmount = $this->totalAmount - $this->contributedAmount;
@@ -65,7 +68,7 @@ class FinancialGoalViewResource extends JsonResource
             'totalWithdrawals'                       => $this->totalWithdrawals,
             'totalWithdrawalsFormated'               => Helpers::formatMoneyWithCurrency($this->totalWithdrawals, $this->currencyCode, $this->currencySymbol, true),
 
-            'users'                                  => new \Modules\FinancialGoal\Http\Resources\UserFinancialGoalContributionViewCollection($this->users),
+            'users'                                  => new \Modules\FinancialGoal\Http\Resources\UserFinancialGoalContributionViewCollection($this->userContributions),
             'totalTransactions'                      => $this->totalTransactions,
 
             'completedAt'                            => $this->completedAt,

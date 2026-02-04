@@ -4,6 +4,7 @@ namespace Modules\FinancialGoal\Repositories;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\FinancialGoal\Entities\FinancialGoalUserInvite;
 use Modules\FinancialGoal\Repositories\FinancialGoalRepository;
 use Modules\FinancialGoal\Repositories\FinancialGoalUserRepository;
@@ -18,13 +19,15 @@ class FinancialGoalUserInviteRepository
     private $friendshipRepository;
     private $sharedRoleRepository;
     private $financialGoalUserRepo;
+    protected ActivityLogRepository $activityRepo;
 
-    public function __construct(FinancialGoalRepository $financialGoalRepository, SharedRoleRepository $sharedRoleRepository, FriendshipRepository $friendshipRepository, FinancialGoalUserRepository $financialGoalUserRepo)
+    public function __construct(FinancialGoalRepository $financialGoalRepository, SharedRoleRepository $sharedRoleRepository, FriendshipRepository $friendshipRepository, FinancialGoalUserRepository $financialGoalUserRepo, ActivityLogRepository $activityRepo)
     {
         $this->financialGoalRepository = $financialGoalRepository;
         $this->sharedRoleRepository    = $sharedRoleRepository;
         $this->friendshipRepository    = $friendshipRepository;
         $this->financialGoalUserRepo   = $financialGoalUserRepo;
+        $this->activityRepo            = $activityRepo;
     }
 
     public function invite(Request $request, string $id, string $userId)
@@ -64,6 +67,7 @@ class FinancialGoalUserInviteRepository
             $input['status']            = 'pending';
 
             $invite = FinancialGoalUserInvite::create($input);
+            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_invited', 'invitedUserId' => $userId, 'sharedRoleId' => $sharedRoleInvite->id, 'inviteId' => $invite->id]);
 
             return $invite;
         });
@@ -87,6 +91,7 @@ class FinancialGoalUserInviteRepository
 
             $input    = ["financial_goal_id" => $id, "user_id" => $user->id, "shared_role_id" => $invite->shared_role_id];
             $relation = $this->financialGoalUserRepo->store($input);
+            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'user_joined', ['userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
 
             return $relation;
         });
