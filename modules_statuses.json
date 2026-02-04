@@ -1,5 +1,6 @@
 {
     "Accounts": true,
+    "ActivityLog": true,
     "ApiResponder": true,
     "Asset": true,
     "Category": true,
