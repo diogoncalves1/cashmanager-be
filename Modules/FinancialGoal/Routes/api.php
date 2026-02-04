@@ -23,6 +23,8 @@ Route::group([
                 Route::get('/all', [FinancialGoalController::class, 'allUser']);
                 Route::get('/stats', [FinancialGoalController::class, 'getStats']);
 
+                Route::get('/{id}/activity', [FinancialGoalController::class, 'activity']);
+
                 // Updates
                 Route::post('/{id}/cancel', [FinancialGoalController::class, 'cancel']);
                 Route::post('/{id}/complete', [FinancialGoalController::class, 'complete']);

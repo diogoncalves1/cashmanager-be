@@ -6,23 +6,25 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Repositories\TransactionRepository;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Category\Repositories\CategoryRepository;
 use Modules\FinancialGoal\Entities\FinancialGoalTransaction;
 use Modules\FinancialGoal\Entities\FinancialGoalTransactionView;
 use Modules\FinancialGoal\Exceptions\FinancialGoalTransactions\ContributionBeforeCurrentDateException;
-use Modules\User\Entities\User;
 
 class FinancialGoalTransactionRepository implements RepositoryApiInterface
 {
     public FinancialGoalRepository $financialGoalRepository;
     protected TransactionRepository $transactionRepository;
     protected CategoryRepository $categoryRepository;
+    protected ActivityLogRepository $activityRepo;
 
-    public function __construct(FinancialGoalRepository $financialGoalRepository, TransactionRepository $transactionRepository, CategoryRepository $categoryRepository)
+    public function __construct(FinancialGoalRepository $financialGoalRepository, TransactionRepository $transactionRepository, CategoryRepository $categoryRepository, ActivityLogRepository $activityRepo)
     {
         $this->financialGoalRepository = $financialGoalRepository;
         $this->transactionRepository   = $transactionRepository;
         $this->categoryRepository      = $categoryRepository;
+        $this->activityRepo            = $activityRepo;
     }
 
     public function all()
@@ -68,6 +70,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
 
             if ($this->checkStatus($financialGoalTransaction->status, 'completed')) {
                 $this->financialGoalRepository->adjustContributedAmount($financialGoalTransaction);
+                $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, $input['type'] == 'contribution' ? 'contribution_added' : 'withdrawal_added', ['transactionId' => $financialGoalTransaction->id, 'amount' => $transaction->amount, 'transactionDate' => $transaction->date, 'accountName' => $transaction->account->name]);
             }
 
             return $financialGoalTransaction;
@@ -115,6 +118,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
 
             if ($this->checkStatus($financialGoalTransaction->status, 'completed')) {
                 $this->financialGoalRepository->updateContributedAmount($financialGoalTransaction, $financialGoalTransaction->amount - $request->get('amount'));
+                // $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, $input['type'] == 'contribution' ? 'contribution_added' : 'withdrawal_added', ['transactionId' => $financialGoalTransaction->id, 'amount' => $financialGoalTransaction->amount, 'transactionDate' => $financialGoalTransaction->date, 'accountName' => $financialGoalTransaction->account->name]);
             }
 
             $financialGoalTransaction->update($input);

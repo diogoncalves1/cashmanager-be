@@ -3,6 +3,7 @@ namespace Modules\FinancialGoal\Repositories;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\FinancialGoal\Entities\FinancialGoalUser;
 use Modules\SharedRoles\Exceptions\RelationNotExistsException;
 use Modules\SharedRoles\Exceptions\SelfRoleUpdateNotAllowedException;
@@ -13,11 +14,13 @@ class FinancialGoalUserRepository
 {
     private $financialGoalRepository;
     private $sharedRoleRepository;
+    protected ActivityLogRepository $activityRepo;
 
-    public function __construct(FinancialGoalRepository $financialGoalRepository, SharedRoleRepository $sharedRoleRepository)
+    public function __construct(FinancialGoalRepository $financialGoalRepository, SharedRoleRepository $sharedRoleRepository, ActivityLogRepository $activityRepo)
     {
         $this->financialGoalRepository = $financialGoalRepository;
         $this->sharedRoleRepository    = $sharedRoleRepository;
+        $this->activityRepo            = $activityRepo;
     }
 
     public function revokeUser(Request $request, string $id, $userId)
@@ -44,6 +47,7 @@ class FinancialGoalUserRepository
             }
 
             $relation = $this->destroy($userId, $id);
+            $this->activityRepo->storeActivity($id, $user->id, 'user_removed', ['userId' => $userId, 'role' => $sharedRoleInvite->code]);
 
             return $relation;
         });

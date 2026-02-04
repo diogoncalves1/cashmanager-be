@@ -1,6 +1,7 @@
 <?php
 namespace Modules\ActivityLog\DataTables;
 
+use Carbon\Carbon;
 use Modules\ActivityLog\Core\ActivityLogMessageResolver;
 use Modules\ActivityLog\Entities\ActivityLog;
 use Modules\User\Http\Resources\UserShareResource;
@@ -27,9 +28,9 @@ class ActivityLogDataTable extends DataTable
 
                 return __($messageArr['key'], $messageArr['params']);
             })
-            ->addColumn('createdAt', fn(ActivityLog $activity) => $activity->created_at)
-            ->editColumn('metadata', fn(ActivityLog $activity) => $this->metadataFormatter->format($activity->metadata))
+            ->addColumn('createdAt', fn(ActivityLog $activity) => new Carbon($activity->created_at)->format('Y-m-d'))
             ->removeColumn('user_id')
+            ->removeColumn('metadata')
             ->removeColumn('subject_id')
             ->removeColumn('type')
             ->removeColumn('created_at')
@@ -44,6 +45,7 @@ class ActivityLogDataTable extends DataTable
         return $model->newQuery()
             ->where("subject_id", $this->id)
             ->where("type", $this->type)
-            ->orderBy("created_at");
+            ->orderBy("created_at", 'desc')
+            ->orderBy('id', 'desc');
     }
 }

@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Debts\Core\Helpers as CoreHelpers;
 use Modules\FinancialGoal\Entities\FinancialGoal;
 use Modules\FinancialGoal\Entities\FinancialGoalBasicView;
@@ -25,10 +26,12 @@ use Modules\SharedRoles\Repositories\SharedRoleRepository;
 class FinancialGoalRepository implements RepositoryApiInterface
 {
     protected SharedRoleRepository $sharedRoleRepository;
+    protected ActivityLogRepository $activityRepo;
 
-    public function __construct(SharedRoleRepository $sharedRoleRepository)
+    public function __construct(SharedRoleRepository $sharedRoleRepository, ActivityLogRepository $activityRepo)
     {
         $this->sharedRoleRepository = $sharedRoleRepository;
+        $this->activityRepo         = $activityRepo;
     }
 
     public function all()
@@ -67,6 +70,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             ];
 
             FinancialGoalUser::create($inputUser);
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', ['type' => 'goal_created', 'initialTarget' => $input['total_amount'], 'currencyCode' => $financialGoal->currency->code, 'currencySymbol' => $financialGoal->currency->symbol]);
 
             return $financialGoal;
         });
@@ -157,6 +161,8 @@ class FinancialGoalRepository implements RepositoryApiInterface
             $financialGoal->canceled_at = Carbon::now();
             $this->setStatus($financialGoal, 'canceled');
 
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', ['type' => 'goal_paused']);
+
             return $financialGoal;
         });
     }
@@ -181,6 +187,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             }
             $financialGoal->completed_at = Carbon::now();
             $this->setStatus($financialGoal, 'completed');
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'goal_completed');
 
             return $financialGoal;
         });
@@ -205,6 +212,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             $financialGoal->canceled_at  = null;
             $financialGoal->completed_at = null;
             $this->setStatus($financialGoal, 'in_progress');
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', ['type' => 'goal_reseted']);
 
             return $financialGoal;
         });
@@ -280,7 +288,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             ->selectRaw("
         SUM(fg.totalAmount * (user_currency.rate / goal_currency.rate)) as total_target,
         SUM(fg.contributedAmount * (user_currency.rate / goal_currency.rate)) as total_saved
-    ")
+        ")
             ->first();
 
         $stats = [
@@ -367,7 +375,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
                 'currentYearTotalTransactions' => FinancialGoalTransaction::where("user_id", $user->id)->whereRaw("YEAR(date) = YEAR(NOW())")->count(),
                 'thisMonth'                    => Helpers::formatMoneyWithSymbolAndCurrency($statsValues->thisMonth ?? 0, $currency->code, $currency->symbol),
                 'lastMonth'                    => Helpers::formatMoneyWithSymbolAndCurrency($statsValues->lastMonth ?? 0, $currency->code, $currency->symbol),
-                'difLastMonth'                 => CoreHelpers::percentage($statsValues->lastMonth, $statsValues->thisMonth - $statsValues->lastMonth),
+                'difLastMonth'                 => CoreHelpers::percentage($statsValues->lastMonth ?? 0, $statsValues->thisMonth - $statsValues->lastMonth),
             ],
             'recentTransactions' => new FinancialGoalTransactionViewCollection(FinancialGoalTransactionView::where("userId", $user->id)->limit(3)->orderBy("date", "desc")->get()),
         ];
