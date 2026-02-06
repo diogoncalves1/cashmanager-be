@@ -17,7 +17,7 @@ class Helpers
         return (self::debtTotalAmount($totalAmount, $monthlyInterestRate, $months) - $paidAmount);
     }
 
-    public static function percentage(float $totalAmount, float $contributedAmount, int $decimals = 2): float
+    public static function percentage(float $totalAmount = 0, float $contributedAmount = 0, int $decimals = 2): float
     {
         if ($contributedAmount == 0 || $totalAmount == 0) {
             return 0;

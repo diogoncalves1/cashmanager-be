@@ -24,7 +24,7 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('due_date');
             $table->date('paid_at')->nullable();
-            $table->integer("months_paid")->nullable();
+            $table->integer("months_paid")->default(0);
             $table->text('description')->nullable();
             $table->decimal('monthly_amount', 15, 2)->nullable();
             $table->timestamps();

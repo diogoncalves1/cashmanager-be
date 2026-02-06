@@ -17,6 +17,7 @@ Route::group([
             'prefix' => 'debts',
             'as'     => 'debts.',
         ], function () {
+            Route::get('/all', [DebtController::class, 'allUser']);
             // Updates
             Route::post('/{id}/mark-paid', [DebtController::class, 'markPaid']);
             Route::post('/{id}/reset', [DebtController::class, 'reset']);
