@@ -50,7 +50,7 @@ class FinancialGoalViewResource extends JsonResource
 
             'currencySymbol'                         => $this->currencySymbol,
             'currencyCode'                           => $this->currencyCode,
-            'currencyId'                             => $this->currencyId,
+            'currencyId'                             => (string) $this->currencyId,
 
             'startDate'                              => $this->startDate,
             'dueDate'                                => $this->dueDate,
