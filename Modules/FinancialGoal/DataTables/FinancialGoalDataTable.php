@@ -53,10 +53,10 @@ class FinancialGoalDataTable extends DataTable
         $query = $model->newQuery()
             ->whereRaw("FIND_IN_SET(?, REPLACE(userIds, ' ', ''))", [$user->id]);
 
-        if ($request->has('status')) {
+        if ($request->has('status') && ! is_null($request->get('status'))) {
             $query->status($request->get('status'));
         }
-        if ($request->has('priority')) {
+        if ($request->has('priority') && ! is_null($request->get('priority'))) {
             $query->priority($request->get('priority'));
         }
 
