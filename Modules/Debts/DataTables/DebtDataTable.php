@@ -45,7 +45,8 @@ class DebtDataTable extends DataTable
 
                 return ['view' => $canView, 'edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'markPaid' => $canMarkPaid];
             })
-            ->removeColumn('user_ids');
+            ->removeColumn('user_ids')
+            ->rawColumns(['name', 'description']);
     }
 
     public function query(DebtsView $model)

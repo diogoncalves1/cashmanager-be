@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Modules\Debts\DataTables\DebtDataTable;
 use Modules\Debts\Http\Requests\DebtRequest;
+use Modules\Debts\Http\Resources\DebtBasicViewCollection;
 use Modules\Debts\Http\Resources\DebtResource;
 use Modules\Debts\Http\Resources\DebtViewResource;
 use Modules\Debts\Repositories\DebtRepository;
@@ -22,13 +23,36 @@ class DebtController extends ApiController
 
     /**
      * Display a listing of the resource.
+     * @param Request $request
      * @param DebtDataTable $dataTable
      * @return JsonResponse
      */
-    public function index(DebtDataTable $dataTable): JsonResponse
+    public function index(Request $request, DebtDataTable $dataTable): JsonResponse
     {
         try {
-            return $dataTable->ajax();
+            $stats = $this->debtRepository->getStats($request);
+
+            $data = $dataTable->ajax()->getData(true);
+
+            return response()->json(array_merge($data, ['stats' => $stats]));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return a resume of all user debts.
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function allUser(Request $request): JsonResponse
+    {
+        try {
+            $financialGoals = $this->debtRepository->allUser($request);
+
+            return $this->ok(new DebtBasicViewCollection($financialGoals));
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
