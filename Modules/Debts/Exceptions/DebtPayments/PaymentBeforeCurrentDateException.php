@@ -10,6 +10,6 @@ class PaymentBeforeCurrentDateException extends Exception
 
     public function __construct()
     {
-        parent::__construct(__('debts::exceptions.debts-payments.paymentBeforeCurrentDateException'), $this->code);
+        parent::__construct(__('debts::exceptions.debt-payments.paymentBeforeCurrentDateException'), $this->code);
     }
 }

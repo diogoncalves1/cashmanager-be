@@ -13,7 +13,7 @@ class DebtPayment extends Model
 
     protected $fillable = [
         "transaction_id", "debt_id", "user_id", "date",
-        "status", "amount", "description", "interest_rate"];
+        "status", "amount", "description", "interest_rate", "is_monthly_payment"];
 
     protected static function newFactory()
     {

@@ -11,7 +11,7 @@ class UserShareResource extends JsonResource
      */
     public function toArray(Request $request): array
     {return [
-        'id'         => $this->id,
+        'id'         => (string) $this->id,
         'name'       => $this->name,
         'sharedRole' => $this->whenHas('sharedRole', new \Modules\SharedRoles\Http\Resources\SharedRoleResource($this->sharedRole)),
     ];}
