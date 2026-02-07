@@ -39,7 +39,8 @@ class DebtPaymentDataTable extends DataTable
                 $canDestroy = $sharedRole?->hasPermission("destroyTransaction");
 
                 return ['view' => $canView, 'confirm' => $canConfirm, 'edit' => $canEdit, 'destroy' => $canDestroy];
-            });
+            })
+            ->rawColumns(['debtName']);
     }
 
     public function query(DebtPaymentView $model)
@@ -53,8 +54,8 @@ class DebtPaymentDataTable extends DataTable
             ->whereRaw("FIND_IN_SET(?, REPLACE(dv.userIds, ' ', ''))", [$user->id])
             ->select('debt_payments_view.*');
 
-        if ($request->has('type')) {
-            $query->type($request->get('type'));
+        if ($request->has('status')) {
+            $query->status($request->get('status'));
         }
         if ($request->has('debtId')) {
             $query->debt($request->get('debtId'));

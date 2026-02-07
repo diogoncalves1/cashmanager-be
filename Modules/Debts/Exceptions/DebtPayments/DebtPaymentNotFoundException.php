@@ -10,6 +10,6 @@ class DebtPaymentNotFoundException extends Exception
 
     public function __construct()
     {
-        parent::__construct(__('debts::exceptions.debts-payments.debtPaymentNotFoundException'), $this->code);
+        parent::__construct(__('debts::exceptions.debt-payments.debtPaymentNotFoundException'), $this->code);
     }
 }

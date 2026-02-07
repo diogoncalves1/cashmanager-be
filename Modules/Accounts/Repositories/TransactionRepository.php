@@ -40,6 +40,10 @@ class TransactionRepository implements RepositoryApiInterface
                 throw new \Modules\Accounts\Exceptions\UnauthorizedCreateTransactionException();
             }
 
+            if ($request->get("currency_id")) {
+                // $input['amount'] = Helpers::convertCurrency($input['amount']);
+            }
+
             $input["user_id"] = $user->id;
 
             $transaction = Transaction::create($input);
@@ -210,10 +214,12 @@ class TransactionRepository implements RepositoryApiInterface
                 "SUM(CASE WHEN transactions.type = 'revenue' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as revenues,
                 SUM(CASE WHEN transactions.type = 'expense' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as expenses,
                 CONCAT(MONTH(transactions.date), ' ', YEAR(transactions.date)) as month,
-                CONCAT(YEAR(transactions.date), MONTH(transactions.date), '') as monthOrder
+                 MONTH(transactions.date) as monthOrder,
+                YEAR(transactions.date) as year
                 "
             )
-            ->groupBy("month", "monthOrder")
+            ->groupBy("month", "monthOrder", "year")
+            ->orderBy("year", "asc")
             ->orderBy("monthOrder", "asc")
             ->get();
 

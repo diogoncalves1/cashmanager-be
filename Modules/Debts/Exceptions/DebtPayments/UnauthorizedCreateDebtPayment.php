@@ -10,6 +10,6 @@ class UnauthorizedCreateDebtPayment extends Exception
 
     public function __construct()
     {
-        parent::__construct(__('debts::exceptions.debts-payments.unauthorizedCreateDebtPayment'), $this->code);
+        parent::__construct(__('debts::exceptions.debt-payments.unauthorizedCreateDebtPayment'), $this->code);
     }
 }

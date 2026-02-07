@@ -1,19 +1,18 @@
 <?php
-
 namespace Modules\SharedRoles\Repositories;
 
-use Modules\SharedRoles\Entities\SharedRole;
 use App\Repositories\RepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Modules\SharedRoles\Entities\SharedRole;
 
 class SharedRoleRepository implements RepositoryInterface
 {
     public function all()
     {
-        return SharedRole::all();
+        return SharedRole::where('code', '!=', 'creator')->get();
     }
 
     public function store(Request $request)
@@ -54,7 +53,7 @@ class SharedRoleRepository implements RepositoryInterface
 
     public function destroy(string $id)
     {
-        return  DB::transaction(function () use ($id) {
+        return DB::transaction(function () use ($id) {
             $sharedRole = $this->show($id);
 
             $sharedRole->delete();
@@ -90,10 +89,11 @@ class SharedRoleRepository implements RepositoryInterface
     {
         $query = SharedRole::where('code', $request->get('code'));
 
-        if ($request->get("id"))
+        if ($request->get("id")) {
             $query->where('id', '!=', $request->get('id'));
+        }
 
-        $exists =  $query->exists();
+        $exists = $query->exists();
 
         return $exists;
     }

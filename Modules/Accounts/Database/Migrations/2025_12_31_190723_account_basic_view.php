@@ -15,6 +15,7 @@ return new class extends Migration
             SELECT
                 a.id,
                 a.name,
+                a.type,
                 GROUP_CONCAT(DISTINCT u.id SEPARATOR ', ') AS user_ids,
                 a.active
             FROM accounts a

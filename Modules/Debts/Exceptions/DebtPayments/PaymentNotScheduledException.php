@@ -10,6 +10,6 @@ class PaymentNotScheduledException extends Exception
 
     public function __construct()
     {
-        parent::__construct(__('debts::exceptions.debts-payments.paymentNotScheduledException'), $this->code);
+        parent::__construct(__('debts::exceptions.debt-payments.paymentNotScheduledException'), $this->code);
     }
 }

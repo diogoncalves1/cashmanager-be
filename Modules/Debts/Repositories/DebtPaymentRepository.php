@@ -57,7 +57,7 @@ class DebtPaymentRepository implements RepositoryApiInterface
                 throw new PaymentBeforeCurrentDateException();
             }
 
-            $input = $request->only(['debt_id', 'date', 'status', 'amount', 'description', 'interest_rate']);
+            $input = $request->only(['debt_id', 'date', 'status', 'amount', 'description', 'interest_rate', 'is_monthly_payment']);
 
             $transactionInput = [];
             $input['user_id'] = $transactionInput['user_id'] = $user->id;
@@ -75,7 +75,7 @@ class DebtPaymentRepository implements RepositoryApiInterface
             $debtPayment = DebtPayment::create($input);
 
             if ($this->checkStatus($debtPayment, 'completed')) {
-                $this->debtRepository->adjustPaidAmount($debtPayment);
+                $this->debtRepository->adjustDebtForPaymentStore($debtPayment);
             }
 
             return $debtPayment;
@@ -134,6 +134,9 @@ class DebtPaymentRepository implements RepositoryApiInterface
 
             if ($debtPayment->status == 'completed') {
                 $this->debtRepository->reversePaidAmount($debtPayment);
+                if ($debtPayment->is_monthly_payment) {
+                    $debt->decrement('months_paid', 1);
+                }
             }
 
             return $debtPayment;
@@ -157,7 +160,7 @@ class DebtPaymentRepository implements RepositoryApiInterface
             if (! $this->checkStatus($debtPayment, 'pending')) {
                 throw new PaymentNotScheduledException();
             }
-            if ($debtPayment->date < Carbon::now()->format('Y-m-d')) {
+            if (! ($debtPayment->date <= date('Y-m-d'))) {
                 throw new PaymentBeforeCurrentDateException();
             }
 
@@ -165,7 +168,7 @@ class DebtPaymentRepository implements RepositoryApiInterface
 
             $debtPayment->update(['status' => 'completed']);
 
-            $this->debtRepository->adjustPaidAmount($debtPayment);
+            $this->debtRepository->adjustDebtForPaymentStore($debtPayment);
 
             return $debtPayment;
         });
@@ -217,4 +220,7 @@ class DebtPaymentRepository implements RepositoryApiInterface
     {
         return $debtPayment->status == $status;
     }
+}
+{
+
 }

@@ -67,7 +67,7 @@ class DebtViewResource extends JsonResource
 
             'months'                           => $this->months,
             'monthsPaid'                       => $this->monthsPaid,
-            'insterestRate'                    => $this->interestRate,
+            'interestRate'                     => $this->interestRate,
             'paidAt'                           => $this->paidAt,
             'monthlyAmount'                    => $this->monthlyAmount,
 

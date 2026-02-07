@@ -23,6 +23,7 @@ return new class extends Migration
             $table->decimal('amount', 15);
             $table->text('description')->nullable();
             $table->decimal('interest_rate', 15, 4);
+            $table->tinyInteger('is_monthly_payment')->default(1);
             $table->timestamps();
 
             $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade');
