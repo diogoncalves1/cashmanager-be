@@ -15,8 +15,11 @@ class DebtViewResource extends JsonResource
     {
         // return parent::toArray($request);
 
-        foreach ($this->users as &$user) {
-            $user->sharedRole = $user->pivot->sharedRole;
+        foreach ($this->userPayments as &$user) {
+            $user->sharedRole     = $user->pivot->sharedRole;
+            $user->totalPaid      = $user->pivot->totalPaid;
+            $user->currencyCode   = $user->pivot->currencyCode;
+            $user->currencySymbol = $user->pivot->currencySymbol;
         }
 
         $user       = $request->user();
@@ -54,6 +57,9 @@ class DebtViewResource extends JsonResource
             'userNames'                        => $this->userNames,
             'description'                      => $this->description,
 
+            'interestPaidFormated'             => Helpers::formatMoneyWithCurrency($this->interestPaid, $this->currencyCode, $this->currencySymbol),
+            'interestPaid'                     => $this->interestPaid,
+
             'missingAmountFormated'            => Helpers::formatMoneyWithCurrency($missingAmount, $this->currencyCode, $this->currencySymbol),
             'missingAmount'                    => $missingAmount,
 
@@ -62,7 +68,8 @@ class DebtViewResource extends JsonResource
             'totalPayments'                    => $this->totalPayments,
             'totalPaymentsFormated'            => Helpers::formatMoneyWithCurrency($this->totalPayments, $this->currencyCode, $this->currencySymbol),
 
-            'users'                            => new \Modules\User\Http\Resources\UserShareCollection($this->users),
+            'users'                            => new \Modules\Debts\Http\Resources\DebtPayments\UserDebtPaymentViewCollection($this->userPayments),
+
             'totalTransactions'                => $this->totalTransactions,
 
             'months'                           => $this->months,
@@ -70,6 +77,7 @@ class DebtViewResource extends JsonResource
             'interestRate'                     => $this->interestRate,
             'paidAt'                           => $this->paidAt,
             'monthlyAmount'                    => $this->monthlyAmount,
+            'monthlyAmountFormated'            => Helpers::formatMoneyWithCurrency($this->monthlyAmount, $this->currencyCode, $this->currencySymbol),
 
             'actions'                          => $actions,
 
