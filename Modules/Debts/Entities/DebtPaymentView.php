@@ -15,4 +15,13 @@ class DebtPaymentView extends DebtPayment
     {
         return $this->belongsTo(Debt::class, "debtId");
     }
+
+    public function scopeStatus($query, $status)
+    {
+        return $query->where("debt_payments_view.status", $status);
+    }
+    public function scopeDebt($query, $debtId)
+    {
+        return $query->where("debt_payments_view.debtId", $debtId);
+    }
 }

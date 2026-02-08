@@ -35,4 +35,17 @@ class DebtUser extends Pivot
     {
         return $this->belongsTo(SharedRole::class);
     }
+
+    public function scopeUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+    public function scopeDebt($query, $debtId)
+    {
+        return $query->where("debt_id", $debtId);
+    }
+    public function scopeStatus($query, $status)
+    {
+        return $query->where('status', $status);
+    }
 }

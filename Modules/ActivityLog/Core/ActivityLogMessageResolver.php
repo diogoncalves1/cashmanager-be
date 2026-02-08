@@ -32,6 +32,9 @@ class ActivityLogMessageResolver
             'goal_created' => [
                 'initialTarget' => Helpers::formatMoneyWithCurrency($metadata['initialTarget'] ?? 0, $metadata['currencyCode'], $metadata['currencySymbol']),
             ],
+            'debt_created' => [
+                'initialAmount' => Helpers::formatMoneyWithCurrency($metadata['initialAmount'] ?? 0, $metadata['currencyCode'], $metadata['currencySymbol']),
+            ],
 
             'user_invited' => [
                 'userName' => $this->userRepo->show($metadata['invitedUserId'])->name,

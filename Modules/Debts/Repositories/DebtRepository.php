@@ -6,9 +6,12 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
+use Modules\Debts\Core\Helpers as CoreHelpers;
 use Modules\Debts\Entities\Debt;
 use Modules\Debts\Entities\DebtBasicView;
 use Modules\Debts\Entities\DebtPayment;
+use Modules\Debts\Entities\DebtPaymentView;
 use Modules\Debts\Entities\DebtsView;
 use Modules\Debts\Entities\DebtUser;
 use Modules\Debts\Exceptions\Debts\DebtNotFoundException;
@@ -18,10 +21,16 @@ use Modules\Debts\Exceptions\Debts\DebtPendingException;
 use Modules\Debts\Exceptions\Debts\UnauthorizedDeleteDebt;
 use Modules\Debts\Exceptions\Debts\UnauthorizedUpdateDebt;
 use Modules\Debts\Exceptions\Debts\UnauthorizedViewDebt;
+use Modules\Debts\Http\Resources\DebtPayments\DebtPaymentViewCollection;
 use Modules\SharedRoles\Entities\SharedRole;
 
 class DebtRepository implements RepositoryApiInterface
 {
+    public function __construct(protected ActivityLogRepository $activityRepo)
+    {
+
+    }
+
     public function all()
     {
         return Debt::all();
@@ -58,6 +67,7 @@ class DebtRepository implements RepositoryApiInterface
             ];
 
             DebtUser::create($debtUserInput);
+            $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', ['type' => 'debt_created', 'initialAmount' => $input['total_amount'], 'currencyCode' => $debt->currency->code, 'currencySymbol' => $debt->currency->symbol]);
 
             return $debt;
         });
@@ -225,6 +235,74 @@ class DebtRepository implements RepositoryApiInterface
         $debt->save();
     }
 
+    public function getFormStats(Request $request)
+    {
+        $user = $request->user();
+
+        $currency = $user->preferences->currency;
+
+        $totalQuery = DebtsView::query()
+            ->from('debts_view as d')
+            ->join('currencies as debt_currency', 'd.currencyId', '=', 'debt_currency.id')
+            ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
+            ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
+            ->whereRaw("FIND_IN_SET(?, REPLACE(d.userIds, ' ', ''))", [$user->id])
+            ->selectRaw("
+                SUM(d.totalAmount * (user_currency.rate / debt_currency.rate)) as total_target,
+                SUM(d.paidAmount * (user_currency.rate / debt_currency.rate)) as total_saved
+            ")
+            ->first();
+
+        $statsValues = DebtPayment::query()
+            ->from('debt_payments as dp')
+            ->join('financial_goal_view as d', 'dp.debt_id', '=', 'd.id')
+            ->join('currencies as debt_currency', 'd.currencyId', '=', 'debt_currency.id')
+            ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
+            ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
+            ->whereRaw("FIND_IN_SET(?, REPLACE(d.userIds, ' ', ''))", [$user->id])
+            ->selectRaw("
+                    SUM(
+                        CASE
+                            WHEN YEAR(dp.date) = YEAR(CURDATE())
+                            AND MONTH(dp.date) = MONTH(CURDATE())
+                            AND dp.status = 'completed'
+                            THEN
+                                dp.amount * (user_currency.rate / debt_currency.rate)
+                            ELSE 0
+                        END
+                    ) as thisMonth,
+
+                    SUM(
+                        CASE
+                            WHEN YEAR(dp.date) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+                            AND MONTH(dp.date) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+                            AND dp.status = 'completed'
+                            THEN
+                                dp.amount * (user_currency.rate / debt_currency.rate)
+                            ELSE 0
+                        END
+                    ) as lastMonth
+            ")
+            ->first();
+        // FinancialGoalTransaction::where("user_id", $user->id)->whereRaw("YEAR(date) = YEAR(NOW())")->whereRaw("MONTH(date) = MONTH(NOW())")->sum('amount'),
+
+        $stats = [
+            'transactionSummary' => [
+                'totalDebts'                   => DB::table('debts_view')
+                    ->whereRaw("FIND_IN_SET(?, REPLACE(userIds, ' ', ''))", [$user->id])
+                    ->count(),
+                'totalSaved'                   => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->total_saved ?? 0, $currency->code, $currency->symbol),
+                'currentYearTotalTransactions' => DebtPayment::where("user_id", $user->id)->whereRaw("YEAR(date) = YEAR(NOW())")->count(),
+                'thisMonth'                    => Helpers::formatMoneyWithSymbolAndCurrency($statsValues->thisMonth ?? 0, $currency->code, $currency->symbol),
+                'lastMonth'                    => Helpers::formatMoneyWithSymbolAndCurrency($statsValues->lastMonth ?? 0, $currency->code, $currency->symbol),
+                'difLastMonth'                 => CoreHelpers::percentage($statsValues->lastMonth ?? 0, $statsValues->thisMonth - $statsValues->lastMonth),
+            ],
+            'recentTransactions' => new DebtPaymentViewCollection(DebtPaymentView::where("userId", $user->id)->limit(3)->orderBy("date", "desc")->get()),
+        ];
+
+        return $stats;
+    }
+
     public function getStats(Request $request): array
     {
         $user = $request->user();
@@ -238,10 +316,11 @@ class DebtRepository implements RepositoryApiInterface
             ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
             ->whereRaw("FIND_IN_SET(?, REPLACE(d.userIds, ' ', ''))", [$user->id])
             ->selectRaw("
-        SUM(CASE WHEN d.status = 'pending' THEN (d.totalAmount - d.paidAmount) * (user_currency.rate / debt_currency.rate) ELSE 0 END) as total_debt,
+        GREATEST(SUM(CASE WHEN d.status = 'pending' THEN (d.totalAmount - d.paidAmount) * (user_currency.rate / debt_currency.rate) ELSE 0 END), 0) as total_debt,
+        SUM(d.totalAmount * (user_currency.rate / debt_currency.rate)) as total_amount_debt,
         SUM(d.paidAmount * (user_currency.rate / debt_currency.rate)) as total_paid,
         SUM(CASE WHEN d.status = 'pending' THEN d.monthlyAmount * (user_currency.rate / debt_currency.rate) ELSE 0 END) as monthly_payments
-    ")
+        ")
             ->first();
 
         $stats = [
@@ -254,6 +333,7 @@ class DebtRepository implements RepositoryApiInterface
                 ->whereRaw("FIND_IN_SET(?, REPLACE(userIds, ' ', ''))", [$user->id])
                 ->count(),
             'totalDebt'         => $totalQuery->total_debt,
+            'totalAmounDebt'    => $totalQuery->total_amount_debt,
             'totalDebtFormated' => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->total_debt ?? 0, $currency->code, $currency->symbol),
             'totalPaid'         => $totalQuery->total_paid,
             'totalPaidFormated' => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->total_paid ?? 0, $currency->code, $currency->symbol),

@@ -32,6 +32,7 @@ return new class extends Migration
 
                 COALESCE(t.totalTransactions, 0) AS totalTransactions,
                 COALESCE(t.totalPayments, 0) AS totalPayments,
+                COALESCE(t.interestPaid, 0) AS interestPaid,
 
                 d.monthly_amount AS monthlyAmount,
                 GROUP_CONCAT(u.name SEPARATOR ', ') AS userNames,
@@ -44,6 +45,7 @@ return new class extends Migration
                     SELECT
                         debt_id,
                         COUNT(id) AS totalTransactions,
+                        SUM(amount * (interest_rate / 100)) as interestPaid,
                         SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) AS totalPayments
                     FROM debt_payments
                     GROUP BY debt_id

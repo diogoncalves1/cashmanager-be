@@ -4,17 +4,19 @@ namespace Modules\Debts\Http\Controllers\Api\V1;
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Modules\ActivityLog\DataTables\ActivityLogDataTable;
 use Modules\Debts\DataTables\DebtDataTable;
 use Modules\Debts\Http\Requests\DebtRequest;
 use Modules\Debts\Http\Resources\DebtBasicViewCollection;
 use Modules\Debts\Http\Resources\DebtResource;
+use Modules\Debts\Http\Resources\DebtStatsResource;
 use Modules\Debts\Http\Resources\DebtViewResource;
 use Modules\Debts\Repositories\DebtRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class DebtController extends ApiController
 {
-    private $debtRepository;
+    private DebtRepository $debtRepository;
 
     public function __construct(DebtRepository $debtRepository)
     {
@@ -163,6 +165,47 @@ class DebtController extends ApiController
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage() ?? __('debts::messages.debts.errors.reset'), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return a stats of all user debts.
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function getStats(Request $request)
+    {
+        try {
+            $stats = $this->debtRepository->getFormStats($request);
+
+            return $this->ok(new DebtStatsResource($stats));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage() ?? __('debts::messages.debts.errors.complete'), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return a activity of debt.
+     * @param Request $request
+     * @param ActivityLogDataTable $dataTable
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function activity(ActivityLogDataTable $dataTable, Request $request, string $id)
+    {
+        try {
+            $this->debtRepository->showToUser($request, $id);
+
+            $dataTable->type = 'debt';
+            $dataTable->id   = $id;
+
+            return $dataTable->ajax();
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage() ?? __('debts::messages.debts.errors.complete'), $e, $e->getCode());
+
         }
     }
 }

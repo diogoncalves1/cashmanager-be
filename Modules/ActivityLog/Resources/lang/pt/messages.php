@@ -1,19 +1,33 @@
 <?php
 
 return [
+    // Financial Goals
     'financial_goal' => [
         'titles'   => [
             'goal_created' => 'Meta criada',
             'user_invited' => 'Utilizador convidado',
             'goal_paused'  => 'Meta cancelada',
             'goal_reseted' => 'Meta resetada',
+
         ],
 
         'messages' => [
-            'goal_created' => 'Initial target: :initialTarget',
+            'goal_created' => 'Meta inicial: :initialTarget',
             'user_invited' => ':userName convidado como :roleName',
             'goal_paused'  => '',
             'goal_reseted' => '',
+
+        ],
+    ],
+
+    // Debts
+    'debt'           => [
+        'titles'   => [
+            'debt_created' => 'Dívida criada',
+        ],
+
+        'messages' => [
+            'debt_created' => 'Dívida inicial: :initialAmount',
         ],
     ],
 ];
