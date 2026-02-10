@@ -1,9 +1,8 @@
 <?php
-namespace Modules\FinancialGoal\Transformers;
+namespace Modules\FinancialGoal\Http\Resources\FinancialGoalUser;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
-use Modules\FinancialGoal\Http\Resources\FinancialGoalUserResource;
 
 class FinancialGoalUserCollection extends ResourceCollection
 {

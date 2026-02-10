@@ -25,4 +25,11 @@ return [
             'withdrawal'   => 'Withdrawal',
         ],
     ],
+    'financial-goal-user-invites' => [
+        'status' => [
+            'pending'  => 'Pending',
+            'accepted' => 'Accepted',
+            'revoked'  => 'Revoked',
+        ],
+    ],
 ];

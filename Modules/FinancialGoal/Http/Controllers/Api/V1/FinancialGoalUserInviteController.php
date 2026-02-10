@@ -4,9 +4,11 @@ namespace Modules\FinancialGoal\Http\Controllers\Api\V1;
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Modules\FinancialGoal\DataTables\FinancialGoalUserInviteDataTable;
 use Modules\FinancialGoal\Http\Requests\InviteUserFinancialGoalRequest;
-use Modules\FinancialGoal\Http\Resources\FinancialGoalUserInviteResource;
-use Modules\FinancialGoal\Http\Resources\FinancialGoalUserResource;
+use Modules\FinancialGoal\Http\Resources\FinancialGoals\FinancialGoalInvitationStatsResource;
+use Modules\FinancialGoal\Http\Resources\FinancialGoalUserInvites\FinancialGoalUserInviteResource;
+use Modules\FinancialGoal\Http\Resources\FinancialGoalUser\FinancialGoalUserResource;
 use Modules\FinancialGoal\Repositories\FinancialGoalUserInviteRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -96,5 +98,57 @@ class FinancialGoalUserInviteController extends ApiController
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
 
+    }
+
+    /**
+     * Return a invitations stats of all user financial goals.
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function getInvitationsStats(Request $request)
+    {
+        try {
+            $stats = $this->repository->getInvitationsStats($request);
+
+            return $this->ok(new FinancialGoalInvitationStatsResource($stats));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return all sent invitations stats of financial goals.
+     * @param FinancialGoalUserInviteDataTable $dataTable
+     * @return JsonResponse
+     */
+    public function getSentInvitations(FinancialGoalUserInviteDataTable $dataTable)
+    {
+        try {
+            $dataTable->type = 'sent';
+
+            return $dataTable->ajax();
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return all received invitations stats of financial goals.
+     * @param FinancialGoalUserInviteDataTable $dataTable
+     * @return JsonResponse
+     */
+    public function getReceivedInvitations(FinancialGoalUserInviteDataTable $dataTable)
+    {
+        try {
+            $dataTable->type = 'received';
+
+            return $dataTable->ajax();
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
     }
 }
