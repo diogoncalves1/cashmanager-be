@@ -32,19 +32,46 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="form-group col-6">
-                                    <label for="inputCode">Nome <span class="text-danger">*</span></label>
-                                    <input type="text" name="name" value='{{ $language->name ?? '' }}'
-                                        class="validate form-control" required>
-                                </div>
 
-                                <div class="form-group col-6">
+                                <div class="form-group col-12">
                                     <label for="inputDisplayName">Código <span class="text-danger">*</span></label>
                                     <input type="text" name="code" value='{{ $language->code ?? '' }}'
                                         class="validate form-control" required>
                                 </div>
                             </div>
 
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header p-2">
+                            <ul class="nav nav-pills">
+                                @foreach ($languages as $key => $lang)
+                                    <li class="nav-item">
+                                        <a @class(['nav-link', 'active' => $key == 0]) href="#{{ $lang->code }}"
+                                            data-toggle="tab">{{ strtoupper($lang->code) }}</a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content">
+                                @foreach ($languages as $key => $lang)
+                                    <div @class(['tab-pane', 'active' => $key == 0]) id="{{ $lang->code }}">
+                                        <div class="form-group">
+                                            <label for="inputDisplayName">Nome em {{ $lang->name->{$userLang} }}
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text"
+                                                value="{{ isset($language) ? $language->name->{$lang->code} ?? '' : '' }}"
+                                                name="name[{{ $lang->code }}]" class="validate form-control" required>
+                                            <span class="error invalid-feedback">Preencha este
+                                                campo</span>
+                                            <span class="success valid-feedback">Campo preenchido</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>

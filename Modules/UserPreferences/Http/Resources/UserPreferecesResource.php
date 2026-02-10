@@ -3,6 +3,7 @@ namespace Modules\UserPreferences\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\Currency\Http\Resources\CurrencyResource;
 
 class UserPreferecesResource extends JsonResource
 {
@@ -13,8 +14,8 @@ class UserPreferecesResource extends JsonResource
     {
         return [
             'lang'        => $this->lang,
-            'currency_id' => $this->currency_id,
-            'currency'    => $this->currency,
+            'currency_id' => (string) $this->currency_id,
+            'currency'    => new CurrencyResource($this->currency),
         ];
     }
 }
