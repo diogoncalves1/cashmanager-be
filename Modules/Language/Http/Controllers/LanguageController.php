@@ -3,6 +3,7 @@ namespace Modules\Language\Http\Controllers;
 
 use App\Http\Controllers\ApiController;
 use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Support\Facades\Auth;
 use Modules\Language\DataTables\LanguageDataTable;
 use Modules\Language\Http\Requests\LanguageRequest;
 use Modules\Language\Repositories\LanguageRepository;
@@ -39,7 +40,10 @@ class LanguageController extends ApiController
     {
         $this->allowedAction('superAdmin');
 
-        return view('language::create');
+        $languages = $this->repository->all();
+        $userLang  = Auth::user()->preferences->lang;
+
+        return view('language::create', compact('languages', 'userLang'));
     }
 
     /**
@@ -66,9 +70,11 @@ class LanguageController extends ApiController
     {
         $this->allowedAction('superAdmin');
 
-        $language = $this->repository->show($id);
+        $language  = $this->repository->show($id);
+        $userLang  = Auth::user()->preferences->lang;
+        $languages = $this->repository->all();
 
-        return view('language::create', compact('language'));
+        return view('language::create', compact('language', 'languages', 'userLang'));
     }
 
     /**

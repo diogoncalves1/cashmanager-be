@@ -18,7 +18,7 @@ class CurrencyResource extends JsonResource
         $locale = in_array(App::getLocale(), $languageRepo->allCodes()) ? App::getLocale() : 'en';
 
         return [
-            'id'     => $this->id,
+            'id'     => (string) $this->id,
             'name'   => $this->name->{$locale},
             'symbol' => $this->symbol,
             'rate'   => (float) $this->rate,

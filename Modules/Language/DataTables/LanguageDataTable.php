@@ -1,6 +1,7 @@
 <?php
 namespace Modules\Language\DataTables;
 
+use Illuminate\Support\Facades\Auth;
 use Modules\Language\Entities\Language;
 use Yajra\DataTables\DataTableAbstract;
 use Yajra\DataTables\Html\Builder;
@@ -17,8 +18,11 @@ class LanguageDataTable extends DataTable
      */
     public function dataTable($query)
     {
+        $user = Auth::user();
+
         return datatables()
             ->eloquent($query)
+            ->editColumn('name', fn(Language $language) => $language->name->{$user->preferences->lang} ?? $language->name->en)
             ->addColumn('action', function (Language $language) {
                 return ' <div class="btn-group">
                  <a title=\'Editar\'

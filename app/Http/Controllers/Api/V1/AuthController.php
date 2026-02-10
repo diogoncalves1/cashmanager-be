@@ -21,11 +21,15 @@ class AuthController extends ApiController
 
     public function register(UserRequest $request)
     {
-        $user = $this->userRepository->store($request);
+        try {
+            $user = $this->userRepository->store($request);
 
-        $token = $user->createToken('web-token')->plainTextToken;
+            $token = $user->createToken('web-token')->plainTextToken;
 
-        return response()->json(['success' => true, 'token' => $token, 'user' => $user]);
+            return response()->json(['success' => true, 'token' => $token, 'user' => new UserResource($user)]);
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
     }
 
     public function login(Request $request)
