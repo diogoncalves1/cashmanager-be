@@ -6,13 +6,10 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Modules\FinancialGoal\Http\Requests\InviteUserFinancialGoalRequest;
-use Modules\FinancialGoal\Http\Resources\FinancialGoalUserResource;
+use Modules\FinancialGoal\Http\Resources\FinancialGoalUser\FinancialGoalUserResource;
 use Modules\FinancialGoal\Repositories\FinancialGoalUserRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-/**
- * [x]
- */
 class FinancialGoalUserController extends ApiController
 {
     private FinancialGoalUserRepository $repository;

@@ -47,7 +47,7 @@ class FinancialGoalUserRepository
             }
 
             $relation = $this->destroy($userId, $id);
-            $this->activityRepo->storeActivity($id, $user->id, 'user_removed', ['userId' => $userId, 'role' => $sharedRoleInvite->code]);
+            $this->activityRepo->storeActivity($id, $user->id, 'financial_goal', ['type' => 'user_removed', 'userId' => $userId, 'role' => $sharedRoleInvite->code]);
 
             return $relation;
         });

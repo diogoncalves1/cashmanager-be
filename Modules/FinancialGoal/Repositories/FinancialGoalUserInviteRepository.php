@@ -65,6 +65,7 @@ class FinancialGoalUserInviteRepository
             $input['financial_goal_id'] = $id;
             $input['user_id']           = $userId;
             $input['status']            = 'pending';
+            $input['invited_by_id']     = $user->id;
 
             $invite = FinancialGoalUserInvite::create($input);
             $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_invited', 'invitedUserId' => $userId, 'sharedRoleId' => $sharedRoleInvite->id, 'inviteId' => $invite->id]);
@@ -85,13 +86,12 @@ class FinancialGoalUserInviteRepository
                 throw new InviteNotFoundException();
             }
 
-            $invite = FinancialGoalUserInvite::query()->user($user->id)->financialGoal($id)->status("pending")->first();
-
-            $invite->delete();
+            $input  = ["status" => "accepted"];
+            $invite = $this->update($user->id, $id, "pending", $input);
 
             $input    = ["financial_goal_id" => $id, "user_id" => $user->id, "shared_role_id" => $invite->shared_role_id];
             $relation = $this->financialGoalUserRepo->store($input);
-            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'user_joined', ['userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
+            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_joined', 'userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
 
             return $relation;
         });
@@ -137,6 +137,19 @@ class FinancialGoalUserInviteRepository
 
             return $invite;
         });
+    }
+
+    public function getInvitationsStats(Request $request)
+    {
+
+        $user = $request->user();
+
+        return [
+            'sentInvites'     => FinancialGoalUserInvite::query()->invitedBy($user->id)->count(),
+            'receivedInvites' => FinancialGoalUserInvite::query()->user($user->id)->count(),
+            'pendingInvites'  => FinancialGoalUserInvite::query()->invitedBy($user->id)->status('pending')->count(),
+            'awaitingInvites' => FinancialGoalUserInvite::query()->user($user->id)->status('pending')->count(),
+        ];
     }
 
     // Private Methods

@@ -16,7 +16,7 @@ class FinancialGoalUserInvite extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['shared_role_id', 'financial_goal_id', 'user_id', 'status'];
+    protected $fillable = ['shared_role_id', 'financial_goal_id', 'user_id', 'invited_by_id', 'status'];
     protected $table    = 'financial_goal_user_invites';
 
     protected static function newFactory(): FinancialGoalUserInviteFactory
@@ -36,10 +36,18 @@ class FinancialGoalUserInvite extends Model
     {
         return $this->belongsTo(SharedRole::class);
     }
+    public function sender()
+    {
+        return $this->belongsTo(User::class, 'invited_by_id');
+    }
 
     public function scopeUser($query, $userId)
     {
         return $query->where('user_id', $userId);
+    }
+    public function scopeInvitedBy($query, $userId)
+    {
+        return $query->where('invited_by_id', $userId);
     }
     public function scopeFinancialGoal($query, $financialGoalId)
     {

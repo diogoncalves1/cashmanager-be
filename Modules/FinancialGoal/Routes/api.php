@@ -22,6 +22,9 @@ Route::group([
             ], function () {
                 Route::get('/all', [FinancialGoalController::class, 'allUser']);
                 Route::get('/stats', [FinancialGoalController::class, 'getStats']);
+                Route::get('/invitations-stats', [FinancialGoalUserInviteController::class, 'getInvitationsStats']);
+                Route::get('/sent-invitations', [FinancialGoalUserInviteController::class, 'getSentInvitations']);
+                Route::get('/received-invitations', [FinancialGoalUserInviteController::class, 'getReceivedInvitations']);
 
                 Route::get('/{id}/activity', [FinancialGoalController::class, 'activity']);
 

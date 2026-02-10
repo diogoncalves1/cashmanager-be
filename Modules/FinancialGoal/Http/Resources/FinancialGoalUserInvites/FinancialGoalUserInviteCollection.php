@@ -1,5 +1,5 @@
 <?php
-namespace Modules\FinancialGoal\Http\Resources;
+namespace Modules\FinancialGoal\Http\Resources\FinancialGoalUserInvites;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
