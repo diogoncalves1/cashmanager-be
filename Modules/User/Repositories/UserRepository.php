@@ -1,14 +1,14 @@
 <?php
-
 namespace Modules\User\Repositories;
 
-use Modules\User\Entities\User;
+use App\Repositories\RepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use App\Repositories\RepositoryInterface;
+use Modules\User\Entities\User;
 
 class UserRepository implements RepositoryInterface
 {
@@ -49,8 +49,9 @@ class UserRepository implements RepositoryInterface
 
                 $input = $request->except(['roles', 'password']);
 
-                if ($request->get('password'))
+                if ($request->get('password')) {
                     $input['password'] = Hash::make($request->get('password'));
+                }
 
                 $user->update($input);
                 $this->updateRoles($user, $request->get('roles'));
@@ -129,5 +130,22 @@ class UserRepository implements RepositoryInterface
         } catch (\Exception $e) {
             Log::error($e);
         }
+    }
+
+    public function updateSettings(Request $request): User
+    {
+        return DB::transaction(function () use ($request) {
+            $user = $request->user();
+
+            $userInput        = $request->only(['name', 'email']);
+            $preferencesInput = $request->only(['currency_id', 'lang']);
+
+            $user->update($userInput);
+            $user->preferences()->update($preferencesInput);
+
+            App::setLocale($preferencesInput['lang']);
+
+            return $user;
+        });
     }
 }
