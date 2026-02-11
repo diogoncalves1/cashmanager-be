@@ -21,10 +21,11 @@ return new class extends Migration
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('currency_id')->references('id')->on('currencies')->onDelete('set null');
+            $table->foreign('lang')->references('code')->on('languages')->onDelete('set null');
         });
 
         $preferences = [
-            ['user_id' => 1, 'currency_id' => 1, 'lang' => 'pt']
+            ['user_id' => 1, 'currency_id' => 1, 'lang' => 'pt'],
         ];
 
         DB::table('user_preferences')->insert($preferences);
