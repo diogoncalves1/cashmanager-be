@@ -51,4 +51,8 @@ class AccountUserInvite extends Model
     {
         return $query->where('status', $status);
     }
+    public function scopeInvitedBy($query, $userId)
+    {
+        return $query->where('invited_by_id', $userId);
+    }
 }

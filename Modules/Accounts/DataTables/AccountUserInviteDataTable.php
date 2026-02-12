@@ -1,5 +1,5 @@
 <?php
-namespace Modules\FinancialGoal\DataTables;
+namespace Modules\Accounts\DataTables;
 
 use Carbon\Carbon;
 use Modules\Accounts\Entities\AccountUserInvite;
@@ -20,7 +20,11 @@ class AccountUserInviteDataTable extends DataTable
             ->addColumn('sender', fn(AccountUserInvite $invite) => new UserShareResource($invite->sender))
             ->addColumn('subject', fn(AccountUserInvite $invite) => new DebtResource($invite->account))
             ->addColumn('sharedRole', fn(AccountUserInvite $invite) => new SharedRoleResource($invite->sharedRole))
-            ->addColumn('createdAt', fn(AccountUserInvite $invite) => new Carbon($invite->created_at)->format('Y-m-d'))
+            ->addColumn('createdAt', function (AccountUserInvite $invite) {
+                $date = new Carbon($invite->created_at);
+
+                return $date->format('Y-m-d');
+            })
             ->addColumn('statusTranslated', fn(AccountUserInvite $invite) => __('financialgoal::attributes.financial-goal-user-invites.status.' . $invite->status))
             ->removeColumn('user_id')
             ->removeColumn('invited_by_id')
