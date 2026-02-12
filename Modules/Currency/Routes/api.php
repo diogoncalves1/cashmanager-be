@@ -19,5 +19,10 @@ Route::group([
         });
     });
 
-    Route::middleware(["setlocale", "auth:sanctum"])->apiResource('currencies', CurrencyController::class, ['except' => ['store', 'update', 'destroy']]);
+    Route::group([
+        'middleware' => ["setlocale", "auth:sanctum"],
+    ], function () {
+        Route::apiResource('currencies', CurrencyController::class, ['except' => ['store', 'update', 'destroy']]);
+    });
+
 });
