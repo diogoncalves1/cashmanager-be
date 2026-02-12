@@ -36,7 +36,7 @@ class AccountViewResource extends JsonResource
             'name'                         => $this->name,
             'currencySymbol'               => $this->currencySymbol,
             'currencyCode'                 => $this->currencyCode,
-            'currencyId'                   => $this->currencyId,
+            'currencyId'                   => (string) $this->currencyId,
             'type'                         => $this->type,
             'typeTranslated'               => $typeTranslated,
             'balance'                      => (float) $this->balance,

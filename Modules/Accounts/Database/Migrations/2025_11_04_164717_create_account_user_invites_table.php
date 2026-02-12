@@ -16,11 +16,13 @@ return new class extends Migration
             $table->unsignedBigInteger('account_id');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('shared_role_id')->nullable();
-            $table->enum('status', ['pending', 'revoked']);
+            $table->unsignedBigInteger('invited_by_id');
+            $table->enum("status", ["pending", "revoked", "accepted"])->default("pending");
             $table->timestamps();
 
             $table->foreign('account_id')->references('id')->on('accounts')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('invited_by_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('shared_role_id')->references('id')->on('shared_roles')->onDelete('set null');
         });
     }

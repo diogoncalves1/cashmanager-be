@@ -29,13 +29,18 @@ class AccountController extends ApiController
 
     /**
      * Display a listing of the resource.
+     * @param Request $request
      * @param AccountDataTable $dataTable
      * @return JsonResponse
      */
-    public function index(AccountDataTable $dataTable)
+    public function index(Request $request, AccountDataTable $dataTable): JsonResponse
     {
         try {
-            return $dataTable->ajax();
+            $stats = $this->repository->getStats($request);
+
+            $data = $dataTable->ajax()->getData(true);
+
+            return response()->json(array_merge($data, ['stats' => $stats]));
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

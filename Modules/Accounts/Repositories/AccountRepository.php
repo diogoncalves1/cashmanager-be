@@ -179,6 +179,61 @@ class AccountRepository implements RepositoryApiInterface
 
     }
 
+    public function getStats(Request $request)
+    {
+        $user = $request->user();
+
+        $currency = $user->preferences->currency;
+
+        $totalQuery = AccountsView::query()
+            ->from('accounts_view as a')
+            ->join('currencies as account_currency', 'a.currencyId', '=', 'account_currency.id')
+            ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
+            ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
+            ->join('transactions as t', 't.account_id', '=', 'a.id')
+            ->join("account_users as au", "au.account_id", "=", "a.id")
+            ->join("shared_roles as sr", "sr.id", "=", "au.shared_role_id")
+            ->join("shared_permission_roles as spr", "spr.shared_role_id", "=", "sr.id")
+            ->join("shared_permissions as sp", "sp.id", "=", "spr.shared_permission_id")
+            ->where("au.user_id", $user->id)
+            ->selectRaw("
+            SUM(
+            CASE
+                WHEN sp.code = 'updateUserBalance'
+                THEN a.balance * (user_currency.rate / account_currency.rate)
+                ELSE 0
+            END
+            ) as netWorth,
+            SUM(
+            CASE
+                WHEN sp.code = 'updateUserBalance'
+                THEN CASE WHEN t.type = 'revenue' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate)  ELSE 0 END
+                ELSE 0
+            END
+            ) as totalRevenues,
+            SUM(
+              CASE
+                WHEN sp.code = 'updateUserBalance'
+                THEN CASE WHEN t.type = 'expense' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate) ELSE 0 END
+                ELSE 0
+            END
+            ) as totalExpenses
+            ")
+            ->first();
+
+        $stats = [
+            'activeAccounts' => DB::table('accounts_view')
+                ->where('status', '1')
+                ->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])
+                ->count(),
+            'netWorth'       => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->netWorth ?? 0, $currency->code, $currency->symbol),
+            'totalRevenues'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalRevenues ?? 0, $currency->code, $currency->symbol),
+            'totalExpenses'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalExpenses ?? 0, $currency->code, $currency->symbol),
+        ];
+
+        return $stats;
+    }
+
     public function showCategorySummary(int $id)
     {
         $account = $this->show($id);

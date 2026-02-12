@@ -51,13 +51,18 @@ class AccountDataTable extends DataTable
         $query = $model->newQuery()
             ->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id]);
 
-        if ($request->has('type')) {
+        if ($request->has('type') && $request->get('type') !== 'all') {
             $query->type($request->get('type'));
         }
-        if ($request->has('status')) {
-            $query->active($request->get('status') == 'active' ? 1 : 0);
+        if ($request->has('active') && $request->get('active') !== 'all') {
+            $query->active($request->get('active') == 'active' ? 1 : 0);
         }
 
         return $query;
+    }
+
+    public function getQuery()
+    {
+        return $this->query(new AccountsView());
     }
 }
