@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Modules\Currency\Core\Helpers;
 use Modules\Currency\Entities\Currency;
 use Modules\Language\Repositories\LanguageRepository;
 
@@ -107,5 +108,24 @@ class CurrencyRepository implements RepositoryInterface
         }
 
         return $query->exists();
+    }
+
+    public function getByCode(string $code)
+    {
+        return Currency::where("code", $code)->first();
+    }
+
+    public function convert(Request $request)
+    {
+        $fromCurrency = $this->show($request->get('from_id'));
+        $toCurrency   = $this->show($request->get('to_id'));
+
+        $amountConverted = Helpers::convertCurrency($request->get('amount'), $fromCurrency, $toCurrency);
+
+        return [
+            'fromCode' => $fromCurrency->code,
+            'toCode'   => $toCurrency->code,
+            'amount'   => $amountConverted,
+        ];
     }
 }
