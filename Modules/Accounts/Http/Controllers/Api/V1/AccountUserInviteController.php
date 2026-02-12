@@ -4,7 +4,9 @@ namespace Modules\Accounts\Http\Controllers\Api\V1;
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Modules\Accounts\DataTables\AccountUserInviteDataTable;
 use Modules\Accounts\Http\Requests\InviteUserAccountRequest;
+use Modules\Accounts\Http\Resources\AccountInvitationStatsResource;
 use Modules\Accounts\Http\Resources\AccountUserInviteResource;
 use Modules\Accounts\Http\Resources\AccountUserResource;
 use Modules\Accounts\Repositories\AccountUserInviteRepository;
@@ -96,5 +98,57 @@ class AccountUserInviteController extends ApiController
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
 
+    }
+
+    /**
+     * Return a invitations stats of all user financial goals.
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function getInvitationsStats(Request $request)
+    {
+        try {
+            $stats = $this->repository->getInvitationsStats($request);
+
+            return $this->ok(new AccountInvitationStatsResource($stats));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return all sent invitations stats of financial goals.
+     * @param AccountUserInviteDataTable $dataTable
+     * @return JsonResponse
+     */
+    public function getSentInvitations(AccountUserInviteDataTable $dataTable)
+    {
+        try {
+            $dataTable->type = 'sent';
+
+            return $dataTable->ajax();
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return all received invitations stats of financial goals.
+     * @param AccountUserInviteDataTable $dataTable
+     * @return JsonResponse
+     */
+    public function getReceivedInvitations(AccountUserInviteDataTable $dataTable)
+    {
+        try {
+            $dataTable->type = 'received';
+
+            return $dataTable->ajax();
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
     }
 }

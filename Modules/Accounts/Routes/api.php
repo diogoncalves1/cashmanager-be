@@ -21,6 +21,9 @@ Route::group([
                 'as'     => 'accounts.',
             ], function () {
                 Route::get('/all', [AccountController::class, 'allUser']);
+                Route::get('/invitations-stats', [AccountUserInviteController::class, 'getInvitationsStats']);
+                Route::get('/sent-invitations', [AccountUserInviteController::class, 'getSentInvitations']);
+                Route::get('/received-invitations', [AccountUserInviteController::class, 'getReceivedInvitations']);
 
                 Route::patch('/{id}/status', [AccountController::class, 'status']);
 

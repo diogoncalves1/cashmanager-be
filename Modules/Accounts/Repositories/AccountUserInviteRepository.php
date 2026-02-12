@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\AccountUserInvite;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Friends\Repositories\FriendshipRepository;
 use Modules\SharedRoles\Exceptions\AlreadyRelationException;
 use Modules\SharedRoles\Exceptions\InviteNotFoundException;
@@ -16,13 +17,15 @@ class AccountUserInviteRepository
     private $friendshipRepository;
     private $sharedRoleRepository;
     private $accountUserRepo;
+    protected ActivityLogRepository $activityRepo;
 
-    public function __construct(AccountRepository $accountRepository, SharedRoleRepository $sharedRoleRepository, FriendshipRepository $friendshipRepository, AccountUserRepository $accountUserRepo)
+    public function __construct(AccountRepository $accountRepository, SharedRoleRepository $sharedRoleRepository, FriendshipRepository $friendshipRepository, AccountUserRepository $accountUserRepo, ActivityLogRepository $activityRepo)
     {
         $this->accountRepository    = $accountRepository;
         $this->sharedRoleRepository = $sharedRoleRepository;
         $this->friendshipRepository = $friendshipRepository;
         $this->accountUserRepo      = $accountUserRepo;
+        $this->activityRepo         = $activityRepo;
     }
 
     public function invite(Request $request, string $id, string $userId)
@@ -56,10 +59,11 @@ class AccountUserInviteRepository
                 throw new \Modules\SharedRoles\Exceptions\InviteUserNotAllowedException();
             }
 
-            $input               = $request->only(['shared_role_id']);
-            $input['account_id'] = $id;
-            $input['user_id']    = $userId;
-            $input['status']     = 'pending';
+            $input                  = $request->only(['shared_role_id']);
+            $input['account_id']    = $id;
+            $input['user_id']       = $userId;
+            $input['status']        = 'pending';
+            $input['invited_by_id'] = $user->id;
 
             $invite = AccountUserInvite::create($input);
 
@@ -81,10 +85,9 @@ class AccountUserInviteRepository
 
             $invite = AccountUserInvite::query()->user($user->id)->account($id)->status("pending")->first();
 
-            $invite->delete();
-
             $input    = ["account_id" => $id, "user_id" => $user->id, "shared_role_id" => $invite->shared_role_id];
             $relation = $this->accountUserRepo->store($input);
+            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_joined', 'userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
 
             return $relation;
         });
@@ -130,6 +133,19 @@ class AccountUserInviteRepository
 
             return $invite;
         });
+    }
+
+    public function getInvitationsStats(Request $request)
+    {
+
+        $user = $request->user();
+
+        return [
+            'sentInvites'     => AccountUserInvite::query()->invitedBy($user->id)->count(),
+            'receivedInvites' => AccountUserInvite::query()->user($user->id)->count(),
+            'pendingInvites'  => AccountUserInvite::query()->invitedBy($user->id)->status('pending')->count(),
+            'awaitingInvites' => AccountUserInvite::query()->user($user->id)->status('pending')->count(),
+        ];
     }
 
     // Private Methods
