@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('username')->unique()->nullable();
+            $table->timestamp('username_updated_at')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
@@ -25,10 +27,11 @@ return new class extends Migration
 
         $users = [
             [
-                'name' => 'Super Admin',
-                'email' => 'geral@gmail.com',
-                'password' => Hash::make('12345678')
-            ]
+                'username' => 'superadmin',
+                'name'     => 'Super Admin',
+                'email'    => 'geral@gmail.com',
+                'password' => Hash::make('12345678'),
+            ],
         ];
 
         DB::table('users')->insert($users);
@@ -42,7 +45,7 @@ return new class extends Migration
         ];
 
         foreach ($permissions as $permission) {
-            $id = DB::table('permissions')->insertGetId($permission);
+            $id                = DB::table('permissions')->insertGetId($permission);
             $rolePermissions[] = ['permission_id' => $id, 'role_id' => 1];
         }
 

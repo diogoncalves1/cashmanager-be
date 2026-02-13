@@ -13,6 +13,7 @@ class UserShareResource extends JsonResource
     {return [
         'id'         => (string) $this->id,
         'name'       => $this->name,
+        'username'   => $this->username,
         'sharedRole' => $this->whenHas('sharedRole', new \Modules\SharedRoles\Http\Resources\SharedRoleResource($this->sharedRole)),
     ];}
 }

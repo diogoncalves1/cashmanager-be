@@ -10,7 +10,7 @@ use Modules\User\Repositories\UserRepository;
 
 class UserController extends ApiController
 {
-    private $repository;
+    private UserRepository $repository;
 
     public function __construct(UserRepository $repository)
     {
@@ -28,6 +28,23 @@ class UserController extends ApiController
             $user = $this->repository->updateSettings($request);
 
             return $this->ok(new UserResource($user), __('user::messages.users.update'));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Check a listing of the usernames.
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function checkUsername(Request $request): JsonResponse
+    {
+        try {
+            $exists = $this->repository->checkUsername($request);
+
+            return $this->ok(['exists' => $exists]);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
