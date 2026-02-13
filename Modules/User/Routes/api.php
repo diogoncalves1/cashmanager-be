@@ -10,5 +10,7 @@ Route::group([
         'middleware' => ["auth:sanctum", "setlocale"],
     ], function () {
         Route::put('me', [UserController::class, 'updateSettings']);
+
     });
+    Route::get('check-username', [UserController::class, 'checkUsername']);
 });

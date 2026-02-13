@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\User\Entities;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -24,6 +23,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'username',
+        'username_updated_at',
     ];
 
     /**
@@ -38,7 +39,7 @@ class User extends Authenticatable
 
     protected static function newFactory()
     {
-        return \Modules\User\Database\Factories\UserFactory::new();
+        return \Modules\User\Database\Factories\UserFactory::new ();
     }
 
     /**
@@ -49,8 +50,9 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'username_updated_at' => 'datetime',
+            'email_verified_at'   => 'datetime',
+            'password'            => 'hashed',
         ];
     }
 

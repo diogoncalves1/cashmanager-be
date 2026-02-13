@@ -2,6 +2,7 @@
 namespace Modules\User\Repositories;
 
 use App\Repositories\RepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
@@ -137,8 +138,12 @@ class UserRepository implements RepositoryInterface
         return DB::transaction(function () use ($request) {
             $user = $request->user();
 
-            $userInput        = $request->only(['name', 'email']);
+            $userInput        = $request->only(['name', 'email', 'username']);
             $preferencesInput = $request->only(['currency_id', 'lang']);
+
+            if ($user->username != $request->get('username')) {
+                $userInput['username_updated_at'] = Carbon::now();
+            }
 
             $user->update($userInput);
             $user->preferences()->update($preferencesInput);
@@ -147,5 +152,10 @@ class UserRepository implements RepositoryInterface
 
             return $user;
         });
+    }
+
+    public function checkUsername(Request $request)
+    {
+        return User::where("username", $request->get('username'))->exists();
     }
 }
