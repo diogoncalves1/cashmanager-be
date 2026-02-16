@@ -107,7 +107,7 @@
                                 @foreach ($languages as $key => $language)
                                     <div class="tab-pane {{ $key == 0 ? 'active' : '' }}" id="{{ $language->code }}">
                                         <div class="form-group">
-                                            <label for="inputDisplayName">Nome em {{ $language->name }} <span
+                                            <label for="inputDisplayName">Nome em {{ $language->name->pt }} <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" name="name[{{ $language->code }}]"
                                                 value="{{ isset($category->name) ? $category->name->{$language->code} ?? '' : '' }}"

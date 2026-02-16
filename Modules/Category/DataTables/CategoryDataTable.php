@@ -31,9 +31,6 @@ class CategoryDataTable extends DataTable
             ->editColumn('type', function (Category $category) {
                 return __('category::attributes.categories.type.' . $category->type);
             })
-            ->editColumn('icon', function (Category $category) {
-                return "<p style='color: $category->color'><i class='nav-icon fas $category->icon'></i></p>";
-            })
             ->addColumn('parent', function (Category $category) {
                 return $category->parent?->name->{app()->getLocale()};
             })
@@ -108,7 +105,6 @@ class CategoryDataTable extends DataTable
             Column::make('name')->title('Name'),
             Column::make('code')->title('Código'),
             Column::make('type')->title('Tipo'),
-            Column::make('icon')->title('Icone'),
             Column::make('parent')->title('Parente'),
             Column::computed('action')
                 ->exportable(false)
