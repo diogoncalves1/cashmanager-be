@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('user_preferences', function (Blueprint $table) {
             $table->unsignedBigInteger('user_id')->unique();
             $table->unsignedBigInteger('currency_id')->nullable();
-            $table->string('lang', 191)->default('en');
+            $table->string('lang', 191)->default('pt')->nullable();
 
             $table->timestamps();
 
