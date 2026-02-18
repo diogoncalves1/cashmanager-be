@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\Friends\Repositories;
 
 use Illuminate\Http\Request;
@@ -8,6 +7,7 @@ use Modules\Friends\Entities\Friendship;
 use Modules\Friends\Exceptions\FriendshipNotFoundException;
 use Modules\Friends\Exceptions\SelfBlockNotAllowedException;
 use Modules\Friends\Exceptions\UserBlockedException;
+use Modules\User\Entities\User;
 
 class FriendshipRepository
 {
@@ -16,8 +16,13 @@ class FriendshipRepository
         return DB::transaction(function () use ($request, $id) {
             $user = $request->user();
 
-            if (!$this->hasRelation($id, $user->id)) throw new FriendshipNotFoundException();
-            if ($this->isBlocked($id, $user->id)) throw new UserBlockedException();
+            if (! $this->hasRelation($id, $user->id)) {
+                throw new FriendshipNotFoundException();
+            }
+
+            if ($this->isBlocked($id, $user->id)) {
+                throw new UserBlockedException();
+            }
 
             $friendship = Friendship::query()
                 ->where(function ($query) use ($id, $user) {
@@ -38,15 +43,21 @@ class FriendshipRepository
         return DB::transaction(function () use ($request, $id) {
             $user = $request->user();
 
-            if ($this->isSelf($id, $user->id)) throw new SelfBlockNotAllowedException();
-            if ($this->isBlocked($id, $user->id)) throw new UserBlockedException();
+            if ($this->isSelf($id, $user->id)) {
+                throw new SelfBlockNotAllowedException();
+            }
 
-            if ($this->hasRelation($id, $user->id))
+            if ($this->isBlocked($id, $user->id)) {
+                throw new UserBlockedException();
+            }
+
+            if ($this->hasRelation($id, $user->id)) {
                 Friendship::query()
                     ->where(function ($query) use ($id, $user) {
                         $query->where(fn($q) => $q->sender($id)->receiver($user->id))
                             ->orWhere(fn($q) => $q->sender($user->id)->receiver($id));
                     })->delete();
+            }
 
             DB::table('friendship_requests')->where(function ($query) use ($id, $user) {
                 $query->where(fn($q) => $q->where('sender_id', $id)->where('receiver_id', $user->id))
@@ -64,8 +75,13 @@ class FriendshipRepository
         return DB::transaction(function () use ($request, $id) {
             $user = $request->user();
 
-            if ($this->isSelf($id, $user->id)) throw new SelfBlockNotAllowedException();
-            if (!$this->isBlocked($id, $user->id)) throw new \Modules\Friends\Exceptions\UserNotBlockedException();
+            if ($this->isSelf($id, $user->id)) {
+                throw new SelfBlockNotAllowedException();
+            }
+
+            if (! $this->isBlocked($id, $user->id)) {
+                throw new \Modules\Friends\Exceptions\UserNotBlockedException();
+            }
 
             $friendship = Friendship::status("blocked")->sender($user->id)->receiver($id)->first();
 
@@ -80,12 +96,21 @@ class FriendshipRepository
     {
         return DB::transaction(function () use ($senderId, $receiverId, $status) {
             return Friendship::create([
-                'sender_id' => $senderId,
+                'sender_id'   => $senderId,
                 'receiver_id' => $receiverId,
-                'status' => $status
+                'status'      => $status,
             ]);
         });
     }
+    public function totalUserFriends(User $user)
+    {
+        return Friendship::query()->sender($user->id)->orWhere('receiver_id', $user->id)->status('friend')->count();
+    }
+    public function totalUserBlocked(User $user)
+    {
+        return Friendship::query()->sender($user->id)->status('blocked')->count();
+    }
+
     public function isSelf(string $receiverId, string $userId)
     {
         return $receiverId == $userId;

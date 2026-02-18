@@ -33,7 +33,9 @@ class FriendshipRequestDataTable extends DataTable
             ->addColumn('actions', function () {
                 return ($this->status == 'pending') ? ['accept' => true, 'decline' => true] : [];
             })
+            ->addColumn('createdAt', fn(FriendshipRequestModel $friendship) => $friendship->created_at->format('Y-m-d'))
             ->removeColumn('sender_id')
+            ->removeColumn('created_at')
             ->removeColumn('receiver_id');
     }
 

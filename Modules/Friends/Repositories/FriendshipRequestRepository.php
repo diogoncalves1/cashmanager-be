@@ -9,6 +9,7 @@ use Modules\Friends\Exceptions\AlreadyFriendsException;
 use Modules\Friends\Exceptions\FriendRequestNotFoundException;
 use Modules\Friends\Exceptions\SelfFriendshipException;
 use Modules\Friends\Exceptions\UserBlockedException;
+use Modules\User\Entities\User;
 use Modules\User\Repositories\UserRepository;
 
 class FriendshipRequestRepository
@@ -143,6 +144,27 @@ class FriendshipRequestRepository
         });
     }
 
+    public function stats(Request $request)
+    {
+        $user = $request->user();
+
+        return [
+            'friends'  => $this->friendshipRepository->totalUserFriends($user),
+            'received' => $this->totalUserPendingReceivedInvites($user->id),
+            'sent'     => $this->totalUserPendingSentInvites($user->id),
+            'blocked'  => $this->friendshipRepository->totalUserBlocked($user),
+        ];
+    }
+
+    public function totalUserPendingReceivedInvites(string $userId)
+    {
+        return FriendshipRequestModel::query()->receiver($userId)->status('pending')->count();
+    }
+    public function totalUserPendingSentInvites(string $userId)
+    {
+        return FriendshipRequestModel::query()->sender($userId)->status('pending')->count();
+    }
+
     // private methods
     private function getRequest(string $userIdO, string $userIdT)
     {
@@ -162,7 +184,7 @@ class FriendshipRequestRepository
     {
         return $this->friendshipRepository->areFriends($receiverId, $userId);
     }
-    private function hasPendingRequest(string $receiverId, string $userId)
+    public function hasPendingRequest(string $receiverId, string $userId)
     {
         return FriendshipRequestModel::query()->sender($receiverId)->receiver($userId)->status('pending')->exists() || FriendshipRequestModel::query()->sender($userId)->receiver($receiverId)->status('pending')->exists();
     }
