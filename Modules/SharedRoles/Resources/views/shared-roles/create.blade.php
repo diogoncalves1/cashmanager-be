@@ -62,7 +62,7 @@
                                 @foreach ($languages as $key => $language)
                                     <div @class(['tab-pane', 'active' => $key == 0]) id="{{ $language->code }}">
                                         <div class="form-group">
-                                            <label for="inputDisplayName">Nome em {{ $language->name }}
+                                            <label for="inputDisplayName">Nome em {{ $language->name->pt }}
                                                 <span class="text-danger">*</span>
                                             </label>
                                             <input type="text"

@@ -73,10 +73,10 @@
                                 @foreach ($languages as $key => $language)
                                     <div @class(['tab-pane', 'active' => $key == 0]) id="{{ $language->code }}">
                                         <div class="form-group">
-                                            <label for="inputDisplayName">Nome em {{ $language->name }} <span
+                                            <label for="inputDisplayName">Nome em {{ $language->name->pt }} <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" name="{{ $language->code }}"
-                                                placeholder="Nome em {{ $language->name }}..."
+                                                placeholder="Nome em {{ $language->name->pt }}..."
                                                 value="{{ isset($currency) ? $currency->name->{$language->code} ?? '' : '' }}"
                                                 class="form-control" required>
                                             <span class="error invalid-feedback">Preencha este
