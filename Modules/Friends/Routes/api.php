@@ -19,6 +19,8 @@ Route::group(
                     'as'     => 'friendships.',
                     'prefix' => 'friendships',
                 ], function () {
+                    Route::get('/stats', [FriendshipRequestController::class, 'stats'])->name('stats');
+
                     Route::delete('/{id}/remove', [FriendshipController::class, 'remove'])->name('remove');
                     Route::post('/{id}/block', [FriendshipController::class, 'block'])->name('block');
                     Route::post('/{id}/unblock', [FriendshipController::class, 'unblock'])->name('unblock');

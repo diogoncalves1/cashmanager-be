@@ -5,6 +5,7 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Modules\User\DataTables\SearchUserDataTable;
 use Modules\User\Http\Resources\UserResource;
 use Modules\User\Repositories\UserRepository;
 
@@ -45,6 +46,20 @@ class UserController extends ApiController
             $exists = $this->repository->checkUsername($request);
 
             return $this->ok(['exists' => $exists]);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+    /**
+     * Search users.
+     * @param SearchUserDataTable $dataTable
+     * @return JsonResponse
+     */
+    public function searchUser(SearchUserDataTable $dataTable): JsonResponse
+    {
+        try {
+            return $dataTable->ajax();
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\Friends\DataTables\FriendshipRequestDataTable;
 use Modules\Friends\Http\Resources\FriendshipRequestResource;
 use Modules\Friends\Http\Resources\FriendshipResource;
+use Modules\Friends\Http\Resources\FriendshipStatsResource;
 use Modules\Friends\Repositories\FriendshipRequestRepository;
 
 class FriendshipRequestController extends ApiController
@@ -122,6 +123,23 @@ class FriendshipRequestController extends ApiController
             $dataTable->status = 'pending';
 
             return $dataTable->ajax();
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Friendship stats.
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function stats(Request $request): JsonResponse
+    {
+        try {
+            $stats = $this->repository->stats($request);
+
+            return $this->ok(new FriendshipStatsResource($stats));
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

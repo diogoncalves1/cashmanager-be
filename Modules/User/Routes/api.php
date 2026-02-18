@@ -11,6 +11,12 @@ Route::group([
     ], function () {
         Route::put('me', [UserController::class, 'updateSettings']);
 
+        Route::group([
+            'prefix' => 'users',
+            'as'     => 'users.',
+        ], function () {
+            Route::get('search', [UserController::class, 'searchUser']);
+        });
     });
     Route::get('check-username', [UserController::class, 'checkUsername']);
 });
