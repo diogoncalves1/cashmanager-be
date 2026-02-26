@@ -34,6 +34,10 @@ class TransactionsView extends Transaction
     {
         return $query->where("transactions_view.accountId", $accountId);
     }
+    public function scopeCategory($query, $categoryId)
+    {
+        return $query->where("transactions_view.categoryId", $categoryId);
+    }
     public function scopeUser($query, $userId)
     {
         return $query->where("transactions_view.userId", $userId);

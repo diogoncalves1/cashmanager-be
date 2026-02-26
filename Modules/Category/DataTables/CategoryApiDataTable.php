@@ -15,6 +15,7 @@ class CategoryApiDataTable extends DataTable
 
         return datatables()
             ->eloquent($query)
+            ->editColumn('id', fn(Category $category) => (string) $category->id)
             ->editColumn('name', fn(Category $category) => optional($category->name->{$user->preferences->lang}) ? $category->name->{$user->preferences->lang} : $category->name)
             ->editColumn('type', fn(Category $category) => __('category::attributes.categories.type.' . $category->type))
             ->addColumn('parent', fn(Category $category) => $category->parent)

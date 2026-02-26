@@ -125,6 +125,27 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
         return Category::find($id);
     }
 
+    public function allUserTransactionsCategories(Request $request)
+    {
+        $user  = $request->user();
+        $query = Category::query()->join('transactions', 'categories.id', '=', 'transactions.category_id')->where('transactions.user_id', $user->id)->distinct()->select("categories.*");
+
+        if ($request->has('type')) {
+            $query->where("transactions.type", $request->get('type'));
+        }
+        if ($request->has('status')) {
+            $query->where("transactions.status", $request->get('status'));
+        }
+        if ($request->has('dateFrom')) {
+            $query->where("transactions.date", '>=', $request->get('dateFrom'));
+        }
+        if ($request->has('dateTo')) {
+            $query->where("transactions.date", '<=', $request->get('dateTo'));
+        }
+
+        return $query->get();
+    }
+
     public function showUser(Request $request, string $id)
     {
         $user = Auth::user() ? Auth::user() : $request->user();

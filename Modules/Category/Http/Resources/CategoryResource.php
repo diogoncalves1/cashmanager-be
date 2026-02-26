@@ -17,13 +17,12 @@ class CategoryResource extends JsonResource
         $lang = $user?->preferences?->lang ?? 'en';
 
         return [
-            'id'             => $this->id,
+            'id'             => (string) $this->id,
             'name'           => $this->is_default ? $this->name->{$lang} : $this->name,
             'typeTranslated' => __('category::attributes.categories.type.' . $this->type),
             'type'           => $this->type,
             'icon'           => $this->icon,
             'color'          => $this->color,
-            'parent'         => $this->whenNotNull($this->parent ? new CategoryResource($this->parent) : null),
         ];
     }
 }

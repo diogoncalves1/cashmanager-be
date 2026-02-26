@@ -9,7 +9,10 @@ use Modules\Accounts\Http\Requests\TransactionRequest;
 use Modules\Accounts\Http\Requests\TransactionUpdateRequest;
 use Modules\Accounts\Http\Resources\TransactionResource;
 use Modules\Accounts\Http\Resources\TransactionViewResource;
+use Modules\Accounts\Repositories\AccountRepository;
 use Modules\Accounts\Repositories\TransactionRepository;
+use Modules\Category\Http\Resources\CategoryCollection;
+use Modules\Category\Repositories\CategoryRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -21,20 +24,26 @@ class TransactionController extends ApiController
 {
     private TransactionRepository $repository;
 
-    public function __construct(TransactionRepository $repository)
+    public function __construct(TransactionRepository $repository, protected AccountRepository $accountRepo, protected CategoryRepository $categoryRepo)
     {
         $this->repository = $repository;
     }
 
     /**
      * Display a listing of the resource.
+     * @param Request $request
      * @param AccountDataTable $dataTable
      * @return JsonResponse
      */
-    public function index(TransactionDataTable $dataTable): JsonResponse
+    public function index(Request $request, TransactionDataTable $dataTable): JsonResponse
     {
         try {
-            return $dataTable->ajax();
+            $stats = $this->repository->getStats($request);
+
+            $data       = $dataTable->ajax()->getData(true);
+            $categories = $this->categoryRepo->allUserTransactionsCategories($request);
+
+            return response()->json(array_merge(['data' => $data['data'], 'recordsTotal' => $data['recordsTotal'], 'recordsFiltered' => $data['recordsFiltered']], ['stats' => $stats, 'categories' => new CategoryCollection($categories)]));
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
