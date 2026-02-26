@@ -50,7 +50,7 @@ class Transaction extends Model
     }
     public function scopeAccount($query, $accountId)
     {
-        return $query->where('account_id', $accountId);
+        return $query->where('transactions.account_id', $accountId);
     }
     public function scopeStatus($query, $status)
     {

@@ -57,6 +57,9 @@ class TransactionDataTable extends DataTable
         if ($request->has('type')) {
             $query->type($request->get('type'));
         }
+        if ($request->has('categoryId')) {
+            $query->category($request->get('categoryId'));
+        }
         if ($request->has('status')) {
             $query->status($request->get('status'));
         }
@@ -65,6 +68,12 @@ class TransactionDataTable extends DataTable
         }
         if ($request->has("userId")) {
             $query->user($request->get("userId"));
+        }
+        if ($request->has('dateFrom')) {
+            $query->where('date', '>=', $request->get('dateFrom'));
+        }
+        if ($request->has('dateTo')) {
+            $query->where('date', '<=', $request->get('dateTo'));
         }
 
         return $query;
