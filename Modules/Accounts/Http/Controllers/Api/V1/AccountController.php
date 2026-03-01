@@ -11,9 +11,11 @@ use Modules\Accounts\Http\Resources\AccountBasicViewCollection;
 use Modules\Accounts\Http\Resources\AccountResource;
 use Modules\Accounts\Http\Resources\AccountViewResource;
 use Modules\Accounts\Http\Resources\CategorySummaryCollection;
+use Modules\Accounts\Http\Resources\Charts\BalanceChartsResource;
 use Modules\Accounts\Http\Resources\MonthlyResumeCollection;
-use Modules\Accounts\Http\Resources\TransactionViewCollection;
+use Modules\Accounts\Http\Resources\Stats\AccountIndividualDataResource;
 use Modules\Accounts\Repositories\AccountRepository;
+use Modules\ActivityLog\DataTables\ActivityLogDataTable;
 
 /**
  * Finished: True
@@ -75,13 +77,16 @@ class AccountController extends ApiController
         try {
             $account = $this->repository->showToUser($request, $id);
 
-            $lastTransactions = $this->repository->showLastTransactions($id);
-            $monthlyResume    = $this->repository->showMonthlyResume($id);
-            $categorySummary  = $this->repository->showCategorySummary($id);
+            $monthlyResume   = $this->repository->showMonthlyResume($id);
+            $categorySummary = $this->repository->showCategorySummary($account);
+            $balanceCharts   = $this->repository->getChartsData($request, $id);
+            $extraData       = $this->repository->getAccountIndividualData($account);
+            $extraData       = array_merge($extraData, ['balance' => $account->balance, 'balanceLastMonth' => isset($balanceCharts['charts']['monthly'][0]) ? $balanceCharts['charts']['monthly'][0]->amount - $balanceCharts['charts']['monthly'][0]->transactionAmount ?? 0 : 0]);
 
             return $this->ok(new AccountViewResource($account), additionals: [
-                'transactions'    => new TransactionViewCollection($lastTransactions),
                 'monthlyResume'   => new MonthlyResumeCollection($monthlyResume),
+                'extraData'       => new AccountIndividualDataResource($extraData),
+                'balanceChart'    => new BalanceChartsResource($balanceCharts),
                 'categorySummary' =>
                 [
                     'data'          => new CategorySummaryCollection($categorySummary['data']),
@@ -159,6 +164,29 @@ class AccountController extends ApiController
             $accounts = $this->repository->allUser($request);
 
             return $this->ok(new AccountBasicViewCollection($accounts));
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    /**
+     * Return a activity of account.
+     * @param ActivityLogDataTable $dataTable
+     * @param Request $request
+     * @param string $id
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function activity(ActivityLogDataTable $dataTable, Request $request, string $id): JsonResponse
+    {
+        try {
+            $this->repository->showToUser($request, $id);
+
+            $dataTable->type = 'account';
+            $dataTable->id   = $id;
+
+            return $dataTable->ajax();
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

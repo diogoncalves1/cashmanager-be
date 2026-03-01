@@ -20,6 +20,8 @@ class CategorySummaryResource extends JsonResource
             'color'                      => $this->color,
             'valueFormated'              => Helpers::formatMoneyWithSymbolAndCurrency($this->value, $this->currencyCode, $this->currencySymbol),
             'valueFormatedWithoutSymbol' => Helpers::formatMoneyWithCurrency($this->value, $this->currencyCode, $this->currencySymbol),
+            'icon'                       => $this->icon,
+            'count'                      => $this->count,
         ];
     }
 }

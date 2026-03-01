@@ -29,19 +29,23 @@ class ActivityLogMessageResolver
         $user    = $request->user();
 
         return match ($metaType) {
-            'goal_created' => [
+            'goal_created'    => [
                 'initialTarget' => Helpers::formatMoneyWithCurrency($metadata['initialTarget'] ?? 0, $metadata['currencyCode'], $metadata['currencySymbol']),
             ],
-            'debt_created' => [
+            'debt_created'    => [
                 'initialAmount' => Helpers::formatMoneyWithCurrency($metadata['initialAmount'] ?? 0, $metadata['currencyCode'], $metadata['currencySymbol']),
             ],
 
-            'user_invited' => [
+            'user_invited'    => [
                 'userName' => $this->userRepo->show($metadata['invitedUserId'])->name,
                 'roleName' => $this->sharedRoleRepo->show($metadata['sharedRoleId'])->name->{$user->preferences->lang},
             ],
 
-            default        => [],
+            'account_created' => [
+                'accountName' => $metadata['accountName'] ?? '',
+            ],
+
+            default           => [],
         };
     }
 }
