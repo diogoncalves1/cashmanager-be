@@ -21,7 +21,7 @@ class MonthlyResumeResource extends JsonResource
             'totalExpenseFormated'              => Helpers::formatMoneyWithSymbolAndCurrency($this->totalExpense, $this->currencyCode, $this->currencySymbol),
             'totalExpenseFormatedWithoutSymbol' => Helpers::formatMoneyWithCurrency($this->totalExpense, $this->currencyCode, $this->currencySymbol),
             'profit'                            => Helpers::formatMoneyWithCurrency($this->totalRevenue - $this->totalExpense, $this->currencyCode, $this->currencySymbol),
-            'total'                             => Helpers::formatMoneyWithCurrency($this->totalRevenue + $this->totalExpense, $this->currencyCode, $this->currencySymbol),
+            'profitFormated'                    => Helpers::formatMoneyWithSymbolAndCurrency($this->totalRevenue - $this->totalExpense, $this->currencyCode, $this->currencySymbol),
         ];
     }
 }

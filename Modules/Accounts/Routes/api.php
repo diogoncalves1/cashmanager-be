@@ -27,6 +27,8 @@ Route::group([
 
                 Route::patch('/{id}/status', [AccountController::class, 'status']);
 
+                Route::get('/{id}/activity', [AccountController::class, 'activity']);
+
                 // Invites
                 Route::post('/{id}/invite/{userId}', [AccountUserInviteController::class, 'invite']);
                 Route::post('/{id}/accept', [AccountUserInviteController::class, 'accept']);

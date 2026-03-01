@@ -25,7 +25,7 @@ class TransactionViewResource extends JsonResource
             'typeTranslated'   => __('accounts::attributes.transactions.type.' . $this->type),
             'userId'           => $this->userId,
             'userName'         => $this->userName,
-            'accountId'        => $this->accountId,
+            'accountId'        => (string) $this->accountId,
             'accountName'      => $this->accountName,
             'currencySymbol'   => $this->currencySymbol,
             'currencyCode'     => $this->currencyCode,

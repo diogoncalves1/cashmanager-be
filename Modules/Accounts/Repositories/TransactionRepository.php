@@ -5,6 +5,8 @@ use App\Repositories\RepositoryApiInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Accounts\Core\Helpers;
+use Modules\Accounts\Entities\AccountsView;
 use Modules\Accounts\Entities\Transaction;
 use Modules\Accounts\Entities\TransactionsView;
 use Modules\Accounts\Exceptions\InvalidTransactionDateException;
@@ -177,6 +179,7 @@ class TransactionRepository implements RepositoryApiInterface
             ->join("currencies as tx_currency", "tx_currency.id", '=', "accounts.currency_id")
             ->join("user_preferences", "user_preferences.user_id", '=', "transactions.user_id")
             ->join("currencies as user_currency", "user_currency.id", '=', "user_preferences.currency_id")
+            ->where("accounts.active", 1)
             ->user($userId);
 
         if ($type) {
@@ -194,6 +197,81 @@ class TransactionRepository implements RepositoryApiInterface
         return floatval($query->sum(DB::raw("(transactions.amount * (user_currency.rate / tx_currency.rate))")));
     }
 
+    public function getStats(Request $request)
+    {
+        $user = $request->user();
+        $user = $request->user();
+
+        $currency = $user->preferences->currency;
+
+        $query = AccountsView::query()
+            ->from('accounts_view as a')
+            ->join('account_users as au', 'au.account_id', '=', 'a.id')
+            ->join('currencies as account_currency', 'a.currencyId', '=', 'account_currency.id')
+            ->join('user_preferences as up', 'up.user_id', '=', 'au.user_id')
+            ->join('currencies as user_currency', 'user_currency.id', '=', 'up.currency_id')
+            ->join('transactions as t', 't.account_id', '=', 'a.id')
+            ->where('au.user_id', $user->id)
+            ->whereExists(function ($q) {
+                $q->selectRaw(1)
+                    ->from('shared_permission_roles as spr')
+                    ->join('shared_permissions as sp', 'sp.id', '=', 'spr.shared_permission_id')
+                    ->join('shared_roles as sr', 'sr.id', '=', 'spr.shared_role_id')
+                    ->whereColumn('sr.id', 'au.shared_role_id')
+                    ->where('sp.code', 'updateUserBalance');
+            })
+            ->selectRaw("
+                        SUM(
+                            CASE
+                                WHEN t.type = 'revenue'
+                                    AND t.status = 'completed'
+                                THEN t.amount * (user_currency.rate / account_currency.rate)
+                                ELSE 0
+                            END
+                        ) as totalRevenues,
+
+                        SUM(
+                            CASE
+                                WHEN t.type = 'expense'
+                                    AND t.status = 'completed'
+                                THEN t.amount * (user_currency.rate / account_currency.rate)
+                                ELSE 0
+                            END
+                        ) as totalExpenses
+                    ");
+
+        if ($request->has('type')) {
+            $query->where('t.type', $request->get('type'));
+        }
+        if ($request->has('categoryId')) {
+            $query->where('t.category_id', $request->get('categoryId'));
+        }
+        if ($request->has('status')) {
+            $query->where('t.status', $request->get('status'));
+        }
+        if ($request->has('accountId')) {
+            $query->where('t.account_id', $request->get('accountId'));
+        }
+        if ($request->has("userId")) {
+            $query->where('t.user_id', $request->get("userId"));
+        }
+        if ($request->has('dateFrom')) {
+            $query->where('t.date', '>=', $request->get('dateFrom'));
+        }
+        if ($request->has('dateTo')) {
+            $query->where('t.date', '<=', $request->get('dateTo'));
+        }
+
+        $res = $query->first();
+
+        return [
+            'balance'  => Helpers::formatMoneyWithSymbolAndCurrency($res->totalRevenues - $res->totalExpenses ?? 0, $currency->code, $currency->symbol),
+            'expenses' => Helpers::formatMoneyWithSymbolAndCurrency($res->totalExpenses ?? 0, $currency->code, $currency->symbol),
+            'income'   => Helpers::formatMoneyWithSymbolAndCurrency($res->totalRevenues ?? 0, $currency->code, $currency->symbol),
+        ];
+
+    }
+
     public function getChartsData(Request $request)
     {
         $user = $request->user();
@@ -202,14 +280,16 @@ class TransactionRepository implements RepositoryApiInterface
             ->join("accounts", "accounts.id", "=", "transactions.account_id")
             ->join("currencies as tx_currency", "tx_currency.id", '=', 'accounts.currency_id')
             ->join("user_preferences", "user_preferences.user_id", '=', 'transactions.user_id')
-            ->join("currencies as user_currency", "user_currency.id", '=', "user_preferences.currency_id");
+            ->join("currencies as user_currency", "user_currency.id", '=', "user_preferences.currency_id")
+            ->where("accounts.active", 1)
+            ->status("completed");
 
         $queryMonthly = clone $query;
         if ($request->filled('min_date')) {
             $queryMonthly->where('transactions.date', '>=', $request->get('min_date'));
         }
 
-        $monthlyData = $queryMonthly->status("completed")
+        $monthlyData = $queryMonthly
             ->selectRaw(
                 "SUM(CASE WHEN transactions.type = 'revenue' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as revenues,
                 SUM(CASE WHEN transactions.type = 'expense' THEN (transactions.amount * (user_currency.rate / tx_currency.rate)) ELSE 0 END) as expenses,

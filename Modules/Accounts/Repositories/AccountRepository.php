@@ -11,10 +11,18 @@ use Modules\Accounts\Entities\AccountsView;
 use Modules\Accounts\Entities\AccountUser;
 use Modules\Accounts\Entities\Transaction;
 use Modules\Accounts\Exceptions\Accounts\AccountNotFoundException;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\SharedRoles\Entities\SharedRole;
 
 class AccountRepository implements RepositoryApiInterface
 {
+    protected ActivityLogRepository $activityRepo;
+
+    public function __construct(ActivityLogRepository $activityRepo)
+    {
+        $this->activityRepo = $activityRepo;
+    }
+
     public function all()
     {
         return Account::all();
@@ -52,6 +60,7 @@ class AccountRepository implements RepositoryApiInterface
             ];
 
             AccountUser::create($accountUserInput);
+            $this->activityRepo->storeActivity($account->id, $user->id, 'account', ['type' => 'account_created', 'accountName' => $account->name]);
 
             return $account;
         });
@@ -198,7 +207,7 @@ class AccountRepository implements RepositoryApiInterface
             ->where("au.user_id", $user->id)
             ->selectRaw("
             SUM(
-            CASE
+           DISTINCT CASE
                 WHEN sp.code = 'updateUserBalance'
                 THEN a.balance * (user_currency.rate / account_currency.rate)
                 ELSE 0
@@ -234,33 +243,117 @@ class AccountRepository implements RepositoryApiInterface
         return $stats;
     }
 
-    public function showCategorySummary(int $id)
+    public function showCategorySummary(AccountsView $account)
     {
-        $account = $this->show($id);
-
         $total = (float) $account->transactionsView()
             ->where('categoryType', 'expense')
             ->where('status', 'completed')
             ->sum('amount');
 
-        $totalFormated = Helpers::formatMoneyWithCurrency($total, $account->currency->code, $account->currency->symbol);
+        $totalFormated = Helpers::formatMoneyWithCurrency($total, $account->currencyCode, $account->currencySymbol);
 
         return [
             'data'          => $account->transactionsView()
                 ->selectRaw("
+                COUNT(*) AS count,
                 SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) AS value,
                 categoryName AS category,
                 categoryColor AS color,
+                categoryIcon AS icon,
                 MAX(currencyCode) AS currencyCode,
                 MAX(currencySymbol) AS currencySymbol
             ")
                 ->groupByRaw("categoryId")
                 ->where('categoryType', 'expense')
                 ->get(),
-
             'total'         => $total,
             'totalFormated' => $totalFormated,
 
+        ];
+    }
+
+    public function getAccountIndividualData(AccountsView $account)
+    {
+        $monthlyRevenues = (float) $account->transactionsView()
+            ->where('type', 'revenue')
+            ->where('status', 'completed')
+            ->whereRaw("MONTH(date) = ?", [date("m")])
+            ->sum('amount');
+
+        $monthlyExpenses = (float) $account->transactionsView()
+            ->where('type', 'expense')
+            ->where('status', 'completed')
+            ->whereRaw("MONTH(date) = ?", [date("m")])
+            ->sum('amount');
+
+        $lastMonthExpenses = (float) $account->transactionsView()
+            ->where('type', 'expense')
+            ->where('status', 'completed')
+            ->whereRaw("MONTH(date) = ?", [date("m", strtotime("-1 month"))])
+            ->sum('amount');
+        $lastMonthRevenues = (float) $account->transactionsView()
+            ->where('type', 'revenue')
+            ->where('status', 'completed')
+            ->whereRaw("MONTH(date) = ?", [date("m", strtotime("-1 month"))])
+            ->sum('amount');
+
+        return [
+            'monthlyRevenues'   => $monthlyRevenues,
+            'monthlyExpenses'   => $monthlyExpenses,
+            'lastMonthExpenses' => $lastMonthExpenses,
+            'lastMonthRevenues' => $lastMonthRevenues,
+            'currencyCode'      => $account->currencyCode,
+            'currencySymbol'    => $account->currencySymbol,
+        ];
+    }
+
+    public function getChartsData(Request $request, string $id)
+    {
+        $periods = ['weekly' => 7, 'monthly' => 30, 'quarterly' => 90, 'annualy' => 365];
+
+        $charts = [];
+
+        foreach ($periods as $period => $days) {
+            $query = DB::query()
+                ->fromRaw("(
+                        SELECT
+                            day AS date,
+                            SUM(daily_amount) OVER (ORDER BY day) AS amount,
+                            amount AS transactionAmount
+                        FROM (
+                            SELECT
+                                DATE(date) AS day,
+                                SUM(CASE
+                                    WHEN type = 'revenue' THEN amount
+                                    ELSE -amount
+                                END) AS daily_amount,
+                                SUM(CASE
+                                    WHEN type = 'revenue' THEN amount
+                                    ELSE -amount
+                                END) as amount
+                            FROM transactions
+                            WHERE account_id = ?
+                            GROUP BY DATE(date)
+                        ) t
+                    ) final", [$id])
+                ->join("accounts as a", "a.id", "=", DB::raw($id))
+                ->join("currencies as c", "c.id", "=", "a.currency_id")
+                ->selectRaw("
+                final.date,
+                final.amount,
+                c.code AS currencyCode,
+                c.symbol AS currencySymbol,
+                final.transactionAmount
+            ")
+                ->orderBy('date', "asc");
+
+            $charts[$period] = $query
+                ->where("date", ">=", Helpers::getOldDate($days))
+                ->get();
+        }
+
+        return [
+            'charts' => $charts,
         ];
     }
 

@@ -30,4 +30,14 @@ return [
             'debt_created' => 'Dívida inicial: :initialAmount',
         ],
     ],
+
+    'account'        => [
+        'titles'   => [
+            'account_created' => 'Conta criada',
+        ],
+
+        'messages' => [
+            'account_created' => 'Conta criada: :accountName',
+        ],
+    ],
 ];

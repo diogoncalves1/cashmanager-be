@@ -12,6 +12,10 @@ class AccountsView extends Account
     {
         return $this->belongsTo(Account::class, 'id', 'id');
     }
+    public function transactionsView()
+    {
+        return $this->hasMany(TransactionsView::class, 'accountId');
+    }
 
     public function scopeType($query, $type)
     {
