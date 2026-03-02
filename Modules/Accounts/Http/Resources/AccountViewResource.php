@@ -31,6 +31,9 @@ class AccountViewResource extends JsonResource
         foreach ($this->users as &$user) {
             $user->sharedRole = $user->pivot->sharedRole;
         }
+        foreach ($this->invites as &$user) {
+            $user->sharedRole = $user->pivot->sharedRole;
+        }
         return [
             'id'                           => $this->id,
             'name'                         => $this->name,
@@ -49,6 +52,7 @@ class AccountViewResource extends JsonResource
             'totalExpenses'                => Helpers::formatMoneyWithCurrency($this->totalExpenses, $this->currencyCode, $this->currencySymbol, true),
             'createdAt'                    => $this->createdAt,
             'users'                        => new UserShareCollection($this->users),
+            'invites'                      => new UserShareCollection($this->invites),
             'actions'                      => $actions,
         ];
     }
