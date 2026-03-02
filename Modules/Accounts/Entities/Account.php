@@ -42,6 +42,12 @@ class Account extends Model
             ->using(\Modules\Accounts\Entities\AccountUser::class)
             ->withPivot('shared_role_id');
     }
+    public function invites()
+    {
+        return $this->belongsToMany(User::class, 'account_user_invites', 'account_id', 'user_id')
+            ->using(\Modules\Accounts\Entities\AccountUserInvite::class)
+            ->withPivot('shared_role_id');
+    }
 
     public function scopeActive($query, $active)
     {

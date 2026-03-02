@@ -2,11 +2,12 @@
 namespace Modules\Accounts\Entities;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Modules\SharedRoles\Entities\SharedRole;
 use Modules\User\Entities\User;
 
-class AccountUserInvite extends Model
+class AccountUserInvite extends Pivot
 {
     /** @use HasFactory<\Modules\Accounts\Database\Factories\AccountUserInviteFactory> */
     use HasFactory;
@@ -34,9 +35,9 @@ class AccountUserInvite extends Model
     {
         return $this->belongsTo(Account::class);
     }
-    public function sharedRole()
+    public function sharedRole(): BelongsTo
     {
-        return $this->belongsTo(SharedRole::class);
+        return $this->belongsTo(SharedRole::class, 'shared_role_id');
     }
 
     public function scopeUser($query, $userId)
