@@ -15,7 +15,7 @@ class DebtUserInvite extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['user_id', 'debt_id', 'shared_role_id', 'status'];
+    protected $fillable = ['user_id', 'debt_id', 'shared_role_id', 'status', 'invited_by_id'];
     protected $table    = "debt_user_invites";
 
     protected static function newFactory(): DebtUserInviteFactory
@@ -26,6 +26,10 @@ class DebtUserInvite extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function sender()
+    {
+        return $this->belongsTo(User::class, 'invited_by_id');
     }
     public function debt()
     {
@@ -47,5 +51,9 @@ class DebtUserInvite extends Model
     public function scopeStatus($query, $status)
     {
         return $query->where('status', $status);
+    }
+    public function scopeInvitedBy($query, $userId)
+    {
+        return $query->where("invited_by_id", $userId);
     }
 }
