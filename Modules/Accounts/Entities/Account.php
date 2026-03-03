@@ -46,6 +46,7 @@ class Account extends Model
     {
         return $this->belongsToMany(User::class, 'account_user_invites', 'account_id', 'user_id')
             ->using(\Modules\Accounts\Entities\AccountUserInvite::class)
+            ->wherePivot('status', '=', 'pending')
             ->withPivot('shared_role_id');
     }
 

@@ -87,7 +87,8 @@ class AccountUserInviteRepository
 
             $input    = ["account_id" => $id, "user_id" => $user->id, "shared_role_id" => $invite->shared_role_id];
             $relation = $this->accountUserRepo->store($input);
-            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_joined', 'userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
+            $invite->update(['status' => 'accepted']);
+            $this->activityRepo->storeActivity($input['account_id'], $user->id, 'account', ['type' => 'user_joined', 'userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
 
             return $relation;
         });
