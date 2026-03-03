@@ -255,7 +255,7 @@ class DebtRepository implements RepositoryApiInterface
 
         $statsValues = DebtPayment::query()
             ->from('debt_payments as dp')
-            ->join('financial_goal_view as d', 'dp.debt_id', '=', 'd.id')
+            ->join('debts_view as d', 'dp.debt_id', '=', 'd.id')
             ->join('currencies as debt_currency', 'd.currencyId', '=', 'debt_currency.id')
             ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
             ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')

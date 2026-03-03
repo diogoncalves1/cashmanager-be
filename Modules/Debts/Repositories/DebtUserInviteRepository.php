@@ -4,6 +4,7 @@ namespace Modules\Debts\Repositories;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Debts\Entities\DebtUserInvite;
 use Modules\Friends\Repositories\FriendshipRepository;
 use Modules\SharedRoles\Exceptions\AlreadyRelationException;
@@ -16,13 +17,15 @@ class DebtUserInviteRepository
     private $friendshipRepository;
     private $sharedRoleRepository;
     private $debtUserRepo;
+    protected ActivityLogRepository $activityRepo;
 
-    public function __construct(DebtRepository $debtRepository, SharedRoleRepository $sharedRoleRepository, FriendshipRepository $friendshipRepository, DebtUserRepository $debtUserRepo)
+    public function __construct(DebtRepository $debtRepository, SharedRoleRepository $sharedRoleRepository, FriendshipRepository $friendshipRepository, DebtUserRepository $debtUserRepo, ActivityLogRepository $activityRepo)
     {
         $this->debtRepository       = $debtRepository;
         $this->sharedRoleRepository = $sharedRoleRepository;
         $this->friendshipRepository = $friendshipRepository;
         $this->debtUserRepo         = $debtUserRepo;
+        $this->activityRepo         = $activityRepo;
     }
 
     public function invite(Request $request, string $id, string $userId)
@@ -81,10 +84,12 @@ class DebtUserInviteRepository
 
             $invite = DebtUserInvite::query()->user($user->id)->debt($id)->status("pending")->first();
 
-            $invite->delete();
+            $input  = ["status" => "accepted"];
+            $invite = $this->update($user->id, $id, "pending", $input);
 
             $input    = ["debt_id" => $id, "user_id" => $user->id, "shared_role_id" => $invite->shared_role_id];
             $relation = $this->debtUserRepo->store($input);
+            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_joined', 'userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
 
             return $relation;
         });
@@ -130,6 +135,18 @@ class DebtUserInviteRepository
 
             return $invite;
         });
+    }
+
+    public function getInvitationsStats(Request $request)
+    {
+        $user = $request->user();
+
+        return [
+            'sentInvites'     => DebtUserInvite::query()->invitedBy($user->id)->count(),
+            'receivedInvites' => DebtUserInvite::query()->user($user->id)->count(),
+            'pendingInvites'  => DebtUserInvite::query()->invitedBy($user->id)->status('pending')->count(),
+            'awaitingInvites' => DebtUserInvite::query()->user($user->id)->status('pending')->count(),
+        ];
     }
 
     // Private Methods

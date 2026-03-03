@@ -19,10 +19,10 @@ class Helpers
 
     public static function percentage(float $totalAmount = 0, float $contributedAmount = 0, int $decimals = 2): float
     {
-        if ($contributedAmount == 0 || $totalAmount == 0) {
+        if ($totalAmount == 0) {
             return 0;
         }
 
-        return (float) number_format(($contributedAmount / $totalAmount) * 100, $decimals);
+        return (float) ((($contributedAmount - $totalAmount) / $totalAmount) * 100);
     }
 }

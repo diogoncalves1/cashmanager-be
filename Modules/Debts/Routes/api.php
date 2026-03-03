@@ -19,6 +19,9 @@ Route::group([
         ], function () {
             Route::get('/all', [DebtController::class, 'allUser']);
             Route::get('/stats', [DebtController::class, 'getStats']);
+            Route::get('/invitations-stats', [DebtUserInviteController::class, 'getInvitationsStats']);
+            Route::get('/sent-invitations', [DebtUserInviteController::class, 'getSentInvitations']);
+            Route::get('/received-invitations', [DebtUserInviteController::class, 'getReceivedInvitations']);
 
             Route::get('/{id}/activity', [DebtController::class, 'activity']);
             // Updates
