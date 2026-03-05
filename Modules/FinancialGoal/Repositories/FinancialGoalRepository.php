@@ -187,7 +187,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             }
             $financialGoal->completed_at = Carbon::now();
             $this->setStatus($financialGoal, 'completed');
-            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'goal_completed');
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', ['type' => 'goal_completed']);
 
             return $financialGoal;
         });

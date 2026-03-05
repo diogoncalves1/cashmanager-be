@@ -26,6 +26,7 @@ return new class extends Migration
                 c.symbol AS currencySymbol,
                 c.code AS currencyCode,
                 c.id AS currencyId,
+                a.id AS accountId,
                 a.name AS accountName,
                 a.type AS accountType,
                 sr.name AS sharedRoleName,
