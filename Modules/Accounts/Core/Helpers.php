@@ -30,7 +30,7 @@ class Helpers
 
     public static function formatMoneyWithCurrency(float $amount, string $currencyCode, string $currencySymbol, bool $turnPositive = false): string
     {
-        $currenciesCodesPrefix = config('currency.currenciesCodesPrefix');
+        $currenciesCodesPrefix = config('currency.currenciesCodesPrefix', []);
 
         if ($turnPositive) {
             $amount = $amount < 0 ? -$amount : $amount;
