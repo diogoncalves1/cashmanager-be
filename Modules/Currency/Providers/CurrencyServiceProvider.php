@@ -34,10 +34,8 @@ class CurrencyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(
-            __DIR__ . '/../Config/services.php',
-            'currency.services'
-        );
+        $this->mergeConfigFrom(__DIR__ . '/../Config/services.php', 'currency.services');
+        $this->mergeConfigFrom(__DIR__ . '/../Config/currenciesCodesPrefix.php', 'currency.currenciesCodesPrefix');
 
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
