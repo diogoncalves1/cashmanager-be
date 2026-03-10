@@ -101,10 +101,10 @@ class DebtPaymentRepository implements RepositoryApiInterface
 
             $this->transactionRepo->update($request, $debtPayment->transaction_id);
 
-            $input = $request->only(['date', 'amount', 'description', 'interest_rate']);
+            $input = $request->only(['date', 'amount', 'description', 'interest_rate', 'is_monthly_payment']);
 
             if ($this->checkStatus($debtPayment, 'completed')) {
-                $this->debtRepository->updatePaidAmount($debtPayment, $debtPayment->amount, $request->get('amount'), $debtPayment->interest_rate, $request->get('interest_rate'));
+                $this->debtRepository->updatePaidAmount($debtPayment, $debtPayment->amount, $request->get('amount'), $debtPayment->interest_rate, $request->get('interest_rate'), $request->get("is_monthly_payment"));
             }
 
             $debtPayment->update($input);
@@ -220,7 +220,4 @@ class DebtPaymentRepository implements RepositoryApiInterface
     {
         return $debtPayment->status == $status;
     }
-}
-{
-
 }

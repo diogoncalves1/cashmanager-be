@@ -22,6 +22,7 @@ return new class extends Migration
                 u.id AS userId,
 
                 a.name AS accountName,
+                a.id AS accountId,
 
                 c.symbol AS currencySymbol,
                 c.code AS currencyCode,
@@ -31,7 +32,8 @@ return new class extends Migration
                 dp.date AS date,
                 dp.status AS status,
                 dp.description AS description,
-                dp.interest_rate AS interestRate
+                dp.interest_rate AS interestRate,
+                dp.is_monthly_payment AS isMonthlyPayment
 
                 FROM debt_payments AS dp
                 JOIN debts AS d ON d.id = dp.debt_id

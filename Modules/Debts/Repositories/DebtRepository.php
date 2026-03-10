@@ -216,9 +216,15 @@ class DebtRepository implements RepositoryApiInterface
         $debt->save();
         return $debt;
     }
-    public function updatePaidAmount(DebtPayment $debtPayment, float $oldAmount, float $amountToUpdate, float $oldInterestRate, float $currentInterestRate): void
+    public function updatePaidAmount(DebtPayment $debtPayment, float $oldAmount, float $amountToUpdate, float $oldInterestRate, float $currentInterestRate, bool $isMonthlyPayment): void
     {
         $debt = $debtPayment->debt;
+
+        if ($debtPayment->is_monthly_payment != $isMonthlyPayment) {
+            $isMonthlyPayment ?
+            $debt->increment('months_paid', 1) :
+            $debt->decrement('months_paid', 1);
+        }
 
         $difference = ($oldAmount - ($oldAmount * ($oldInterestRate / 100))) - ($amountToUpdate - ($amountToUpdate * ($currentInterestRate / 100)));
 

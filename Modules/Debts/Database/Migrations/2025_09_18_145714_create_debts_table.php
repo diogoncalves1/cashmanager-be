@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('paid_amount', 15)->default(0);
             $table->enum('status', ['pending', 'paid'])->default('pending');
             $table->integer('months')->nullable();
-            $table->decimal('interest_rate', 8, 5)->nullable();
+            $table->decimal('interest_rate', 8, 5)->default(0);
             $table->date('start_date');
             $table->date('due_date');
             $table->date('paid_at')->nullable();
