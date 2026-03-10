@@ -1,0 +1,13 @@
+{
+    "name": "EmailLayout",
+    "alias": "emaillayout",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EmailLayout\\Providers\\EmailLayoutServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}
