@@ -44,6 +44,7 @@ class DebtViewResource extends JsonResource
             'totalAmountFormated'              => Helpers::formatMoneyWithSymbolAndCurrency($this->totalAmount, $this->currencyCode, $this->currencySymbol),
             'totalAmountFormatedWithoutSymbol' => Helpers::formatMoneyWithCurrency($this->totalAmount, $this->currencyCode, $this->currencySymbol),
 
+            'remainingAmount'                  => Helpers::formatMoneyWithCurrency($this->totalAmount - $this->paidAmount, $this->currencyCode, $this->currencySymbol),
             'paidAmount'                       => $this->paidAmount,
             'paidAmountFormatedWithoutSymbol'  => Helpers::formatMoneyWithCurrency($this->paidAmount, $this->currencyCode, $this->currencySymbol),
             'paidAmountFormated'               => Helpers::formatMoneyWithSymbolAndCurrency($this->paidAmount, $this->currencyCode, $this->currencySymbol),

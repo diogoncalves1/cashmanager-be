@@ -25,8 +25,8 @@
     <div class="wrapper">
 
         <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__shake" src="/assets/images/logos/logo.png" alt="Logo" height="100"
-                width="100">
+            <img class="animation__shake" src="{{ asset('assets/images/logos/logo.png') }}" alt="Logo"
+                height="100" width="100">
         </div>
 
         @include('components.admin.header')

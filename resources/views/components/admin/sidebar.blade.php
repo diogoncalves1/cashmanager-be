@@ -117,20 +117,32 @@
                                 </li>
                             @endcan
 
+                            @can('authorization', 'viewRole')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.roles.index') }}" class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles') &&
+                                    !Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared')
+                                        ? 'active'
+                                        : '' !!}">
+                                        <i class="nav-icon fas fa-user-shield"></i>
+                                        <p>
+                                            Papéis
+                                        </p>
+                                    </a>
+                                </li>
+                            @endcan
+
 
 
                             @can('authorization', 'superAdmin')
                                 <li class="nav-header">SUPER ADMIN</li>
-                                <li class="nav-item {!! (Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') ||
-                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles') ||
-                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'languages') ||
-                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions')) &&
-                                !Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-roles')
+                                <li class="nav-item {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') ||
+                                Illuminate\Support\Str::contains(\Request::route()->getName(), 'languages') ||
+                                Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions')
                                     ? 'menu-open'
                                     : '' !!} ">
-                                    <a href="#" class="nav-link {!! (Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') ||
-                                        Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles')) &&
-                                    !Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared')
+                                    <a href="#" class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') ||
+                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'languages') ||
+                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions')
                                         ? 'active'
                                         : '' !!} ">
                                         <i class="nav-icon fas fa-user-shield"></i>
@@ -158,18 +170,6 @@
                                                 <i class="nav-icon fas fa-user-shield"></i>
                                                 <p>
                                                     Permissões de Partilha
-                                                </p>
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a href="{{ route('admin.roles.index') }}"
-                                                class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'roles') &&
-                                                !Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared')
-                                                    ? 'active'
-                                                    : '' !!}">
-                                                <i class="nav-icon fas fa-user-shield"></i>
-                                                <p>
-                                                    Papéis
                                                 </p>
                                             </a>
                                         </li>

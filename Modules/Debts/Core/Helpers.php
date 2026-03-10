@@ -3,7 +3,7 @@ namespace Modules\Debts\Core;
 
 class Helpers
 {
-    public static function debtInterestValue(float $totalAmount, float $monthlyInterestRate, int $months)
+    public static function debtInterestValue(float $totalAmount, float $monthlyInterestRate, int $months = 1)
     {
         return $totalAmount * (($monthlyInterestRate / 100) * $months);
     }

@@ -25,7 +25,7 @@ class DebtDataTable extends DataTable
 
         return datatables()
             ->eloquent($query)
-            ->addColumn('interestValue', fn(DebtsView $debt) => DebtHelpers::debtInterestValue($debt->totalAmount, $debt->interestRate, $debt->months))
+            ->addColumn('interestValue', fn(DebtsView $debt) => DebtHelpers::debtInterestValue($debt->totalAmount, $debt->interestRate, $debt->months ?? 0))
             ->addColumn('remainingAmount', fn(DebtsView $debt) => DebtHelpers::debtRemainingAmount($debt->totalAmount, $debt->paidAmount, $debt->interestRate, $debt->months))
             ->addColumn('totalAmountWithInterest', fn(DebtsView $debt) => DebtHelpers::debtTotalAmount($debt->totalAmount, $debt->interestRate, $debt->months))
             ->addColumn('totalAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->totalAmount, $debt->currencyCode, $debt->currencySymbol))
