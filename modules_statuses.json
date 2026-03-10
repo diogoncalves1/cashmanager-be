@@ -5,13 +5,14 @@
     "Asset": true,
     "Category": true,
     "Currency": true,
+    "DashboardCharts": true,
+    "Debts": true,
+    "EmailLayout": true,
+    "FinancialGoal": true,
     "Friends": true,
     "Language": true,
     "Permission": true,
     "SharedRoles": true,
     "User": true,
-    "UserPreferences": true,
-    "FinancialGoal": true,
-    "DashboardCharts": true,
-    "Debts": true
+    "UserPreferences": true
 }
