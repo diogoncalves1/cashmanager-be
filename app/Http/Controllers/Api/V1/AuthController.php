@@ -34,19 +34,23 @@ class AuthController extends ApiController
 
     public function login(Request $request)
     {
-        $user = User::where('email', $request->email)->first();
+        try {
+            $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages(['email' => ['Credenciais invalidas.']]);
+            if (! $user || ! Hash::check($request->password, $user->password)) {
+                throw ValidationException::withMessages(['email' => ['Credenciais invalidas.']]);
+            }
+
+            if (! $user->hasVerifiedEmail()) {
+                throw new \Exception('Valide o seu email antes de efetuar login.', 403);
+            }
+
+            $token = $user->createToken('web-token')->plainTextToken;
+
+            return response()->json(['user' => new UserResource($user), 'token' => $token], 201);
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage(), $e, $e->getCode());
         }
-
-        if (! $user->hasVerifiedEmail()) {
-            throw ValidationException::withMessages(['email' => ['Valide o seu email antes de efetuar login.']]);
-        }
-
-        $token = $user->createToken('web-token')->plainTextToken;
-
-        return response()->json(['user' => new UserResource($user), 'token' => $token], 201);
     }
 
     public function logout(Request $request)

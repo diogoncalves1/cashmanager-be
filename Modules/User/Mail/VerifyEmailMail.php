@@ -44,6 +44,7 @@ class VerifyEmailMail extends Mailable
 
         $mail = $this->from(config('mail.from.address'), config('app.name'))
             ->subject($emailSubject);
+
         if (! empty($user)) {
             $mail->to($user->email);
         }

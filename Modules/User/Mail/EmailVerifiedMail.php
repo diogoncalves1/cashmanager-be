@@ -37,11 +37,13 @@ class EmailVerifiedMail extends Mailable
 
         $emailSubject = str_replace(['[$user_name]'],
             [$this->user->name], $this->emailLayout->subject);
-        $emailText = str_replace(['[$user_name]', '[$app_link]'], [$this->user->name, config('app.frontend_url') . '/signin'], $this->emailLayout->email);
+        $emailText = str_replace(['[$user_name]', '[$verification_link]'],
+            [$this->user->name, config('app.frontend_url') . '/signin'], $this->emailLayout->email);
 
         $signature = str_replace('[$logo]', "<img style='width:200px'; margin-left: auto; margin-rigth:auto; margin-top: '10px'; margin-bottom: '10px'; src='" . config('app.url') . '/assets/images/logos/logo.png' . "'/>", $this->emailLayout->signature);
 
-        $mail = $this->from(config('mail.from.address'), config('app.name'))->subject($emailSubject);
+        $mail = $this->from(config('mail.from.address'), config('app.name'))
+            ->subject($emailSubject);
 
         if (! empty($user)) {
             $mail->to($user->email);
@@ -52,7 +54,7 @@ class EmailVerifiedMail extends Mailable
             'email'     => config('mail.from.address'),
             'signature' => $signature,
         ])
-            ->markdown('user::emails.verify');
+            ->markdown('user::emails.verified');
 
         return $mail;
     }
