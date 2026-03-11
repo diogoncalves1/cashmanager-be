@@ -1,9 +1,9 @@
 <?php
 
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 
 class CreateEmailLayoutsTable extends Migration
 {
@@ -29,16 +29,16 @@ class CreateEmailLayoutsTable extends Migration
         });
 
         $permissions = [
-            ['name' => 'Visualizar Layout de Email', 'key' => 'viewEmailLayout', 'category' => 'Layouts de Emails'],
-            ['name' => 'Editar Layout de Email', 'key' => 'editEmailLayout', 'category' => 'Layouts de Emails'],
+            ['name' => 'Visualizar Layout de Email', 'code' => 'viewEmailLayout', 'category' => 'Layouts de Emails'],
+            ['name' => 'Editar Layout de Email', 'code' => 'editEmailLayout', 'category' => 'Layouts de Emails'],
         ];
-        $permissionRole = array();
+        $permissionRole = [];
 
         foreach ($permissions as $permission) {
             $id = DB::table('permissions')->insertGetId($permission);
             array_push($permissionRole, ['permission_id' => $id, 'role_id' => 1]);
         }
-        DB::table('permission_role')->insert($permissionRole);
+        DB::table('role_permissions')->insert($permissionRole);
     }
 
     /**
