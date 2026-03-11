@@ -2,10 +2,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\ApiController;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Modules\User\Entities\User;
+use Modules\User\Events\EmailVerified;
 use Modules\User\Http\Requests\UserRequest;
 use Modules\User\Http\Resources\UserResource;
 use Modules\User\Repositories\UserRepository;
@@ -22,11 +24,9 @@ class AuthController extends ApiController
     public function register(UserRequest $request)
     {
         try {
-            $user = $this->userRepository->store($request);
+            $this->userRepository->store($request);
 
-            $token = $user->createToken('web-token')->plainTextToken;
-
-            return response()->json(['success' => true, 'token' => $token, 'user' => new UserResource($user)]);
+            return $this->ok();
         } catch (\Exception $e) {
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
@@ -38,6 +38,10 @@ class AuthController extends ApiController
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages(['email' => ['Credenciais invalidas.']]);
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            throw ValidationException::withMessages(['email' => ['Valide o seu email antes de efetuar login.']]);
         }
 
         $token = $user->createToken('web-token')->plainTextToken;
@@ -57,5 +61,24 @@ class AuthController extends ApiController
         $user = $request->user();
 
         return $this->ok(new UserResource($user));
+    }
+
+    public function verifyEmail(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if ($user->hasVerifiedEmail()) {
+                return $this->ok();
+            }
+
+            if ($user->markEmailAsVerified()) {
+                event(new Verified($user));
+                event(new EmailVerified($user));
+            }
+
+            return $this->ok();
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
     }
 }
