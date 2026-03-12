@@ -20,7 +20,11 @@ class FinancialGoalUserInviteDataTable extends DataTable
             ->addColumn('sender', fn(FinancialGoalUserInvite $invite) => new UserShareResource($invite->sender))
             ->addColumn('subject', fn(FinancialGoalUserInvite $invite) => new FinancialGoalResource($invite->financialGoal))
             ->addColumn('sharedRole', fn(FinancialGoalUserInvite $invite) => new SharedRoleResource($invite->sharedRole))
-            ->addColumn('createdAt', fn(FinancialGoalUserInvite $invite) => new Carbon($invite->created_at)->format('Y-m-d'))
+            ->addColumn('createdAt', function (FinancialGoalUserInvite $invite) {
+                $date = new Carbon($invite->created_at);
+
+                return $date->format('Y-m-d');
+            })
             ->addColumn('statusTranslated', fn(FinancialGoalUserInvite $invite) => __('financialgoal::attributes.financial-goal-user-invites.status.' . $invite->status))
             ->removeColumn('user_id')
             ->removeColumn('invited_by_id')

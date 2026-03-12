@@ -67,6 +67,12 @@ class FinancialGoalTransactionDataTable extends DataTable
         if ($request->has('status')) {
             $query->status($request->get('status'));
         }
+        if ($request->has('dateFrom')) {
+            $query->where('date', '>=', $request->get('dateFrom'));
+        }
+        if ($request->has('dateTo')) {
+            $query->where('date', '<=', $request->get('dateTo'));
+        }
 
         return $query;
     }
