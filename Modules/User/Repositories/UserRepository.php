@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Modules\User\Entities\User;
+use Modules\User\Events\PasswordChanged;
 
 class UserRepository implements RepositoryInterface
 {
@@ -101,6 +102,20 @@ class UserRepository implements RepositoryInterface
 
             return [];
         }
+    }
+
+    public function updatePassword(Request $request)
+    {
+        DB::transaction(function () use ($request) {
+            $user = $request->user();
+
+            $input             = [];
+            $input['password'] = Hash::make($request->get('password'));
+
+            $user->update($input);
+
+            event(new PasswordChanged($user));
+        });
     }
 
     public function getUserByEmail(string $email)

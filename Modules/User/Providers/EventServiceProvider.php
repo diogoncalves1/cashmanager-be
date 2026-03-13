@@ -3,9 +3,11 @@ namespace Modules\User\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Modules\User\Events\EmailVerified;
+use Modules\User\Events\PasswordChanged;
 use Modules\User\Events\ResetPassword;
 use Modules\User\Events\VerifyEmail;
 use Modules\User\Listeners\EmailVerifiedListener;
+use Modules\User\Listeners\PasswordChangedListener;
 use Modules\User\Listeners\ResetPasswordListener;
 use Modules\User\Listeners\VerifyEmailListener;
 
@@ -17,14 +19,17 @@ class EventServiceProvider extends ServiceProvider
      * @var array<string, array<int, string>>
      */
     protected $listen = [
-        VerifyEmail::class   => [
+        VerifyEmail::class     => [
             VerifyEmailListener::class,
         ],
-        EmailVerified::class => [
+        EmailVerified::class   => [
             EmailVerifiedListener::class,
         ],
-        ResetPassword::class => [
+        ResetPassword::class   => [
             ResetPasswordListener::class,
+        ],
+        PasswordChanged::class => [
+            PasswordChangedListener::class,
         ],
     ];
 

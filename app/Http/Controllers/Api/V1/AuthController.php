@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Auth\AuthResetChangePasswordRequest;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -91,7 +92,6 @@ class AuthController extends ApiController
     public function resetPassword(Request $request)
     {
         try {
-
             $user = $this->userRepository->getUserByEmail($request->get('email'));
 
             event(new ResetPassword($user));
@@ -101,18 +101,10 @@ class AuthController extends ApiController
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
-    public function changePassword(Request $request)
+    public function resetChangePassword(AuthResetChangePasswordRequest $request)
     {
         try {
-            $user = $request->user();
-            if ($user->hasVerifiedEmail()) {
-                return $this->ok();
-            }
-
-            if ($user->markEmailAsVerified()) {
-                event(new Verified($user));
-                event(new EmailVerified($user));
-            }
+            $this->userRepository->updatePassword($request);
 
             return $this->ok();
         } catch (\Exception $e) {
