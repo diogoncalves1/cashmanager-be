@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Auth\AuthChangePasswordRequest;
 use App\Http\Requests\Auth\AuthResetChangePasswordRequest;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
@@ -101,9 +102,25 @@ class AuthController extends ApiController
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
+
     public function resetChangePassword(AuthResetChangePasswordRequest $request)
     {
         try {
+            $this->userRepository->updatePassword($request);
+
+            return $this->ok();
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+
+    public function changePassword(AuthChangePasswordRequest $request)
+    {
+        try {
+            if (! $this->userRepository->checkPassword($request)) {
+                throw new \Exception('Palavra-Passe atual inválida.', 403);
+            }
+
             $this->userRepository->updatePassword($request);
 
             return $this->ok();
