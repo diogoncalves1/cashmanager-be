@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Modules\User\Entities\User;
 use Modules\User\Events\EmailVerified;
-use Modules\User\Http\Requests\UserRequest;
+use Modules\User\Events\ResetPassword;
 use Modules\User\Http\Resources\UserResource;
 use Modules\User\Repositories\UserRepository;
 
@@ -21,9 +21,12 @@ class AuthController extends ApiController
         $this->userRepository = $userRepository;
     }
 
-    public function register(UserRequest $request)
+    public function register(Request $request)
     {
         try {
+            if (! $request->validate(['email' => 'required|email|unique:users|max:191'])) {
+                throw new \Exception('Erro ao efetuar login');
+            }
             $this->userRepository->store($request);
 
             return $this->ok();
@@ -68,6 +71,37 @@ class AuthController extends ApiController
     }
 
     public function verifyEmail(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if ($user->hasVerifiedEmail()) {
+                return $this->ok();
+            }
+
+            if ($user->markEmailAsVerified()) {
+                event(new Verified($user));
+                event(new EmailVerified($user));
+            }
+
+            return $this->ok();
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+    public function resetPassword(Request $request)
+    {
+        try {
+
+            $user = $this->userRepository->getUserByEmail($request->get('email'));
+
+            event(new ResetPassword($user));
+
+            return $this->ok();
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage(), $e, $e->getCode());
+        }
+    }
+    public function changePassword(Request $request)
     {
         try {
             $user = $request->user();
