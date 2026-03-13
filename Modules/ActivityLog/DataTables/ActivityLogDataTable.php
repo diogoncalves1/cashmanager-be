@@ -28,7 +28,10 @@ class ActivityLogDataTable extends DataTable
 
                 return __($messageArr['key'], $messageArr['params']);
             })
-            ->addColumn('createdAt', fn(ActivityLog $activity) => new Carbon($activity->created_at)->format('Y-m-d'))
+            ->addColumn('createdAt', function (ActivityLog $activity) {
+                $date = new Carbon($activity->created_at);
+                return $date->format('Y-m-d');
+            })
             ->removeColumn('user_id')
             ->removeColumn('metadata')
             ->removeColumn('subject_id')
@@ -36,7 +39,7 @@ class ActivityLogDataTable extends DataTable
             ->removeColumn('created_at')
             ->removeColumn('id')
             ->removeColumn('updated_at')
-            ->rawColumns(['metadata', 'user']);
+            ->rawColumns(['metadata', 'user', 'message', 'title']);
 
     }
 

@@ -4,6 +4,7 @@ namespace Modules\Accounts\Repositories;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Entities\AccountUser;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\SharedRoles\Exceptions\RelationNotExistsException;
 use Modules\SharedRoles\Exceptions\SelfRoleUpdateNotAllowedException;
 use Modules\SharedRoles\Exceptions\UnauthorizedUpdateUserRoleException;
@@ -14,7 +15,7 @@ class AccountUserRepository
     private $accountRepository;
     private $sharedRoleRepository;
 
-    public function __construct(AccountRepository $accountRepository, SharedRoleRepository $sharedRoleRepository)
+    public function __construct(AccountRepository $accountRepository, SharedRoleRepository $sharedRoleRepository, protected ActivityLogRepository $activityRepo)
     {
         $this->accountRepository    = $accountRepository;
         $this->sharedRoleRepository = $sharedRoleRepository;
@@ -44,6 +45,7 @@ class AccountUserRepository
             }
 
             $relation = $this->destroy($userId, $id);
+            $this->activityRepo->storeActivity($id, $user->id, 'account', ['type' => 'user_revoked', 'userId' => $userId]);
 
             return $relation;
         });
@@ -80,6 +82,7 @@ class AccountUserRepository
             $input = $request->only(["shared_role_id"]);
 
             $relation = $this->update($userId, $id, $input);
+            $this->activityRepo->storeActivity($id, $user->id, 'account', ['type' => 'user_role_updated', 'userId' => $userId, 'sharedRoleId' => $input['shared_role_id']]);
 
             return $relation;
         });
@@ -101,6 +104,7 @@ class AccountUserRepository
             }
 
             $relation = $this->destroy($user->id, $id);
+            $this->activityRepo->storeActivity($id, $user->id, 'account', ['type' => 'user_leaved', 'userId' => $user->id]);
 
             return $relation;
         });
