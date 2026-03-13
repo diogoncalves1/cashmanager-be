@@ -178,4 +178,11 @@ class UserRepository implements RepositoryInterface
     {
         return User::where("username", $request->get('username'))->exists();
     }
+
+    public function checkPassword(Request $request)
+    {
+        $user = $request->user();
+
+        return Hash::check($request->get('current_password'), $user->password);
+    }
 }
