@@ -9,6 +9,8 @@ Route::prefix('v1')->group(function () {
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
 
     Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('reset-change-password', [AuthController::class, 'resetChangePassword']);
+        Route::post('change-password', [AuthController::class, 'changePassword']);
         Route::post('verify-email', [AuthController::class, 'verifyEmail']);
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
