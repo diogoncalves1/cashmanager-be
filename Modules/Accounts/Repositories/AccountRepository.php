@@ -12,13 +12,14 @@ use Modules\Accounts\Entities\AccountUser;
 use Modules\Accounts\Entities\Transaction;
 use Modules\Accounts\Exceptions\Accounts\AccountNotFoundException;
 use Modules\ActivityLog\Repositories\ActivityLogRepository;
+use Modules\Currency\Repositories\CurrencyRepository;
 use Modules\SharedRoles\Entities\SharedRole;
 
 class AccountRepository implements RepositoryApiInterface
 {
     protected ActivityLogRepository $activityRepo;
 
-    public function __construct(ActivityLogRepository $activityRepo)
+    public function __construct(ActivityLogRepository $activityRepo, protected CurrencyRepository $currencyRepo)
     {
         $this->activityRepo = $activityRepo;
     }
@@ -80,7 +81,48 @@ class AccountRepository implements RepositoryApiInterface
 
             $input = $request->only('name', 'type', 'currency_id', 'active');
 
+            $old = $account->only(['name', 'type', 'currency_id', 'active']);
+
+            $changes = [];
+
+            foreach ($input as $field => $value) {
+
+                if ($old[$field] != $value) {
+
+                    $values = [
+                        'old' => $old[$field],
+                        'new' => $value,
+                    ];
+                    if ($field == 'type') {
+                        $values['old'] = __('accounts::attributes.accounts.type.' . $old[$field]);
+                        $values['new'] = __('accounts::attributes.accounts.type.' . $value);
+                    }
+                    if ($field == 'active') {
+                        $values['old'] = __("accounts::attributes.accounts.status." . ($old[$field] ? 'activated' : 'inactivated'));
+                        $values['new'] = __("accounts::attributes.accounts.status." . ($value ? 'activated' : 'inactivated'));
+                        $field         = 'status';
+                    }
+                    if ($field == 'currency_id') {
+                        $values['oldFallback'] = $this->currencyRepo->show($old[$field])->name->{$user->preferences->lang};
+                        $values['newFallback'] = $this->currencyRepo->show($value)->name->{$user->preferences->lang};
+                    }
+                    $changes[$field] = $values;
+                }
+            }
+
             $account->update($input);
+
+            if (! empty($changes)) {
+                $this->activityRepo->storeActivity(
+                    $account->id,
+                    $user->id,
+                    'account',
+                    [
+                        'type'    => 'account_updated',
+                        'changes' => $changes,
+                    ]
+                );
+            }
 
             return $account;
         });
@@ -102,6 +144,13 @@ class AccountRepository implements RepositoryApiInterface
 
             $account->save();
 
+            $this->activityRepo->storeActivity(
+                $account->id,
+                $user->id,
+                'account',
+                ['type' => 'account_status_updated', 'status' => $account->active]
+            );
+
             return $account;
         });
     }
@@ -119,6 +168,8 @@ class AccountRepository implements RepositoryApiInterface
             }
 
             $account->delete();
+
+            $this->activityRepo->destroyByType($account->id, 'account');
 
             return $account;
         });
@@ -314,42 +365,41 @@ class AccountRepository implements RepositoryApiInterface
         $charts = [];
 
         foreach ($periods as $period => $days) {
-            $query = DB::query()
-                ->fromRaw("(
-                        SELECT
-                            day AS date,
-                            SUM(daily_amount) OVER (ORDER BY day) AS amount,
-                            amount AS transactionAmount
-                        FROM (
-                            SELECT
-                                DATE(date) AS day,
-                                SUM(CASE
-                                    WHEN type = 'revenue' THEN amount
-                                    ELSE -amount
-                                END) AS daily_amount,
-                                SUM(CASE
-                                    WHEN type = 'revenue' THEN amount
-                                    ELSE -amount
-                                END) as amount
-                            FROM transactions
-                            WHERE account_id = ?
-                            GROUP BY DATE(date)
-                        ) t
-                    ) final", [$id])
-                ->join("accounts as a", "a.id", "=", DB::raw($id))
-                ->join("currencies as c", "c.id", "=", "a.currency_id")
-                ->selectRaw("
-                final.date,
-                final.amount,
-                c.code AS currencyCode,
-                c.symbol AS currencySymbol,
-                final.transactionAmount
-            ")
-                ->orderBy('date', "asc");
-
-            $charts[$period] = $query
-                ->where("date", ">=", Helpers::getOldDate($days))
+            $dailyTotals = DB::table('transactions')
+                ->selectRaw("DATE(date) AS date,
+                     SUM(CASE WHEN type = 'revenue' THEN amount ELSE -amount END) AS transactionAmount")
+                ->where('account_id', $id)
+                ->where('date', '>=', Helpers::getOldDate($days))
+                ->groupByRaw('DATE(date)')
+                ->orderBy('date', 'asc')
                 ->get();
+
+            $cumulative      = 0;
+            $charts[$period] = $dailyTotals->map(function ($row) use (&$cumulative) {
+                $cumulative += $row->transactionAmount;
+                return (object) [
+                    'date'              => $row->date,
+                    'transactionAmount' => $row->transactionAmount,
+                    'amount'            => $cumulative, // cumulative sum
+                    'currencyCode'      => null,        // will add next
+                    'currencySymbol'    => null,
+                ];
+            });
+
+            // Get currency info
+            $currency = DB::table('accounts')
+                ->join('currencies', 'currencies.id', '=', 'accounts.currency_id')
+                ->where('accounts.id', $id)
+                ->select('currencies.code', 'currencies.symbol')
+                ->first();
+
+            if ($currency) {
+                $charts[$period] = $charts[$period]->map(function ($row) use ($currency) {
+                    $row->currencyCode   = $currency->code;
+                    $row->currencySymbol = $currency->symbol;
+                    return $row;
+                });
+            }
         }
 
         return [

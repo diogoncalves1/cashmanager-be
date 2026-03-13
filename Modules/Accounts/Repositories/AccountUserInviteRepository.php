@@ -66,6 +66,7 @@ class AccountUserInviteRepository
             $input['invited_by_id'] = $user->id;
 
             $invite = AccountUserInvite::create($input);
+            $this->activityRepo->storeActivity($account->id, $user->id, 'account', ['type' => 'user_invited', 'invitedUserId' => $userId, 'sharedRoleId' => $input['shared_role_id']]);
 
             return $invite;
         });
@@ -88,7 +89,8 @@ class AccountUserInviteRepository
             $input    = ["account_id" => $id, "user_id" => $user->id, "shared_role_id" => $invite->shared_role_id];
             $relation = $this->accountUserRepo->store($input);
             $invite->update(['status' => 'accepted']);
-            $this->activityRepo->storeActivity($input['account_id'], $user->id, 'account', ['type' => 'user_joined', 'userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
+
+            $this->activityRepo->storeActivity($input['account_id'], $user->id, 'account', ['type' => 'user_joined', 'userId' => $user->id, 'sharedRoleId' => $invite->shared_role_id]);
 
             return $relation;
         });
@@ -113,6 +115,8 @@ class AccountUserInviteRepository
 
             $invite = $this->destroy($userId, $id, "pending");
 
+            $this->activityRepo->storeActivity($id, $user->id, 'account', ['type' => 'invited_destroyed', 'userId' => $userId]);
+
             return $invite;
         });
     }
@@ -120,7 +124,7 @@ class AccountUserInviteRepository
     public function revoke(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $account = $this->accountRepository->show($id);
+            $this->accountRepository->show($id);
 
             $user = $request->user();
 
@@ -131,6 +135,8 @@ class AccountUserInviteRepository
             $input = ["status" => "revoked"];
 
             $invite = $this->update($user->id, $id, "pending", $input);
+
+            $this->activityRepo->storeActivity($id, $user->id, 'account', ['type' => 'invited_revoked', 'userId' => $user->id]);
 
             return $invite;
         });

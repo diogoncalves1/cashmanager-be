@@ -81,7 +81,7 @@ class AccountController extends ApiController
             $categorySummary = $this->repository->showCategorySummary($account);
             $balanceCharts   = $this->repository->getChartsData($request, $id);
             $extraData       = $this->repository->getAccountIndividualData($account);
-            $extraData       = array_merge($extraData, ['balance' => $account->balance, 'balanceLastMonth' => isset($balanceCharts['charts']['monthly'][0]) ? $balanceCharts['charts']['monthly'][0]->amount - $balanceCharts['charts']['monthly'][0]->transactionAmount ?? 0 : 0]);
+            $extraData       = array_merge($extraData, ['balance' => $account->balance, 'balanceLastMonth' => isset($balanceCharts['charts']['monthly'][0]) ? $balanceCharts['charts']['monthly'][0]->amount ?? 0 : 0]);
 
             return $this->ok(new AccountViewResource($account), additionals: [
                 'monthlyResume'   => new MonthlyResumeCollection($monthlyResume),
