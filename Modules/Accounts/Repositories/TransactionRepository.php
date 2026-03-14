@@ -331,19 +331,18 @@ class TransactionRepository implements RepositoryApiInterface
         $userTotalData = $userTotalQuery
             ->selectRaw("
                             CONCAT(MONTH(transactions.date), ' ', YEAR(transactions.date)) as monthYear,
+                            MIN(transactions.date) AS min_date,
                             SUM(
-                                SUM(
-                                    CASE
-                                        WHEN transactions.type = 'revenue'
-                                        THEN (transactions.amount * (user_currency.rate / tx_currency.rate))
-                                        ELSE -(transactions.amount * (user_currency.rate / tx_currency.rate))
-                                    END
-                                )
-                            ) OVER (ORDER BY MIN(transactions.date)) as balance
+                                CASE
+                                    WHEN transactions.type = 'revenue'
+                                    THEN (transactions.amount * (user_currency.rate / tx_currency.rate))
+                                    ELSE -(transactions.amount * (user_currency.rate / tx_currency.rate))
+                                END
+                            ) OVER (ORDER BY transactions.date) as balance
                         ")
             ->where('transactions.status', 'completed')
             ->groupByRaw("monthYear")
-            ->orderByRaw("MIN(transactions.date)")
+            ->orderByRaw("min_date")
             ->get();
 
         return [

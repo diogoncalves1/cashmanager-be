@@ -3,6 +3,7 @@ namespace Modules\DashboardCharts\Repositories;
 
 use Illuminate\Http\Request;
 use Modules\Accounts\Core\Helpers;
+use Modules\Accounts\Repositories\AccountRepository;
 use Modules\Accounts\Repositories\TransactionRepository;
 use Modules\DashboardCharts\Core\Helpers as CoreHelpers;
 
@@ -10,7 +11,7 @@ class DashboardRepository
 {
     private TransactionRepository $transactionRepo;
 
-    public function __construct(TransactionRepository $transactionRepo)
+    public function __construct(TransactionRepository $transactionRepo, protected AccountRepository $accountRepo)
     {
         $this->transactionRepo = $transactionRepo;
     }
@@ -74,6 +75,7 @@ class DashboardRepository
     {
         return $this->transactionRepo->getUserConvertedSum($userId, $type, $maxDate, $status);
     }
+
 }
 // ACCOUNTS
 // $accounts = Accounts::getUserAccounts($userId, ['viewAccountDetails']);
