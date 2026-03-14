@@ -8,4 +8,5 @@ Route::group([
     'prefix'     => 'v1',
 ], function () {
     Route::get('dashboard-overview', [DashboardChartsController::class, 'overview'])->name('overview');
+
 });
