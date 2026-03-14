@@ -29,6 +29,7 @@ class DebtDataTable extends DataTable
             ->addColumn('remainingAmount', fn(DebtsView $debt) => DebtHelpers::debtRemainingAmount($debt->totalAmount, $debt->paidAmount, $debt->interestRate, $debt->months))
             ->addColumn('totalAmountWithInterest', fn(DebtsView $debt) => DebtHelpers::debtTotalAmount($debt->totalAmount, $debt->interestRate, $debt->months))
             ->addColumn('totalAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->totalAmount, $debt->currencyCode, $debt->currencySymbol))
+            ->addColumn('totalAmountFormatedWithoutSymbol', fn(DebtsView $debt) => Helpers::formatMoneyWithCurrency($debt->totalAmount, $debt->currencyCode, $debt->currencySymbol))
             ->addColumn('paidAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->paidAmount, $debt->currencyCode, $debt->currencySymbol))
             ->addColumn('monthlyAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->monthlyAmount, $debt->currencyCode, $debt->currencySymbol))
             ->addColumn('statusTranslated', fn(DebtsView $debt) => __("debts::attributes.debts.status." . $debt->status))
@@ -37,13 +38,13 @@ class DebtDataTable extends DataTable
                 $debt       = $this->repository->show($debtV->id);
                 $sharedRole = $debt->userSharedRole($debt, $user->id);
 
-                $canView     = $sharedRole?->hasPermission("viewDebt");
-                $canEdit     = $sharedRole?->hasPermission("editDebt");
-                $canDestroy  = $sharedRole?->hasPermission("destroyDebt");
-                $canManage   = $sharedRole?->hasPermission("manageDebtUsers");
-                $canMarkPaid = $canEdit && ($debtV->status == 'pending') && ($debtV->paidAmount >= $debtV->totalAmount);
+                $canView = $sharedRole?->hasPermission("viewDebt");
+                // $canEdit = $sharedRole?->hasPermission("editDebt");
+                // $canDestroy  = $sharedRole?->hasPermission("destroyDebt");
+                // $canManage   = $sharedRole?->hasPermission("manageDebtUsers");
+                // $canMarkPaid = $canEdit && ($debtV->status == 'pending') && ($debtV->paidAmount >= $debtV->totalAmount);
 
-                return ['view' => $canView, 'edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'markPaid' => $canMarkPaid];
+                return ['view' => $canView/* 'edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'markPaid' => $canMarkPaid*/];
             })
             ->removeColumn('user_ids')
             ->rawColumns(['name', 'description']);
