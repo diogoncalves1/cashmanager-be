@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'completed'])->default('pending');
             $table->decimal('amount', 15);
             $table->text('description')->nullable();
-            $table->decimal('interest_rate', 15, 4);
+            $table->decimal('interest_rate', 15, 4)->default(0);
             $table->tinyInteger('is_monthly_payment')->default(1);
             $table->timestamps();
 

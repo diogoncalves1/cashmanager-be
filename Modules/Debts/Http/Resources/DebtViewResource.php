@@ -29,8 +29,9 @@ class DebtViewResource extends JsonResource
         $canDestroy            = $sharedRole?->hasPermission("destroyDebt");
         $canManage             = $sharedRole?->hasPermission("manageDebtUsers");
         $canCreateTransactions = $sharedRole?->hasPermission("storeDebtPayment");
+        $canMarkPaid           = $canEdit && ($this->status == 'pending') && ($this->paidAmount >= $this->totalAmount);
 
-        $actions = ['edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'createTransactions' => $canCreateTransactions];
+        $actions = ['edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'createTransactions' => $canCreateTransactions, 'markPaid' => $canMarkPaid];
 
         $missingAmount = $this->totalAmount - $this->paidAmount;
 
