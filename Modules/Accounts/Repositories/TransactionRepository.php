@@ -338,7 +338,7 @@ class TransactionRepository implements RepositoryApiInterface
                                     THEN (transactions.amount * (user_currency.rate / tx_currency.rate))
                                     ELSE -(transactions.amount * (user_currency.rate / tx_currency.rate))
                                 END
-                            ) OVER (ORDER BY transactions.date) as balance
+                            ) as balance
                         ")
             ->where('transactions.status', 'completed')
             ->groupByRaw("monthYear")
