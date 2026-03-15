@@ -43,6 +43,36 @@ return [
         ],
     ],
 
+    // Debts
+    'debt'           => [
+        'titles'   => [
+            'debt_created'        => 'Dívida criada',
+            'debt_updated'        => 'Dívida atualizada',
+            'debt_status_updated' => 'Estado atualizado',
+
+            'user_invited'        => 'Utilizador convidado',
+            'user_joined'         => 'Utilizador novo',
+            'invited_destroyed'   => 'Convite apagado',
+            'invited_revoked'     => 'Convite recusado',
+            'invited_revoked'     => 'Membro removido',
+            'user_role_updated'   => 'Papel de membro atualizado',
+            'user_leaved'         => 'Utilizador saiu',
+        ],
+
+        'messages' => [
+            'debt_created'        => 'Dívida inicial: :initialAmount',
+            'debt_updated'        => 'Conta atualizada: :changes',
+            'debt_status_updated' => 'Estado atualizado para: :status',
+
+            'user_invited'        => ':userName convidado como :roleName',
+            'user_joined'         => 'Utilizador :userName entrou na dívida como :roleName',
+            'invited_destroyed'   => 'Convite para :userName apagado',
+            'invited_revoked'     => ':userName foi removido',
+            'user_role_updated'   => 'Papel de :userName foi atualizado para :roleName',
+            'user_leaved'         => ':userName saiu da dívida',
+        ],
+    ],
+
     // Financial Goals
     'financial_goal' => [
         'titles'   => [
@@ -76,32 +106,6 @@ return [
             'user_role_updated'  => 'Papel de :userName foi atualizado para :roleName',
             'user_leaved'        => ':userName saiu da meta financeira',
 
-        ],
-    ],
-
-    // Debts
-    'debt'           => [
-        'titles'   => [
-            'debt_created'      => 'Dívida criada',
-
-            'user_invited'      => 'Utilizador convidado',
-            'user_joined'       => 'Utilizador novo',
-            'invited_destroyed' => 'Convite apagado',
-            'invited_revoked'   => 'Convite recusado',
-            'invited_revoked'   => 'Membro removido',
-            'user_role_updated' => 'Papel de membro atualizado',
-            'user_leaved'       => 'Utilizador saiu',
-        ],
-
-        'messages' => [
-            'debt_created'      => 'Dívida inicial: :initialAmount',
-
-            'user_invited'      => ':userName convidado como :roleName',
-            'user_joined'       => 'Utilizador :userName entrou na dívida como :roleName',
-            'invited_destroyed' => 'Convite para :userName apagado',
-            'invited_revoked'   => ':userName foi removido',
-            'user_role_updated' => 'Papel de :userName foi atualizado para :roleName',
-            'user_leaved'       => ':userName saiu da dívida',
         ],
     ],
 

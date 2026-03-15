@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
 use Modules\ActivityLog\Repositories\ActivityLogRepository;
+use Modules\Currency\Repositories\CurrencyRepository;
 use Modules\Debts\Core\Helpers as CoreHelpers;
 use Modules\Debts\Entities\Debt;
 use Modules\Debts\Entities\DebtBasicView;
@@ -26,9 +27,8 @@ use Modules\SharedRoles\Entities\SharedRole;
 
 class DebtRepository implements RepositoryApiInterface
 {
-    public function __construct(protected ActivityLogRepository $activityRepo)
+    public function __construct(protected ActivityLogRepository $activityRepo, protected CurrencyRepository $currencyRepo)
     {
-
     }
 
     public function all()
@@ -67,7 +67,7 @@ class DebtRepository implements RepositoryApiInterface
             ];
 
             DebtUser::create($debtUserInput);
-            $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', ['type' => 'debt_created', 'initialAmount' => $input['total_amount'], 'currencyCode' => $debt->currency->code, 'currencySymbol' => $debt->currency->symbol]);
+            $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', ['type' => 'debt_created', 'debtName' => $debt->name, 'initialAmount' => $input['total_amount'], 'initialAmountFallback' => Helpers::formatMoneyWithCurrency($input['total_amount'], $debt->currency->code, $debt->currency->symbol, true), 'currencyId' => $input['currency_id']]);
 
             return $debt;
         });
@@ -87,7 +87,50 @@ class DebtRepository implements RepositoryApiInterface
             $input = $request->only(['currency_id', 'name', 'total_amount', 'months', 'interest_rate',
                 'start_date', 'due_date', 'description', 'monthly_amount']);
 
+            $old = $debt->only(['currency_id', 'name', 'total_amount', 'months', 'interest_rate',
+                'start_date', 'due_date', 'description', 'monthly_amount']);
+
+            $changes = [];
+
+            foreach ($input as $field => $value) {
+
+                if ($old[$field] != $value) {
+
+                    $values = [
+                        'old' => $old[$field],
+                        'new' => $value,
+                    ];
+                    if ($field == 'interest_rate') {
+                        $values['old'] = $old[$field] . '%';
+                        $values['new'] = $value . '%';
+                    }
+                    if ($field == 'total_amount' || 'monthly_amount') {
+                        $values['subjectId']    = $debt->id;
+                        $values['oldFallback']  = Helpers::formatMoneyWithCurrency($old[$field], $debt->currency->code, $debt->currency->symbol, true);
+                        $values['newFallback']  = Helpers::formatMoneyWithCurrency($value, $debt->currency->code, $debt->currency->symbol, true);
+                        $values['formatAmount'] = true;
+                    }
+                    if ($field == 'currency_id') {
+                        $values['oldFallback'] = $this->currencyRepo->show($old[$field])->name->{$user->preferences->lang};
+                        $values['newFallback'] = $this->currencyRepo->show($value)->name->{$user->preferences->lang};
+                    }
+                    $changes[$field] = $values;
+                }
+            }
+
             $debt->update($input);
+
+            if (! empty($changes)) {
+                $this->activityRepo->storeActivity(
+                    $debt->id,
+                    $user->id,
+                    'debt',
+                    [
+                        'type'    => 'debt_updated',
+                        'changes' => $changes,
+                    ]
+                );
+            }
 
             return $debt;
         });
@@ -107,6 +150,7 @@ class DebtRepository implements RepositoryApiInterface
             }
 
             $debt->delete();
+            $this->activityRepo->destroyByType($debt->id, 'debt');
 
             return $debt;
         });
@@ -149,6 +193,13 @@ class DebtRepository implements RepositoryApiInterface
             $debt->paid_at = Carbon::now();
             $this->setStatus($debt, 'paid');
 
+            $this->activityRepo->storeActivity(
+                $debt->id,
+                $user->id,
+                'debt',
+                ['type' => 'debt_status_updated', 'status' => __("debts::attributes.debts.status." . $debt->status)]
+            );
+
             return $debt;
         });
     }
@@ -171,6 +222,12 @@ class DebtRepository implements RepositoryApiInterface
 
             $debt->paid_at = null;
             $this->setStatus($debt, 'pending');
+            $this->activityRepo->storeActivity(
+                $debt->id,
+                $user->id,
+                'debt',
+                ['type' => 'debt_status_updated', 'status' => __("debts::attributes.debts.status." . $debt->status)]
+            );
 
             return $debt;
         });
