@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\Currency\DataTables;
 
 use Illuminate\Support\Facades\Auth;
@@ -19,14 +18,14 @@ class CurrencyDataTable extends DataTable
      */
     public function dataTable($query)
     {
-        $user = Auth::user();
-        $canEdit = $user->can('authorization', 'editCurrency');
+        $user       = Auth::user();
+        $canEdit    = $user->can('authorization', 'editCurrency');
         $canDestroy = $user->can('authorization', 'destroyCurrency');
 
         return datatables()
             ->eloquent($query)
             ->editColumn('name', function (Currency $currency) {
-                return $currency->name->en;
+                return $currency->name->pt;
             })
             ->addColumn('action', function (Currency $currency) use ($canEdit, $canDestroy) {
                 $btn = ' <div class="btn-group">';
@@ -82,7 +81,7 @@ class CurrencyDataTable extends DataTable
             ->dom('Bfrtip')
             ->drawCallback(" function () {
                     $('[data-toggle=\"tooltip\"]').tooltip();
-                }   
+                }
                  ");
     }
 

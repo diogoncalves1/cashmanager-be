@@ -1,11 +1,10 @@
 <?php
-
 namespace Modules\UserPreferences\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Modules\User\Entities\User;
 use Modules\UserPreferences\Observers\UserObserver;
+use Modules\User\Entities\User;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -90,9 +89,9 @@ class UserPreferencesServiceProvider extends ServiceProvider
 
             foreach ($iterator as $file) {
                 if ($file->isFile() && $file->getExtension() === 'php') {
-                    $config = str_replace($configPath . DIRECTORY_SEPARATOR, '', $file->getPathname());
+                    $config     = str_replace($configPath . DIRECTORY_SEPARATOR, '', $file->getPathname());
                     $config_key = str_replace([DIRECTORY_SEPARATOR, '.php'], ['.', ''], $config);
-                    $segments = explode('.', $this->nameLower . '.' . $config_key);
+                    $segments   = explode('.', $this->nameLower . '.' . $config_key);
 
                     // Remove duplicated adjacent segments
                     $normalized = [];
@@ -116,7 +115,7 @@ class UserPreferencesServiceProvider extends ServiceProvider
      */
     protected function merge_config_from(string $path, string $key): void
     {
-        $existing = config($key, []);
+        $existing      = config($key, []);
         $module_config = require $path;
 
         config([$key => array_replace_recursive($existing, $module_config)]);
@@ -127,8 +126,8 @@ class UserPreferencesServiceProvider extends ServiceProvider
      */
     public function registerViews(): void
     {
-        $viewPath = resource_path('views/modules/' . $this->nameLower);
-        $sourcePath = module_path($this->name, 'resources/views');
+        $viewPath   = resource_path('views/modules/' . $this->nameLower);
+        $sourcePath = module_path($this->name, 'Resources/views');
 
         $this->publishes([$sourcePath => $viewPath], ['views', $this->nameLower . '-module-views']);
 

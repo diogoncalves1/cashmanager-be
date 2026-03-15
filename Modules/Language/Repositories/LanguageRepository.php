@@ -24,7 +24,7 @@ class LanguageRepository implements RepositoryInterface
     {
         try {
             DB::transaction(function () use ($request) {
-                $input = $request->all();
+                $input = $request->only(['name', 'code']);
 
                 Language::create($input);
 

@@ -20,6 +20,15 @@ Route::group([
                 'prefix' => 'accounts',
                 'as'     => 'accounts.',
             ], function () {
+                Route::get('/all', [AccountController::class, 'allUser']);
+                Route::get('/invitations-stats', [AccountUserInviteController::class, 'getInvitationsStats']);
+                Route::get('/sent-invitations', [AccountUserInviteController::class, 'getSentInvitations']);
+                Route::get('/received-invitations', [AccountUserInviteController::class, 'getReceivedInvitations']);
+
+                Route::patch('/{id}/status', [AccountController::class, 'status']);
+
+                Route::get('/{id}/activity', [AccountController::class, 'activity']);
+
                 // Invites
                 Route::post('/{id}/invite/{userId}', [AccountUserInviteController::class, 'invite']);
                 Route::post('/{id}/accept', [AccountUserInviteController::class, 'accept']);

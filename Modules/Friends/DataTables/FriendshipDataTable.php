@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\Friends\DataTables;
 
 use Modules\Friends\Entities\Friendship;
@@ -15,7 +14,7 @@ class FriendshipDataTable extends DataTable
     public function __construct(FriendshipRepository $repository, string $type = 'friend')
     {
         $this->repository = $repository;
-        $this->type = $type;
+        $this->type       = $type;
     }
 
     public function dataTable($query)
@@ -42,8 +41,27 @@ class FriendshipDataTable extends DataTable
 
         $user = $request->user();
 
-        return $model->newQuery()->where(function ($query) use ($user) {
+        $query = $model->newQuery()->where(function ($query) use ($user) {
             return $query->sender($user->id)->orWhere('receiver_id', $user->id);
         })->status($this->type);
+
+        if ($request->has('search') && ! empty($request->get('search')['value'])) {
+            $search = $request->get('search')['value'];
+
+            $query->where(function ($q) use ($search, $user) {
+                $q->whereHas('sender', function ($q2) use ($search, $user) {
+                    $q2->where('id', '!=', $user->id)
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('id', 'like', "%{$search}%");
+                })
+                    ->orWhereHas('receiver', function ($q2) use ($search, $user) {
+                        $q2->where('id', '!=', $user->id)
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('id', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query;
     }
 }

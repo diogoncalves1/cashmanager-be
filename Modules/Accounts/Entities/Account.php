@@ -28,6 +28,10 @@ class Account extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+    public function transactionsView()
+    {
+        return $this->hasMany(TransactionsView::class, 'accountId');
+    }
     public function currency()
     {
         return $this->belongsTo(Currency::class);
@@ -36,6 +40,13 @@ class Account extends Model
     {
         return $this->belongsToMany(User::class, 'account_users', 'account_id', 'user_id')
             ->using(\Modules\Accounts\Entities\AccountUser::class)
+            ->withPivot('shared_role_id');
+    }
+    public function invites()
+    {
+        return $this->belongsToMany(User::class, 'account_user_invites', 'account_id', 'user_id')
+            ->using(\Modules\Accounts\Entities\AccountUserInvite::class)
+            ->wherePivot('status', '=', 'pending')
             ->withPivot('shared_role_id');
     }
 

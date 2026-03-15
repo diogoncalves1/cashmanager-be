@@ -1,14 +1,16 @@
 <?php
-
 namespace Modules\User\Repositories;
 
-use Modules\User\Entities\User;
+use App\Repositories\RepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use App\Repositories\RepositoryInterface;
+use Modules\User\Entities\User;
+use Modules\User\Events\PasswordChanged;
 
 class UserRepository implements RepositoryInterface
 {
@@ -49,8 +51,9 @@ class UserRepository implements RepositoryInterface
 
                 $input = $request->except(['roles', 'password']);
 
-                if ($request->get('password'))
+                if ($request->get('password')) {
                     $input['password'] = Hash::make($request->get('password'));
+                }
 
                 $user->update($input);
                 $this->updateRoles($user, $request->get('roles'));
@@ -101,6 +104,25 @@ class UserRepository implements RepositoryInterface
         }
     }
 
+    public function updatePassword(Request $request)
+    {
+        DB::transaction(function () use ($request) {
+            $user = $request->user();
+
+            $input             = [];
+            $input['password'] = Hash::make($request->get('password'));
+
+            $user->update($input);
+
+            event(new PasswordChanged($user));
+        });
+    }
+
+    public function getUserByEmail(string $email)
+    {
+        return User::where("email", $email)->first();
+    }
+
     public function manageRoles(Request $request, string $id)
     {
         try {
@@ -129,5 +151,38 @@ class UserRepository implements RepositoryInterface
         } catch (\Exception $e) {
             Log::error($e);
         }
+    }
+
+    public function updateSettings(Request $request): User
+    {
+        return DB::transaction(function () use ($request) {
+            $user = $request->user();
+
+            $userInput        = $request->only(['name', 'email', 'username']);
+            $preferencesInput = $request->only(['currency_id', 'lang']);
+
+            if ($user->username != $request->get('username')) {
+                $userInput['username_updated_at'] = Carbon::now();
+            }
+
+            $user->update($userInput);
+            $user->preferences()->update($preferencesInput);
+
+            App::setLocale($preferencesInput['lang']);
+
+            return $user;
+        });
+    }
+
+    public function checkUsername(Request $request)
+    {
+        return User::where("username", $request->get('username'))->exists();
+    }
+
+    public function checkPassword(Request $request)
+    {
+        $user = $request->user();
+
+        return Hash::check($request->get('current_password'), $user->password);
     }
 }

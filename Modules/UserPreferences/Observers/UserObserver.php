@@ -1,9 +1,9 @@
 <?php
-
 namespace Modules\UserPreferences\Observers;
 
-use Modules\User\Entities\User;
 use Modules\UserPreferences\Entities\UserPrefence;
+use Modules\User\Entities\User;
+use Modules\User\Events\VerifyEmail;
 
 class UserObserver
 {
@@ -13,11 +13,14 @@ class UserObserver
     public function created(User $user): void
     {
         $input = [
-            'user_id' => $user->id,
+            'user_id'     => $user->id,
             'currency_id' => 1,
-            'lang' => 'en'
+            'lang'        => 'en',
         ];
+
+        event(new VerifyEmail($user));
 
         UserPrefence::create($input);
     }
+
 }

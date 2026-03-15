@@ -13,6 +13,10 @@ class Language extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = ['code', 'name'];
+    protected $guarded  = ["id"];
+    protected $casts    = [
+        'name' => 'object',
+    ];
 
     protected static function newFactory(): LanguageFactory
     {

@@ -1,5 +1,4 @@
 <?php
-
 namespace Modules\User\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,18 +22,26 @@ class UserRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'name' => 'required|string|max:255',
-            'roles' => 'nullable|array'
+            'name'     => 'required|string|max:255',
+            'roles'    => 'nullable|array',
+            'username' => 'nullable|string|max:255',
         ];
 
         if ($this->get('user_id')) {
-            $rules['email'] = ['required', 'email', Rule::unique('users')->ignore($this->get('user_id')), 'max:191'];
+            $rules['email']    = ['required', 'email', Rule::unique('users')->ignore($this->get('user_id')), 'max:191'];
             $rules['password'] = 'nullable|min:8|max:191';
         } else {
-            $rules['email'] = 'required|email|unique:users|max:191';
+            $rules['email']    = 'required|email|unique:users|max:191';
             $rules['password'] = 'required|min:8|max:191';
         }
 
         return $rules;
+    }
+
+    public function messages()
+    {
+        return [
+            'email.unique' => 'Este email já está em uso.',
+        ];
     }
 }

@@ -1,0 +1,11 @@
+{
+    "name": "DashboardCharts",
+    "alias": "dashboardcharts",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\DashboardCharts\\Providers\\DashboardChartsServiceProvider"
+    ],
+    "files": []
+}

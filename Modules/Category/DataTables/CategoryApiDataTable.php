@@ -15,6 +15,8 @@ class CategoryApiDataTable extends DataTable
 
         return datatables()
             ->eloquent($query)
+            ->editColumn('id', fn(Category $category) => (string) $category->id)
+            ->editColumn('name', fn(Category $category) => optional($category->name->{$user->preferences->lang}) ? $category->name->{$user->preferences->lang} : $category->name)
             ->editColumn('type', fn(Category $category) => __('category::attributes.categories.type.' . $category->type))
             ->addColumn('parent', fn(Category $category) => $category->parent)
             ->addColumn('actions', function (Category $category) use ($user) {
@@ -31,11 +33,19 @@ class CategoryApiDataTable extends DataTable
     public function query(Category $model)
     {
         $request = request();
+        $user    = $request->user();
 
-        $user = $request->user();
+        $exceptions = ['financialGoalContribution', 'financialGoalWithdrawal'];
 
-        return $model->newQuery()
+        $query = $model->newQuery()
             ->userId($user->id)
-            ->orWhere('is_default', 1);
+            ->orWhere('is_default', 1)
+            ->whereNotIn('code', $exceptions);
+
+        if ($request->has('type')) {
+            $query->type($request->get('type'));
+        }
+
+        return $query;
     }
 }

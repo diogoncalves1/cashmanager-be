@@ -1,8 +1,15 @@
 <?php
-
 namespace Modules\User\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Modules\User\Events\EmailVerified;
+use Modules\User\Events\PasswordChanged;
+use Modules\User\Events\ResetPassword;
+use Modules\User\Events\VerifyEmail;
+use Modules\User\Listeners\EmailVerifiedListener;
+use Modules\User\Listeners\PasswordChangedListener;
+use Modules\User\Listeners\ResetPasswordListener;
+use Modules\User\Listeners\VerifyEmailListener;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -11,7 +18,20 @@ class EventServiceProvider extends ServiceProvider
      *
      * @var array<string, array<int, string>>
      */
-    protected $listen = [];
+    protected $listen = [
+        VerifyEmail::class     => [
+            VerifyEmailListener::class,
+        ],
+        EmailVerified::class   => [
+            EmailVerifiedListener::class,
+        ],
+        ResetPassword::class   => [
+            ResetPasswordListener::class,
+        ],
+        PasswordChanged::class => [
+            PasswordChangedListener::class,
+        ],
+    ];
 
     /**
      * Indicates if events should be discovered.
@@ -23,5 +43,6 @@ class EventServiceProvider extends ServiceProvider
     /**
      * Configure the proper event listeners for email verification.
      */
-    protected function configureEmailVerification(): void {}
+    protected function configureEmailVerification(): void
+    {}
 }

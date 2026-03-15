@@ -26,9 +26,17 @@ class TransactionsView extends Transaction
     {
         return $query->where("transactions_view.type", $type);
     }
+    public function scopeStatus($query, $status)
+    {
+        return $query->where("transactions_view.status", $status);
+    }
     public function scopeAccount($query, $accountId)
     {
         return $query->where("transactions_view.accountId", $accountId);
+    }
+    public function scopeCategory($query, $categoryId)
+    {
+        return $query->where("transactions_view.categoryId", $categoryId);
     }
     public function scopeUser($query, $userId)
     {

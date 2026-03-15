@@ -17,6 +17,7 @@ class SharedRoleResource extends JsonResource
         $lang = $user->preferences?->lang ?? 'en';
 
         return [
+            'id'   => (string) $this->id,
             'name' => $this->name->$lang,
             'code' => $this->code,
         ];

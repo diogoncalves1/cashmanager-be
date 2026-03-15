@@ -9,8 +9,10 @@ return [
         ],
 
         'status' => [
-            'active'   => 'Active',
-            'disabled' => 'Disabled',
+            'activated'   => 'activated',
+            'inactivated' => 'inactivated',
+            'active'      => 'Active',
+            'disabled'    => 'Disabled',
         ],
     ],
 

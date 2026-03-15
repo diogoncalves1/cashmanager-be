@@ -1,9 +1,9 @@
 <?php
-
 namespace Modules\UserPreferences\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\Currency\Http\Resources\CurrencyResource;
 
 class UserPreferecesResource extends JsonResource
 {
@@ -13,10 +13,9 @@ class UserPreferecesResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'lang' => $this->lang,
-            'currency_id' => $this->currency_id,
-            'currency' => $this->currency,
-            'user' => $this->user,
+            'lang'        => $this->lang,
+            'currency_id' => (string) $this->currency_id,
+            'currency'    => new CurrencyResource($this->currency),
         ];
     }
 }

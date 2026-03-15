@@ -11,20 +11,26 @@ Route::group(
     function () {
         Route::group(
             [
-                'as' => 'shared-roles.',
-                'prefix' => 'shared-roles/',
-                'middleware' => ['auth', 'web', 'setlocale']
+                'as'         => 'shared-roles.',
+                'prefix'     => 'shared-roles/',
+                'middleware' => ['auth', 'web', 'setlocale'],
             ],
             function () {
                 Route::get('check-code', [SharedRoleController::class, 'checkRoleCode']);
             }
         );
 
+        Route::group([
+            'middleware' => ['setlocale', 'auth:sanctum'],
+        ], function () {
+            Route::get('shared-roles', [SharedRoleController::class, 'all']);
+        });
+
         Route::group(
             [
-                'as' => 'shared-permissions.',
-                'prefix' => 'shared-permissions/',
-                'middleware' => ['auth', 'web', 'setlocale']
+                'as'         => 'shared-permissions.',
+                'prefix'     => 'shared-permissions/',
+                'middleware' => ['auth', 'web', 'setlocale'],
             ],
             function () {
                 Route::get('check-code', [SharedPermissionController::class, 'checkPermissionCode']);

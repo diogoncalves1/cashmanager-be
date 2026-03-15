@@ -20,10 +20,14 @@ return new class extends Migration
                 t.type AS type,
                 t.user_id AS userId,
                 ca.name AS categoryName,
+                ca.icon AS categoryIcon,
+                ca.color AS categoryColor,
+                ca.type AS categoryType,
                 ca.id AS categoryId,
                 u.name AS userName,
                 a.id AS accountId,
                 a.name AS accountName,
+                a.type AS accountType,
                 c.symbol AS currencySymbol,
                 c.code AS currencyCode
                 FROM transactions AS t

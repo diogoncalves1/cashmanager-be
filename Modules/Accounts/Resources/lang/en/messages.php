@@ -5,6 +5,7 @@ return [
         'store'   => 'Account :name added successfully!',
         'update'  => 'Account :name updated successfully!',
         'destroy' => 'Account :name deleted successfully!',
+        'status'  => 'Account :name :status successfully!',
 
         'errors'  => [
             'store'   => 'Error trying to add account.',

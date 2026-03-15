@@ -28,9 +28,30 @@ class Helpers
         return number_format($amount, 2, '.', ',');
     }
 
-    public static function formatMoneyWithSymbolAndCurrency(float $amount, string $currencyCode, string $currencySymbol): string
+    public static function formatMoneyWithCurrency(float $amount, string $currencyCode, string $currencySymbol, bool $turnPositive = false): string
+    {
+        $currenciesCodesPrefix = config('currency.currenciesCodesPrefix', []);
+
+        if ($turnPositive) {
+            $amount = $amount < 0 ? -$amount : $amount;
+        }
+
+        $amountFormated = self::formatMoney($amount);
+
+        if (in_array($currencyCode, $currenciesCodesPrefix)) {
+            return $currencySymbol . ' ' . $amountFormated;
+        }
+
+        return $amountFormated . ' ' . $currencySymbol;
+    }
+
+    public static function formatMoneyWithSymbolAndCurrency(float $amount, string $currencyCode, string $currencySymbol, bool $turnPositive = false): string
     {
         $currenciesCodesPrefix = config('currency.currenciesCodesPrefix');
+
+        if ($turnPositive) {
+            $amount = $amount < 0 ? -$amount : $amount;
+        }
 
         $amountFormated = self::formatMoneyWithSymbol($amount);
 

@@ -4,18 +4,44 @@ namespace Modules\Accounts\Repositories;
 use App\Repositories\RepositoryApiInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\Account;
+use Modules\Accounts\Entities\AccountBasicView;
 use Modules\Accounts\Entities\AccountsView;
 use Modules\Accounts\Entities\AccountUser;
 use Modules\Accounts\Entities\Transaction;
 use Modules\Accounts\Exceptions\Accounts\AccountNotFoundException;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
+use Modules\Currency\Repositories\CurrencyRepository;
 use Modules\SharedRoles\Entities\SharedRole;
 
 class AccountRepository implements RepositoryApiInterface
 {
+    protected ActivityLogRepository $activityRepo;
+
+    public function __construct(ActivityLogRepository $activityRepo, protected CurrencyRepository $currencyRepo)
+    {
+        $this->activityRepo = $activityRepo;
+    }
+
     public function all()
     {
         return Account::all();
+    }
+
+    public function allUser(Request $request)
+    {
+        $user = $request->user();
+
+        return AccountBasicView::query()->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])
+            ->join("account_users", "account_users.account_id", '=', 'account_basic_view.id')
+            ->join("shared_roles", "shared_roles.id", '=', "account_users.shared_role_id")
+            ->join('shared_permission_roles', "shared_permission_roles.shared_role_id", '=', 'shared_roles.id')
+            ->join('shared_permissions', "shared_permissions.id", '=', 'shared_permission_roles.shared_permission_id')
+            ->where("account_users.user_id", $user->id)
+            ->where('shared_permissions.code', 'createTransaction')
+            ->active(true)
+            ->select("account_basic_view.*")->get();
     }
 
     public function store(Request $request)
@@ -35,6 +61,7 @@ class AccountRepository implements RepositoryApiInterface
             ];
 
             AccountUser::create($accountUserInput);
+            $this->activityRepo->storeActivity($account->id, $user->id, 'account', ['type' => 'account_created', 'accountName' => $account->name]);
 
             return $account;
         });
@@ -54,7 +81,75 @@ class AccountRepository implements RepositoryApiInterface
 
             $input = $request->only('name', 'type', 'currency_id', 'active');
 
+            $old = $account->only(['name', 'type', 'currency_id', 'active']);
+
+            $changes = [];
+
+            foreach ($input as $field => $value) {
+
+                if ($old[$field] != $value) {
+
+                    $values = [
+                        'old' => $old[$field],
+                        'new' => $value,
+                    ];
+                    if ($field == 'type') {
+                        $values['old'] = __('accounts::attributes.accounts.type.' . $old[$field]);
+                        $values['new'] = __('accounts::attributes.accounts.type.' . $value);
+                    }
+                    if ($field == 'active') {
+                        $values['old'] = __("accounts::attributes.accounts.status." . ($old[$field] ? 'activated' : 'inactivated'));
+                        $values['new'] = __("accounts::attributes.accounts.status." . ($value ? 'activated' : 'inactivated'));
+                        $field         = 'status';
+                    }
+                    if ($field == 'currency_id') {
+                        $values['oldFallback'] = $this->currencyRepo->show($old[$field])->name->{$user->preferences->lang};
+                        $values['newFallback'] = $this->currencyRepo->show($value)->name->{$user->preferences->lang};
+                    }
+                    $changes[$field] = $values;
+                }
+            }
+
             $account->update($input);
+
+            if (! empty($changes)) {
+                $this->activityRepo->storeActivity(
+                    $account->id,
+                    $user->id,
+                    'account',
+                    [
+                        'type'    => 'account_updated',
+                        'changes' => $changes,
+                    ]
+                );
+            }
+
+            return $account;
+        });
+    }
+
+    public function status(Request $request, string $id)
+    {
+        return DB::transaction(function () use ($request, $id) {
+            $account = $this->show($id);
+
+            $user = $request->user();
+
+            $sharedRole = $account->userSharedRole($account, $user->id);
+            if (! $sharedRole || ! $sharedRole->hasPermission("editAccount")) {
+                throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedUpdateAccountException();
+            }
+
+            $account->active = ! $account->active;
+
+            $account->save();
+
+            $this->activityRepo->storeActivity(
+                $account->id,
+                $user->id,
+                'account',
+                ['type' => 'account_status_updated', 'status' => $account->active]
+            );
 
             return $account;
         });
@@ -73,6 +168,8 @@ class AccountRepository implements RepositoryApiInterface
             }
 
             $account->delete();
+
+            $this->activityRepo->destroyByType($account->id, 'account');
 
             return $account;
         });
@@ -114,6 +211,201 @@ class AccountRepository implements RepositoryApiInterface
         }
 
         return $account;
+    }
+
+    public function showLastTransactions(int $id, int $limit = 3)
+    {
+        $account = $this->show($id);
+
+        return $account->transactionsView()->orderBy('date', 'desc')->limit($limit)->get();
+    }
+
+    public function showMonthlyResume(int $id)
+    {
+        $account = $this->show($id);
+
+        return $account->transactionsView()
+            ->selectRaw("
+                SUM(CASE WHEN type = 'revenue' THEN amount ELSE 0 END) AS totalRevenue,
+                SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) AS totalExpense,
+                DATE_FORMAT(date, '%Y-%m') AS month,
+                MAX(currencyCode) AS currencyCode,
+                MAX(currencySymbol) AS currencySymbol
+            ")
+            ->groupByRaw("DATE_FORMAT(date, '%Y-%m')")
+            ->where('status', 'completed')
+            ->orderBy('month', 'desc')
+            ->get();
+
+    }
+
+    public function getStats(Request $request)
+    {
+        $user = $request->user();
+
+        $currency = $user->preferences->currency;
+
+        $totalQuery = AccountsView::query()
+            ->from('accounts_view as a')
+            ->join('currencies as account_currency', 'a.currencyId', '=', 'account_currency.id')
+            ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
+            ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
+            ->join('transactions as t', 't.account_id', '=', 'a.id')
+            ->join("account_users as au", "au.account_id", "=", "a.id")
+            ->join("shared_roles as sr", "sr.id", "=", "au.shared_role_id")
+            ->join("shared_permission_roles as spr", "spr.shared_role_id", "=", "sr.id")
+            ->join("shared_permissions as sp", "sp.id", "=", "spr.shared_permission_id")
+            ->where("au.user_id", $user->id)
+            ->selectRaw("
+            SUM(
+           DISTINCT CASE
+                WHEN sp.code = 'updateUserBalance'
+                THEN a.balance * (user_currency.rate / account_currency.rate)
+                ELSE 0
+            END
+            ) as netWorth,
+            SUM(
+            CASE
+                WHEN sp.code = 'updateUserBalance'
+                THEN CASE WHEN t.type = 'revenue' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate)  ELSE 0 END
+                ELSE 0
+            END
+            ) as totalRevenues,
+            SUM(
+              CASE
+                WHEN sp.code = 'updateUserBalance'
+                THEN CASE WHEN t.type = 'expense' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate) ELSE 0 END
+                ELSE 0
+            END
+            ) as totalExpenses
+            ")
+            ->first();
+
+        $stats = [
+            'activeAccounts' => DB::table('accounts_view')
+                ->where('status', '1')
+                ->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])
+                ->count(),
+            'netWorth'       => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->netWorth ?? 0, $currency->code, $currency->symbol),
+            'totalRevenues'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalRevenues ?? 0, $currency->code, $currency->symbol),
+            'totalExpenses'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalExpenses ?? 0, $currency->code, $currency->symbol),
+        ];
+
+        return $stats;
+    }
+
+    public function showCategorySummary(AccountsView $account)
+    {
+        $total = (float) $account->transactionsView()
+            ->where('categoryType', 'expense')
+            ->where('status', 'completed')
+            ->sum('amount');
+
+        $totalFormated = Helpers::formatMoneyWithCurrency($total, $account->currencyCode, $account->currencySymbol);
+
+        return [
+            'data'          => $account->transactionsView()
+                ->selectRaw("
+                COUNT(*) AS count,
+                SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) AS value,
+                categoryName AS category,
+                categoryColor AS color,
+                categoryIcon AS icon,
+                MAX(currencyCode) AS currencyCode,
+                MAX(currencySymbol) AS currencySymbol
+            ")
+                ->groupByRaw("categoryId")
+                ->where('categoryType', 'expense')
+                ->get(),
+            'total'         => $total,
+            'totalFormated' => $totalFormated,
+
+        ];
+    }
+
+    public function getAccountIndividualData(AccountsView $account)
+    {
+        $monthlyRevenues = (float) $account->transactionsView()
+            ->where('type', 'revenue')
+            ->where('status', 'completed')
+            ->whereRaw("MONTH(date) = ?", [date("m")])
+            ->sum('amount');
+
+        $monthlyExpenses = (float) $account->transactionsView()
+            ->where('type', 'expense')
+            ->where('status', 'completed')
+            ->whereRaw("MONTH(date) = ?", [date("m")])
+            ->sum('amount');
+
+        $lastMonthExpenses = (float) $account->transactionsView()
+            ->where('type', 'expense')
+            ->where('status', 'completed')
+            ->whereRaw("MONTH(date) = ?", [date("m", strtotime("-1 month"))])
+            ->sum('amount');
+        $lastMonthRevenues = (float) $account->transactionsView()
+            ->where('type', 'revenue')
+            ->where('status', 'completed')
+            ->whereRaw("MONTH(date) = ?", [date("m", strtotime("-1 month"))])
+            ->sum('amount');
+
+        return [
+            'monthlyRevenues'   => $monthlyRevenues,
+            'monthlyExpenses'   => $monthlyExpenses,
+            'lastMonthExpenses' => $lastMonthExpenses,
+            'lastMonthRevenues' => $lastMonthRevenues,
+            'currencyCode'      => $account->currencyCode,
+            'currencySymbol'    => $account->currencySymbol,
+        ];
+    }
+
+    public function getChartsData(Request $request, string $id)
+    {
+        $periods = ['weekly' => 7, 'monthly' => 30, 'quarterly' => 90, 'annualy' => 365];
+
+        $charts = [];
+
+        foreach ($periods as $period => $days) {
+            $dailyTotals = DB::table('transactions')
+                ->selectRaw("DATE(date) AS date,
+                     SUM(CASE WHEN type = 'revenue' THEN amount ELSE -amount END) AS transactionAmount")
+                ->where('account_id', $id)
+                ->where('status', 'completed')
+                ->where('date', '>=', Helpers::getOldDate($days))
+                ->groupByRaw('DATE(date)')
+                ->orderBy('date', 'asc')
+                ->get();
+
+            $cumulative      = 0;
+            $charts[$period] = $dailyTotals->map(function ($row) use (&$cumulative) {
+                $cumulative += $row->transactionAmount;
+                return (object) [
+                    'date'              => $row->date,
+                    'transactionAmount' => $row->transactionAmount,
+                    'amount'            => $cumulative, // cumulative sum
+                    'currencyCode'      => null,        // will add next
+                    'currencySymbol'    => null,
+                ];
+            });
+
+            // Get currency info
+            $currency = DB::table('accounts')
+                ->join('currencies', 'currencies.id', '=', 'accounts.currency_id')
+                ->where('accounts.id', $id)
+                ->select('currencies.code', 'currencies.symbol')
+                ->first();
+
+            if ($currency) {
+                $charts[$period] = $charts[$period]->map(function ($row) use ($currency) {
+                    $row->currencyCode   = $currency->code;
+                    $row->currencySymbol = $currency->symbol;
+                    return $row;
+                });
+            }
+        }
+
+        return [
+            'charts' => $charts,
+        ];
     }
 
     // Extra methods
