@@ -329,6 +329,7 @@ class AccountRepository implements RepositoryApiInterface
             ->where('type', 'revenue')
             ->where('status', 'completed')
             ->whereRaw("MONTH(date) = ?", [date("m")])
+            ->whereRaw("YEAR(date) = ?", [date("Y")])
             ->sum('amount');
 
         $monthlyExpenses = (float) $account->transactionsView()
@@ -360,47 +361,48 @@ class AccountRepository implements RepositoryApiInterface
 
     public function getChartsData(Request $request, string $id)
     {
-        $periods = ['weekly' => 7, 'monthly' => 30, 'quarterly' => 90, 'annualy' => 365];
+        $periods = [
+            'weekly'    => 7,
+            'monthly'   => 30,
+            'quarterly' => 90,
+            'annualy'   => 365,
+        ];
+
+        $dailyTotals = Transaction::query()
+            ->account($id)
+            ->status('completed')
+            ->selectRaw("
+                DATE(date) AS date,
+                SUM(CASE WHEN type = 'revenue' THEN amount ELSE -amount END) AS transactionAmount,
+                SUM(
+                    SUM(
+                        CASE
+                            WHEN type = 'revenue' THEN amount
+                            ELSE -amount
+                        END
+                    )
+                ) OVER (ORDER BY DATE(date)) AS cumulative
+        ")
+            ->groupByRaw('DATE(date)')
+            ->orderBy('date')
+            ->get();
 
         $charts = [];
 
         foreach ($periods as $period => $days) {
-            $dailyTotals = DB::table('transactions')
-                ->selectRaw("DATE(date) AS date,
-                     SUM(CASE WHEN type = 'revenue' THEN amount ELSE -amount END) AS transactionAmount")
-                ->where('account_id', $id)
-                ->where('status', 'completed')
-                ->where('date', '>=', Helpers::getOldDate($days))
-                ->groupByRaw('DATE(date)')
-                ->orderBy('date', 'asc')
-                ->get();
 
-            $cumulative      = 0;
-            $charts[$period] = $dailyTotals->map(function ($row) use (&$cumulative) {
-                $cumulative += $row->transactionAmount;
+            $startDate = Helpers::getOldDate($days)->format('Y-m-d');
+
+            $transactions = $dailyTotals->where('date', '>=', $startDate);
+
+            $charts[$period] = $transactions->map(function ($row) {
+
                 return (object) [
                     'date'              => $row->date,
                     'transactionAmount' => $row->transactionAmount,
-                    'amount'            => $cumulative, // cumulative sum
-                    'currencyCode'      => null,        // will add next
-                    'currencySymbol'    => null,
+                    'amount'            => $row->cumulative,
                 ];
             });
-
-            // Get currency info
-            $currency = DB::table('accounts')
-                ->join('currencies', 'currencies.id', '=', 'accounts.currency_id')
-                ->where('accounts.id', $id)
-                ->select('currencies.code', 'currencies.symbol')
-                ->first();
-
-            if ($currency) {
-                $charts[$period] = $charts[$period]->map(function ($row) use ($currency) {
-                    $row->currencyCode   = $currency->code;
-                    $row->currencySymbol = $currency->symbol;
-                    return $row;
-                });
-            }
         }
 
         return [
