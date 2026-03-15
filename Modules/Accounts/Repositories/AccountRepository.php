@@ -369,6 +369,7 @@ class AccountRepository implements RepositoryApiInterface
                 ->selectRaw("DATE(date) AS date,
                      SUM(CASE WHEN type = 'revenue' THEN amount ELSE -amount END) AS transactionAmount")
                 ->where('account_id', $id)
+                ->where('status', 'completed')
                 ->where('date', '>=', Helpers::getOldDate($days))
                 ->groupByRaw('DATE(date)')
                 ->orderBy('date', 'asc')
