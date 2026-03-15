@@ -2,13 +2,18 @@
 namespace Modules\ActivityLog\Core;
 
 use Modules\Accounts\Core\Helpers;
+use Modules\Accounts\Entities\Account;
+use Modules\Category\Entities\Category;
 use Modules\Currency\Entities\Currency;
+use Modules\Debts\Entities\Debt;
+use Modules\FinancialGoal\Entities\FinancialGoal;
 use Modules\SharedRoles\Repositories\SharedRoleRepository;
 use Modules\User\Repositories\UserRepository;
 
 class ActivityLogMessageResolver
 {
-    protected $idsFields = ['currency_id' => Currency::class];
+    protected $idsFields     = ['currency_id' => Currency::class, 'category_id' => Category::class];
+    protected $logTypeModels = ['account' => Account::class, 'financial_goal' => FinancialGoal::class, 'debt' => Debt::class];
 
     public function __construct(
         protected SharedRoleRepository $sharedRoleRepo,
@@ -22,11 +27,11 @@ class ActivityLogMessageResolver
 
         return [
             'key'    => "activitylog::messages.$logType.messages.$metaType",
-            'params' => $this->resolveParams($metaType, $metadata),
+            'params' => $this->resolveParams($metaType, $metadata, $logType),
         ];
     }
 
-    protected function resolveParams(string $metaType, array $metadata): array
+    protected function resolveParams(string $metaType, array $metadata, string $logType): array
     {
         $request = request();
         $user    = $request->user();
@@ -37,11 +42,36 @@ class ActivityLogMessageResolver
             ],
 
             'account_updated'        => [
-                'changes' => $this->formatChanges($metadata['changes'] ?? []),
+                'changes' => $this->formatChanges($metadata['changes'] ?? [], $logType),
             ],
 
             'account_status_updated' => [
                 'status' => __("accounts::attributes.accounts.status." . ($metadata['status'] ? 'activated' : 'inactivated')),
+            ],
+
+            'transaction_added'      => [
+                'type'   => __("accounts::attributes.transactions.type." . $metadata['transactionType']),
+                'date'   => $metadata['date'],
+                'amount' => $this->formatAmount($metadata['amount'], Account::find($metadata['accountId'])->currency_id, $metadata['amountFallback']),
+            ],
+
+            'transaction_scheduled'  => [
+                'type'   => __("accounts::attributes.transactions.type." . $metadata['transactionType']),
+                'date'   => $metadata['date'],
+                'amount' => $this->formatAmount($metadata['amount'], Account::find($metadata['accountId'])->currency_id, $metadata['amountFallback']),
+            ],
+
+            'transaction_updated'    => [
+                'changes' => $this->formatChanges($metadata['changes'] ?? [], $logType),
+            ],
+
+            'transaction_deleted'    => [
+                'amount' => $this->formatAmount($metadata['amount'], Account::find($metadata['accountId'])->currency_id, $metadata['amountFallback']),
+            ],
+
+            'transaction_confirmed'  => [
+                'amount' => $this->formatAmount($metadata['amount'], Account::find($metadata['accountId'])->currency_id, $metadata['amountFallback']),
+                'date'   => $metadata['date'],
             ],
 
             'goal_created'           => [
@@ -90,7 +120,7 @@ class ActivityLogMessageResolver
         };
     }
 
-    protected function formatChanges(array $changes): string
+    protected function formatChanges(array $changes, string $logType): string
     {
         $messages = [];
         $request  = request();
@@ -99,6 +129,13 @@ class ActivityLogMessageResolver
         foreach ($changes as $field => $change) {
             $old = $change['old'];
             $new = $change['new'];
+
+            $model = new $this->logTypeModels[$logType];
+
+            if (isset($change['formatAmount'])) {
+                $old = $this->formatAmount($change['old'], $model->find($change['subjectId'])->currency_id, $change['oldFallback']);
+                $new = $this->formatAmount($change['new'], $model->find($change['subjectId'])->currency_id, $change['newFallback']);
+            }
 
             if (str_contains($field, 'id')) {
                 $model    = new $this->idsFields[$field];
@@ -117,5 +154,16 @@ class ActivityLogMessageResolver
         }
 
         return implode(', ', $messages);
+    }
+
+    protected function formatAmount(string $amount, string $currencyId, ?string $fallback): string
+    {
+        $currency = Currency::find($currencyId);
+
+        if (! $currency) {
+            return $fallback;
+        }
+
+        return Helpers::formatMoneyWithCurrency($amount, $currency->code, $currency->symbol);
     }
 }

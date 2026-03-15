@@ -11,12 +11,14 @@ use Modules\Accounts\Entities\Transaction;
 use Modules\Accounts\Entities\TransactionsView;
 use Modules\Accounts\Exceptions\InvalidTransactionDateException;
 use Modules\Accounts\Exceptions\Transactions\TransactionNotFoundException;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
+use Modules\Category\Repositories\CategoryRepository;
 
 class TransactionRepository implements RepositoryApiInterface
 {
     private AccountRepository $accountRepository;
 
-    public function __construct(AccountRepository $accountRepository)
+    public function __construct(AccountRepository $accountRepository, protected ActivityLogRepository $activityRepo, protected CategoryRepository $categoryRepo)
     {
         $this->accountRepository = $accountRepository;
     }
@@ -42,13 +44,22 @@ class TransactionRepository implements RepositoryApiInterface
                 throw new \Modules\Accounts\Exceptions\UnauthorizedCreateTransactionException();
             }
 
-            if ($request->get("currency_id")) {
+            if ($request->has("currency_id")) {
                 // $input['amount'] = Helpers::convertCurrency($input['amount']);
             }
 
             $input["user_id"] = $user->id;
 
             $transaction = Transaction::create($input);
+
+            $this->activityRepo->storeActivity($account->id, $user->id, 'account', [
+                'type'            => $input['status'] == 'completed' ? 'transaction_added' : 'transaction_scheduled',
+                'transactionType' => $input['type'],
+                'date'            => $input['date'],
+                'amount'          => $input['amount'],
+                'accountId'       => $account->id,
+                'amountFallback'  => Helpers::formatMoneyWithCurrency($input['amount'], $account->currency->code, $account->currency->symbol, true),
+            ]);
 
             if ($transaction->status == "completed" && $transaction->account) {
                 $this->accountRepository->adjustBalance($transaction);
@@ -81,7 +92,46 @@ class TransactionRepository implements RepositoryApiInterface
                 $this->accountRepository->updateBalance($transaction, $difference);
             }
 
+            $old = $transaction->only(['amount', 'date', 'description', 'category_id']);
+
+            $changes = [];
+
+            foreach ($input as $field => $value) {
+
+                if ($old[$field] != $value) {
+
+                    $values = [
+                        'old' => $old[$field],
+                        'new' => $value,
+                    ];
+
+                    if ($field == 'amount') {
+                        $values['subjectId']    = $account->id;
+                        $values['oldFallback']  = Helpers::formatMoneyWithCurrency($old[$field], $account->currency->code, $account->currency->symbol, true);
+                        $values['newFallback']  = Helpers::formatMoneyWithCurrency($value, $account->currency->code, $account->currency->symbol, true);
+                        $values['formatAmount'] = true;
+                    }
+                    if ($field == 'category_id') {
+                        $values['oldFallback'] = $this->categoryRepo->show($old[$field])->name->{$user->preferences->lang};
+                        $values['newFallback'] = $this->categoryRepo->show($value)->name->{$user->preferences->lang};
+                    }
+                    $changes[$field] = $values;
+                }
+            }
+
             $transaction->update($input);
+
+            if (! empty($changes)) {
+                $this->activityRepo->storeActivity(
+                    $account->id,
+                    $user->id,
+                    'account',
+                    [
+                        'type'    => 'transaction_updated',
+                        'changes' => $changes,
+                    ]
+                );
+            }
 
             return $transaction;
         });
@@ -105,6 +155,13 @@ class TransactionRepository implements RepositoryApiInterface
 
             $transaction->delete();
 
+            $this->activityRepo->storeActivity($account->id, $user->id, 'account', [
+                'type'           => 'transaction_deleted',
+                'accountId'      => $account->id,
+                'amountFallback' => Helpers::formatMoneyWithCurrency($transaction->amount, $account->currency->code, $account->currency->symbol, true),
+                'amount'         => $transaction->amount,
+            ]);
+
             return $transaction;
         });
     }
@@ -127,6 +184,13 @@ class TransactionRepository implements RepositoryApiInterface
             $this->accountRepository->adjustBalance($transaction);
 
             $transaction->update(['status' => 'completed']);
+            $this->activityRepo->storeActivity($account->id, $user->id, 'account', [
+                'type'           => 'transaction_confirmed',
+                'accountId'      => $account->id,
+                'amountFallback' => Helpers::formatMoneyWithCurrency($transaction->amount, $account->currency->code, $account->currency->symbol, true),
+                'amount'         => $transaction->amount,
+                'date'           => $transaction->date,
+            ]);
 
             return $transaction;
         });
