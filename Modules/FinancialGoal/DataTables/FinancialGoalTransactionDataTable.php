@@ -38,7 +38,6 @@ class FinancialGoalTransactionDataTable extends DataTable
                 return ['view' => $canView, 'edit' => $canEdit, 'destroy' => $canDestroy, 'confirm' => $canConfirm];
             })
             ->removeColumn('currencyId')
-            ->removeColumn('financialGoalId')
             ->removeColumn('userId')
             ->removeColumn('currencyCode');
     }

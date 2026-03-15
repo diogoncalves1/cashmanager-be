@@ -70,7 +70,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
 
             if ($this->checkStatus($financialGoalTransaction->status, 'completed')) {
                 $this->financialGoalRepository->adjustContributedAmount($financialGoalTransaction);
-                $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => $input['type'] == 'contribution' ? 'contribution_added' : 'withdrawal_added', 'transactionId' => $financialGoalTransaction->id, 'amount' => $transaction->amount, 'transactionDate' => $transaction->date, 'accountName' => $transaction->account->name]);
+                $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => $input['type'] == 'contribution' ? 'contribution_added' : 'withdrawal_added', 'currencyId' => $financialGoal->currency->id, 'amount' => $transaction->amount, 'transactionDate' => $transaction->date, 'currencyCode' => $financialGoal->currency->code, 'accountName' => $transaction->account->name]);
             }
 
             return $financialGoalTransaction;
