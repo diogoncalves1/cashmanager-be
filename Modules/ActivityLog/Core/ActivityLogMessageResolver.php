@@ -37,6 +37,7 @@ class ActivityLogMessageResolver
         $user    = $request->user();
 
         return match ($metaType) {
+            // ACCOUNTS
             'account_created'        => [
                 'accountName' => $metadata['accountName'] ?? '',
             ],
@@ -49,6 +50,7 @@ class ActivityLogMessageResolver
                 'status' => __("accounts::attributes.accounts.status." . ($metadata['status'] ? 'activated' : 'inactivated')),
             ],
 
+            // TRANSACTIONS
             'transaction_added'      => [
                 'type'   => __("accounts::attributes.transactions.type." . $metadata['transactionType']),
                 'date'   => $metadata['date'],
@@ -74,6 +76,22 @@ class ActivityLogMessageResolver
                 'date'   => $metadata['date'],
             ],
 
+            // DEBTS
+            'debt_created'           => [
+                'accountName'   => $metadata['accountName'] ?? '',
+                'initialAmount' => $this->formatAmount($metadata['initialAmount'] ?? 0, $metadata['currencyId'], $metadata['initialAmountFallback']),
+            ],
+
+            'debt_updated'           => [
+                'changes' => $this->formatChanges($metadata['changes'], $logType),
+            ],
+
+            'debt_status_updated'    => [
+                'accountName'   => $metadata['accountName'] ?? '',
+                'initialAmount' => $this->formatAmount($metadata['initialAmount'] ?? 0, $metadata['currencyId'], $metadata['initialAmountFallback']),
+            ],
+
+            // FINANCIAL GOALS
             'goal_created'           => [
                 'initialTarget' => Helpers::formatMoneyWithCurrency($metadata['initialTarget'] ?? 0, $metadata['currencyCode'], $metadata['currencySymbol']),
             ],
@@ -81,10 +99,8 @@ class ActivityLogMessageResolver
                 'amount'      => Helpers::formatMoneyWithCurrency($metadata['amount'] ?? 0, $metadata['currencyCode'], $metadata['currencySymbol']),
                 'accountName' => $metadata['accountName'],
             ],
-            'debt_created'           => [
-                'initialAmount' => Helpers::formatMoneyWithCurrency($metadata['initialAmount'] ?? 0, $metadata['currencyCode'], $metadata['currencySymbol']),
-            ],
 
+            // MEMBERS
             'user_invited'           => [
                 'userName' => $this->userRepo->show($metadata['invitedUserId'])->name,
                 'roleName' => $this->sharedRoleRepo->show($metadata['sharedRoleId'])->name->{$user->preferences->lang},

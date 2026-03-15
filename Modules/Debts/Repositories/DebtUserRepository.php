@@ -3,6 +3,7 @@ namespace Modules\Debts\Repositories;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Debts\Entities\DebtUser;
 use Modules\SharedRoles\Exceptions\RelationNotExistsException;
 use Modules\SharedRoles\Exceptions\SelfRoleUpdateNotAllowedException;
@@ -14,7 +15,7 @@ class DebtUserRepository
     private $debtRepository;
     private $sharedRoleRepository;
 
-    public function __construct(DebtRepository $debtRepository, SharedRoleRepository $sharedRoleRepository)
+    public function __construct(DebtRepository $debtRepository, SharedRoleRepository $sharedRoleRepository, protected ActivityLogRepository $activityRepo)
     {
         $this->debtRepository       = $debtRepository;
         $this->sharedRoleRepository = $sharedRoleRepository;
@@ -44,6 +45,7 @@ class DebtUserRepository
             }
 
             $relation = $this->destroy($userId, $id);
+            $this->activityRepo->storeActivity($id, $user->id, 'debt', ['type' => 'user_revoked', 'userId' => $userId]);
 
             return $relation;
         });
@@ -80,6 +82,7 @@ class DebtUserRepository
             $input = $request->only(["shared_role_id"]);
 
             $relation = $this->update($userId, $id, $input);
+            $this->activityRepo->storeActivity($id, $user->id, 'debt', ['type' => 'user_role_updated', 'userId' => $userId, 'sharedRoleId' => $input['shared_role_id']]);
 
             return $relation;
         });
@@ -101,6 +104,7 @@ class DebtUserRepository
             }
 
             $relation = $this->destroy($user->id, $id);
+            $this->activityRepo->storeActivity($id, $user->id, 'debt', ['type' => 'user_leaved', 'userId' => $user->id]);
 
             return $relation;
         });

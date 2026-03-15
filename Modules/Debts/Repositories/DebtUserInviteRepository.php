@@ -65,6 +65,7 @@ class DebtUserInviteRepository
             $input['status']  = 'pending';
 
             $invite = DebtUserInvite::create($input);
+            $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', ['type' => 'user_invited', 'invitedUserId' => $userId, 'sharedRoleId' => $input['shared_role_id']]);
 
             return $invite;
         });
@@ -89,7 +90,7 @@ class DebtUserInviteRepository
 
             $input    = ["debt_id" => $id, "user_id" => $user->id, "shared_role_id" => $invite->shared_role_id];
             $relation = $this->debtUserRepo->store($input);
-            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_joined', 'userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
+            $this->activityRepo->storeActivity($input['debt_id'], $user->id, 'debt', ['type' => 'user_joined', 'userId' => $user->id, 'sharedRoleId' => $invite->shared_role_id]);
 
             return $relation;
         });
@@ -113,6 +114,7 @@ class DebtUserInviteRepository
             }
 
             $invite = $this->destroy($userId, $id, "pending");
+            $this->activityRepo->storeActivity($id, $user->id, 'debt', ['type' => 'invited_destroyed', 'userId' => $userId]);
 
             return $invite;
         });
@@ -121,7 +123,7 @@ class DebtUserInviteRepository
     public function revoke(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $debt = $this->debtRepository->show($id);
+            $this->debtRepository->show($id);
 
             $user = $request->user();
 
@@ -132,6 +134,7 @@ class DebtUserInviteRepository
             $input = ["status" => "revoked"];
 
             $invite = $this->update($user->id, $id, "pending", $input);
+            $this->activityRepo->storeActivity($id, $user->id, 'debt', ['type' => 'invited_revoked', 'userId' => $user->id]);
 
             return $invite;
         });
