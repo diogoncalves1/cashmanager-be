@@ -392,21 +392,27 @@ class TransactionRepository implements RepositoryApiInterface
 
         $userTotalQuery = clone $query;
 
-        $userTotalData = $userTotalQuery
+        $monthly = $userTotalQuery
             ->selectRaw("
-                            CONCAT(MONTH(transactions.date), ' ', YEAR(transactions.date)) as monthYear,
-                            MIN(transactions.date) AS min_date,
-                            SUM(
-                                CASE
-                                    WHEN transactions.type = 'revenue'
-                                    THEN (transactions.amount * (user_currency.rate / tx_currency.rate))
-                                    ELSE -(transactions.amount * (user_currency.rate / tx_currency.rate))
-                                END
-                            ) as balance
-                        ")
-            ->where('transactions.status', 'completed')
-            ->groupByRaw("monthYear")
-            ->orderByRaw("min_date")
+        MIN(transactions.date) as min_date,
+        SUM(
+            CASE
+                WHEN transactions.type = 'revenue'
+                THEN (transactions.amount * (user_currency.rate / tx_currency.rate))
+                ELSE -(transactions.amount * (user_currency.rate / tx_currency.rate))
+            END
+        ) as month_total
+    ")
+            ->groupByRaw("YEAR(transactions.date), MONTH(transactions.date)");
+
+        $userTotalData = DB::query()
+            ->fromSub($monthly, 'monthly')
+            ->selectRaw("
+        CONCAT(MONTH(min_date), ' ', YEAR(min_date)) as monthYear,
+        min_date,
+        SUM(month_total) OVER (ORDER BY min_date) as balance
+    ")
+            ->orderBy('min_date')
             ->get();
 
         return [
