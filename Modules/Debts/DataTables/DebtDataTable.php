@@ -29,6 +29,7 @@ class DebtDataTable extends DataTable
             ->addColumn('remainingAmount', fn(DebtsView $debt) => DebtHelpers::debtRemainingAmount($debt->totalAmount, $debt->paidAmount, $debt->interestRate, $debt->months))
             ->addColumn('totalAmountWithInterest', fn(DebtsView $debt) => DebtHelpers::debtTotalAmount($debt->totalAmount, $debt->interestRate, $debt->months))
             ->addColumn('totalAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->totalAmount, $debt->currencyCode, $debt->currencySymbol))
+            ->addColumn('totalAmountFormatedWithoutSymbol', fn(DebtsView $debt) => Helpers::formatMoneyWithCurrency($debt->totalAmount, $debt->currencyCode, $debt->currencySymbol))
             ->addColumn('paidAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->paidAmount, $debt->currencyCode, $debt->currencySymbol))
             ->addColumn('monthlyAmountFormated', fn(DebtsView $debt) => Helpers::formatMoneyWithSymbolAndCurrency($debt->monthlyAmount, $debt->currencyCode, $debt->currencySymbol))
             ->addColumn('statusTranslated', fn(DebtsView $debt) => __("debts::attributes.debts.status." . $debt->status))

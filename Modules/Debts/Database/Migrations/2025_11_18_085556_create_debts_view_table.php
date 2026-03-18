@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -45,7 +44,7 @@ return new class extends Migration
                     SELECT
                         debt_id,
                         COUNT(id) AS totalTransactions,
-                        SUM(amount * (interest_rate / 100)) as interestPaid,
+                        SUM(interest_paid) as interestPaid,
                         SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) AS totalPayments
                     FROM debt_payments
                     GROUP BY debt_id
@@ -59,6 +58,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('debts_view');
+        DB::statement("DROP VIEW IF EXISTS debts_view");
     }
 };

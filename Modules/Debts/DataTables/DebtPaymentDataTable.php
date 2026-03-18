@@ -29,6 +29,7 @@ class DebtPaymentDataTable extends DataTable
             ->eloquent($query)
             ->addColumn('statusTranslated', fn(DebtPayment $transaction) => __('accounts::attributes.transactions.status.' . $transaction->status))
             ->addColumn('amountFormated', fn(DebtPayment $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
+            ->addColumn('interestPaidFormated', fn(DebtPayment $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->interestPaid, $transaction->currencyCode, $transaction->currencySymbol))
             ->addColumn('actions', function (DebtPayment $transaction) use ($user) {
                 $debt       = $transaction->debt;
                 $sharedRole = $debt->userSharedRole($debt, $user->id);

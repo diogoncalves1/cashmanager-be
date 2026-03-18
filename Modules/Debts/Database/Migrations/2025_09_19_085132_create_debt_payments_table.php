@@ -23,6 +23,7 @@ return new class extends Migration
             $table->decimal('amount', 15);
             $table->text('description')->nullable();
             $table->decimal('interest_rate', 15, 4);
+            $table->decimal('interest_paid', 15, 2)->default(0);
             $table->tinyInteger('is_monthly_payment')->default(1);
             $table->timestamps();
 
