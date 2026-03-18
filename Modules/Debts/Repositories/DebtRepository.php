@@ -268,32 +268,95 @@ class DebtRepository implements RepositoryApiInterface
     {
         $debt = $debtPayment->debt;
 
-        $debt->paid_amount += $debtPayment->amount - ($debtPayment->amount * ($debtPayment->interest_rate / 100));
+        $remainingDebt = $debt->total_amount - $debt->paid_amount;
+        $interest      = $remainingDebt * ($debtPayment->interest_rate / 100);
+        $principal     = $debtPayment->amount - $interest;
+
+        if ($principal < 0) {
+            $principal = 0;
+        }
+
+        // if ($principal > $remainingDebt) {
+        //     $principal = $remainingDebt;
+        // }
+        $debtPayment->interest_paid = $interest;
+        $debtPayment->save();
+
+        $debt->paid_amount += $principal;
 
         $debt->save();
         return $debt;
     }
-    public function updatePaidAmount(DebtPayment $debtPayment, float $oldAmount, float $amountToUpdate, float $oldInterestRate, float $currentInterestRate, bool $isMonthlyPayment): void
+
+    public function updatePaidAmount(DebtPayment $debtPayment, bool $oldIsMonthlyPayment, bool $isMonthlyPayment): void
     {
         $debt = $debtPayment->debt;
 
-        if ($debtPayment->is_monthly_payment != $isMonthlyPayment) {
+        if ($oldIsMonthlyPayment != $isMonthlyPayment) {
             $isMonthlyPayment ?
             $debt->increment('months_paid', 1) :
             $debt->decrement('months_paid', 1);
         }
 
-        $difference = ($oldAmount - ($oldAmount * ($oldInterestRate / 100))) - ($amountToUpdate - ($amountToUpdate * ($currentInterestRate / 100)));
+        $payments          = $debt->payments;
+        $debt->paid_amount = 0;
 
-        $debt->paid_amount -= $difference;
+        foreach ($payments as $payment) {
 
+            $remainingDebt = $debt->total_amount - $debt->paid_amount;
+
+            $interest = $remainingDebt * ($payment->interest_rate / 100);
+
+            $principal = $payment->amount - $interest;
+
+            if ($principal < 0) {
+                $principal = 0;
+            }
+
+            if ($principal > $remainingDebt) {
+                $principal = $remainingDebt;
+            }
+
+            $payment->interest_paid = $interest;
+
+            $payment->save();
+
+            $debt->paid_amount += $principal;
+        }
         $debt->save();
     }
+
     public function reversePaidAmount(DebtPayment $debtPayment): void
     {
-        $debt = $debtPayment->debt;
+        $debt     = $debtPayment->debt;
+        $payments = $debt->payments;
 
-        $debt->paid_amount -= $debtPayment->amount - ($debtPayment->amount * ($debtPayment->interest_rate / 100));
+        $debt->paid_amount = 0;
+
+        foreach ($payments as $payment) {
+            if ($payment->cancelled) {
+                continue;
+            }
+
+            $remainingDebt = $debt->total_amount - $debt->paid_amount;
+
+            $interest = $remainingDebt * ($payment->interest_rate / 100);
+
+            $principal = $payment->amount - $interest;
+
+            if ($principal < 0) {
+                $principal = 0;
+            }
+
+            if ($principal > $remainingDebt) {
+                $principal = $remainingDebt;
+            }
+
+            $payment->interest_paid = $interest;
+            $payment->save();
+
+            $debt->paid_amount += $principal;
+        }
 
         $debt->save();
     }
