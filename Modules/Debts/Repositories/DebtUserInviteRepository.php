@@ -59,10 +59,11 @@ class DebtUserInviteRepository
                 throw new \Modules\SharedRoles\Exceptions\InviteUserNotAllowedException();
             }
 
-            $input            = $request->only(['shared_role_id']);
-            $input['debt_id'] = $id;
-            $input['user_id'] = $userId;
-            $input['status']  = 'pending';
+            $input                  = $request->only(['shared_role_id']);
+            $input['debt_id']       = $id;
+            $input['invited_by_id'] = $user->id;
+            $input['user_id']       = $userId;
+            $input['status']        = 'pending';
 
             $invite = DebtUserInvite::create($input);
             $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', ['type' => 'user_invited', 'invitedUserId' => $userId, 'sharedRoleId' => $input['shared_role_id']]);
@@ -90,6 +91,7 @@ class DebtUserInviteRepository
 
             $input    = ["debt_id" => $id, "user_id" => $user->id, "shared_role_id" => $invite->shared_role_id];
             $relation = $this->debtUserRepo->store($input);
+
             $this->activityRepo->storeActivity($input['debt_id'], $user->id, 'debt', ['type' => 'user_joined', 'userId' => $user->id, 'sharedRoleId' => $invite->shared_role_id]);
 
             return $relation;

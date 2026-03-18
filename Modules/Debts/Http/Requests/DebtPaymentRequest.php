@@ -15,7 +15,7 @@ class DebtPaymentRequest extends FormRequest
             "status"        => "required|in:completed,pending",
             "amount"        => "required|numeric|min:0",
             "date"          => "required|string",
-            "interest_rate" => "required|numeric|min:0",
+            "interest_rate" => "nullable|numeric|min:0",
             "description"   => "nullable|string",
             "account_id"    => "required|exists:accounts,id",
         ];
