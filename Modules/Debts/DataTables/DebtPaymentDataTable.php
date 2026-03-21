@@ -53,7 +53,8 @@ class DebtPaymentDataTable extends DataTable
         $query = $model->newQuery()
             ->join('debts_view AS dv', 'dv.id', '=', 'debt_payments_view.debtId')
             ->whereRaw("FIND_IN_SET(?, REPLACE(dv.userIds, ' ', ''))", [$user->id])
-            ->select('debt_payments_view.*');
+            ->select('debt_payments_view.*')
+            ->orderBy('id', 'desc');
 
         if ($request->has('status')) {
             $query->status($request->get('status'));
