@@ -78,7 +78,7 @@ class ActivityLogMessageResolver
 
             // DEBTS
             'debt_created'           => [
-                'accountName'   => $metadata['accountName'] ?? '',
+                'debtName'      => $metadata['debtName'] ?? '',
                 'initialAmount' => $this->formatAmount($metadata['initialAmount'] ?? 0, $metadata['currencyId'], $metadata['initialAmountFallback']),
             ],
 
@@ -87,8 +87,37 @@ class ActivityLogMessageResolver
             ],
 
             'debt_status_updated'    => [
-                'accountName'   => $metadata['accountName'] ?? '',
+                'debtName'      => $metadata['debtName'] ?? '',
                 'initialAmount' => $this->formatAmount($metadata['initialAmount'] ?? 0, $metadata['currencyId'], $metadata['initialAmountFallback']),
+            ],
+
+            // PAYMENTS
+            'payment_added'          => [
+                'date'               => $metadata['date'],
+                'amount'             => $this->formatAmount($metadata['amount'], Account::find($metadata['debtId'])->currency_id, $metadata['amountFallback']),
+                'interest_rate'      => $metadata['interest_rate'],
+                'is_monthly_payment' => __("debts::attributes.debt-payments.is-monthly-payment." . ($metadata['is_monthly_payment'] ? 'yes' : 'no')),
+            ],
+
+            'payment_scheduled'      => [
+                'date'               => $metadata['date'],
+                'amount'             => $this->formatAmount($metadata['amount'], Account::find($metadata['debtId'])->currency_id, $metadata['amountFallback']),
+                'interest_rate'      => $metadata['interest_rate'],
+                'is_monthly_payment' => __("debts::attributes.debt-payments.is-monthly-payment." . ($metadata['is_monthly_payment'] ? 'yes' : 'no')),
+            ],
+
+            'payment_updated'        => [
+                'changes' => $this->formatChanges($metadata['changes'] ?? [], $logType),
+            ],
+
+            'payment_deleted'        => [
+                'amount' => $this->formatAmount($metadata['amount'], Account::find($metadata['debtId'])->currency_id, $metadata['amountFallback']),
+                'date'   => $metadata['date'],
+            ],
+
+            'payment_confirmed'      => [
+                'amount' => $this->formatAmount($metadata['amount'], Account::find($metadata['debtId'])->currency_id, $metadata['amountFallback']),
+                'date'   => $metadata['date'],
             ],
 
             // FINANCIAL GOALS

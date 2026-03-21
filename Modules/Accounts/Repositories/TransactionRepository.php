@@ -44,9 +44,9 @@ class TransactionRepository implements RepositoryApiInterface
                 throw new \Modules\Accounts\Exceptions\UnauthorizedCreateTransactionException();
             }
 
-            if ($request->has("currency_id")) {
-                // $input['amount'] = Helpers::convertCurrency($input['amount']);
-            }
+            // if ($request->has("currency_id")) {
+            //     // $input['amount'] = Helpers::convertCurrency($input['amount']);
+            // }
 
             $input["user_id"] = $user->id;
 

@@ -50,6 +50,12 @@ return [
             'debt_updated'        => 'Dívida atualizada',
             'debt_status_updated' => 'Estado atualizado',
 
+            'payment_added'       => 'Pagamento adicionado',
+            'payment_scheduled'   => 'Pagamento agendado',
+            'payment_updated'     => 'Pagamento atualizado',
+            'payment_deleted'     => 'Pagamento apagado',
+            'payment_confirmed'   => 'Pagamento confirmado',
+
             'user_invited'        => 'Utilizador convidado',
             'user_joined'         => 'Utilizador novo',
             'invited_destroyed'   => 'Convite apagado',
@@ -63,6 +69,12 @@ return [
             'debt_created'        => 'Dívida inicial: :initialAmount',
             'debt_updated'        => 'Conta atualizada: :changes',
             'debt_status_updated' => 'Estado atualizado para: :status',
+
+            'payment_added'       => 'Pagamento adicionado no dia :date com o valor de :amount, com taxa de juro de :interest_rate%. Foi um pagamento mensal: :is_monthly_payment',
+            'payment_scheduled'   => 'Pagamento agendado para dia :date com o valor de :amount, com taxa de juro de :interest_rate%. Será um pagamento mensal: :is_monthly_payment',
+            'payment_updated'     => 'Pagamento atualizado: :changes',
+            'payment_deleted'     => 'Pagamento com valor de :amount de dia :date foi apagado',
+            'payment_confirmed'   => 'Pagamento com valor de :amount agendado para :date foi confirmado',
 
             'user_invited'        => ':userName convidado como :roleName',
             'user_joined'         => 'Utilizador :userName entrou na dívida como :roleName',
