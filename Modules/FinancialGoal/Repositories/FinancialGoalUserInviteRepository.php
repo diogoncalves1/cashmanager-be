@@ -68,7 +68,7 @@ class FinancialGoalUserInviteRepository
             $input['invited_by_id']     = $user->id;
 
             $invite = FinancialGoalUserInvite::create($input);
-            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_invited', 'invitedUserId' => $userId, 'sharedRoleId' => $sharedRoleInvite->id, 'inviteId' => $invite->id]);
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', ['type' => 'user_invited', 'invitedUserId' => $userId, 'sharedRoleId' => $input['shared_role_id']]);
 
             return $invite;
         });
@@ -91,7 +91,7 @@ class FinancialGoalUserInviteRepository
 
             $input    = ["financial_goal_id" => $id, "user_id" => $user->id, "shared_role_id" => $invite->shared_role_id];
             $relation = $this->financialGoalUserRepo->store($input);
-            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_joined', 'userId' => $user->id, 'role' => $relation->sharedRole->code, 'relationId' => $relation->id]);
+            $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => 'user_joined', 'userId' => $user->id, 'sharedRoleId' => $invite->shared_role_id]);
 
             return $relation;
         });
@@ -115,6 +115,7 @@ class FinancialGoalUserInviteRepository
             }
 
             $invite = $this->destroy($userId, $id, "pending");
+            $this->activityRepo->storeActivity($id, $user->id, 'financial_goal', ['type' => 'invited_destroyed', 'userId' => $userId]);
 
             return $invite;
         });
@@ -123,7 +124,7 @@ class FinancialGoalUserInviteRepository
     public function revoke(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $financialGoal = $this->financialGoalRepository->show($id);
+            $this->financialGoalRepository->show($id);
 
             $user = $request->user();
 
@@ -134,6 +135,7 @@ class FinancialGoalUserInviteRepository
             $input = ["status" => "revoked"];
 
             $invite = $this->update($user->id, $id, "pending", $input);
+            $this->activityRepo->storeActivity($id, $user->id, 'financial_goal', ['type' => 'invited_revoked', 'userId' => $user->id]);
 
             return $invite;
         });

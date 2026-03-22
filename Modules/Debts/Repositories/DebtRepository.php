@@ -67,7 +67,7 @@ class DebtRepository implements RepositoryApiInterface
             ];
 
             DebtUser::create($debtUserInput);
-            $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', ['type' => 'debt_created', 'debtName' => $debt->name, 'initialAmount' => $input['total_amount'], 'initialAmountFallback' => Helpers::formatMoneyWithCurrency($input['total_amount'], $debt->currency->code, $debt->currency->symbol, true), 'currencyId' => $input['currency_id']]);
+            $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', ['type' => 'debt_created', 'debtId' => $debt->id, 'initialAmount' => $input['total_amount'], 'initialAmountFallback' => Helpers::formatMoneyWithCurrency($input['total_amount'], $debt->currency->code, $debt->currency->symbol, true), 'currencyId' => $input['currency_id']]);
 
             return $debt;
         });
@@ -197,7 +197,7 @@ class DebtRepository implements RepositoryApiInterface
                 $debt->id,
                 $user->id,
                 'debt',
-                ['type' => 'debt_status_updated', 'status' => __("debts::attributes.debts.status." . $debt->status)]
+                ['type' => 'debt_status_updated', 'status' => $debt->status]
             );
 
             return $debt;
@@ -226,7 +226,7 @@ class DebtRepository implements RepositoryApiInterface
                 $debt->id,
                 $user->id,
                 'debt',
-                ['type' => 'debt_status_updated', 'status' => __("debts::attributes.debts.status." . $debt->status)]
+                ['type' => 'debt_status_updated', 'status' => $debt->status]
             );
 
             return $debt;
