@@ -16,4 +16,5 @@ return [
     'due_date'           => 'data de fim',
     'monthly_amount'     => 'pagamento mensal',
     'is_monthly_payment' => 'é um pagamento mensal:',
+    'priority'           => "prioridade",
 ];
