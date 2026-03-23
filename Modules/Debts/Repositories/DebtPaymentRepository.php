@@ -61,6 +61,10 @@ class DebtPaymentRepository implements RepositoryApiInterface
 
             $input = $request->only(['debt_id', 'date', 'status', 'amount', 'description', 'interest_rate', 'is_monthly_payment']);
 
+            if ($input['interest_rate'] == null) {
+                $input['interest_rate'] = 0;
+            }
+
             $transactionInput = [];
             $input['user_id'] = $transactionInput['user_id'] = $user->id;
 

@@ -38,13 +38,13 @@ class DebtDataTable extends DataTable
                 $debt       = $this->repository->show($debtV->id);
                 $sharedRole = $debt->userSharedRole($debt, $user->id);
 
-                $canView     = $sharedRole?->hasPermission("viewDebt");
-                $canEdit     = $sharedRole?->hasPermission("editDebt");
-                $canDestroy  = $sharedRole?->hasPermission("destroyDebt");
-                $canManage   = $sharedRole?->hasPermission("manageDebtUsers");
-                $canMarkPaid = $canEdit && ($debtV->status == 'pending') && ($debtV->paidAmount >= $debtV->totalAmount);
+                $canView = $sharedRole?->hasPermission("viewDebt");
+                // $canEdit = $sharedRole?->hasPermission("editDebt");
+                // $canDestroy  = $sharedRole?->hasPermission("destroyDebt");
+                // $canManage   = $sharedRole?->hasPermission("manageDebtUsers");
+                // $canMarkPaid = $canEdit && ($debtV->status == 'pending') && ($debtV->paidAmount >= $debtV->totalAmount);
 
-                return ['view' => $canView, 'edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'markPaid' => $canMarkPaid];
+                return ['view' => $canView/* 'edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'markPaid' => $canMarkPaid*/];
             })
             ->removeColumn('user_ids')
             ->rawColumns(['name', 'description']);
