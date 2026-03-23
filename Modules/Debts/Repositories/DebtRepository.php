@@ -298,7 +298,7 @@ class DebtRepository implements RepositoryApiInterface
             $debt->decrement('months_paid', 1);
         }
 
-        $payments          = $debt->payments;
+        $payments          = $debt->payments()->orderBy('date', 'asc')->get();
         $debt->paid_amount = 0;
 
         foreach ($payments as $payment) {
