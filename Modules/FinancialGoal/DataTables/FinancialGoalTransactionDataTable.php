@@ -51,8 +51,7 @@ class FinancialGoalTransactionDataTable extends DataTable
         $query = $model->newQuery()
             ->join('financial_goal_view AS fgv', 'fgv.id', '=', 'financial_goal_transaction_view.financialGoalId')
             ->whereRaw("FIND_IN_SET(?, REPLACE(fgv.userIds, ' ', ''))", [$user->id])
-            ->select('financial_goal_transaction_view.*')
-            ->orderBy("id", 'desc');
+            ->select('financial_goal_transaction_view.*');
 
         if ($request->has('userId')) {
             $query->user($request->get("userId"));

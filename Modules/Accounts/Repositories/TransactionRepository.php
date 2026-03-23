@@ -394,25 +394,29 @@ class TransactionRepository implements RepositoryApiInterface
 
         $monthly = $userTotalQuery
             ->selectRaw("
-        MIN(transactions.date) as min_date,
-        SUM(
-            CASE
-                WHEN transactions.type = 'revenue'
-                THEN (transactions.amount * (user_currency.rate / tx_currency.rate))
-                ELSE -(transactions.amount * (user_currency.rate / tx_currency.rate))
-            END
-        ) as month_total
-    ")
+                MIN(transactions.date) as min_date,
+                SUM(
+                    CASE
+                        WHEN transactions.type = 'revenue'
+                        THEN (transactions.amount * (user_currency.rate / tx_currency.rate))
+                        ELSE -(transactions.amount * (user_currency.rate / tx_currency.rate))
+                    END
+                ) as month_total
+            ")
             ->groupByRaw("YEAR(transactions.date), MONTH(transactions.date)");
 
         $userTotalData = DB::query()
-            ->fromSub($monthly, 'monthly')
+            ->fromSub($monthly, 'm1')
+            ->joinSub($monthly, 'm2', function ($join) {
+                $join->on('m2.min_date', '<=', 'm1.min_date');
+            })
             ->selectRaw("
-        CONCAT(MONTH(min_date), ' ', YEAR(min_date)) as monthYear,
-        min_date,
-        SUM(month_total) OVER (ORDER BY min_date) as balance
-    ")
-            ->orderBy('min_date')
+                CONCAT(MONTH(m1.min_date), ' ', YEAR(m1.min_date)) as monthYear,
+                m1.min_date,
+                SUM(m2.month_total) as balance
+            ")
+            ->groupBy('m1.min_date')
+            ->orderBy('m1.min_date')
             ->get();
 
         return [

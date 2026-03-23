@@ -2,7 +2,6 @@
 namespace Modules\Debts\DataTables;
 
 use Modules\Accounts\Core\Helpers;
-use Modules\Debts\Entities\DebtPayment;
 use Modules\Debts\Entities\DebtPaymentView;
 use Modules\Debts\Repositories\DebtPaymentRepository;
 use Modules\Debts\Repositories\DebtRepository;
@@ -27,10 +26,10 @@ class DebtPaymentDataTable extends DataTable
 
         return datatables()
             ->eloquent($query)
-            ->addColumn('statusTranslated', fn(DebtPayment $transaction) => __('accounts::attributes.transactions.status.' . $transaction->status))
-            ->addColumn('amountFormated', fn(DebtPayment $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
-            ->addColumn('interestPaidFormated', fn(DebtPayment $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->interestPaid, $transaction->currencyCode, $transaction->currencySymbol))
-            ->addColumn('actions', function (DebtPayment $transaction) use ($user) {
+            ->addColumn('statusTranslated', fn(DebtPaymentView $transaction) => __('accounts::attributes.transactions.status.' . $transaction->status))
+            ->addColumn('amountFormated', fn(DebtPaymentView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
+            ->addColumn('interestPaidFormated', fn(DebtPaymentView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->interestPaid, $transaction->currencyCode, $transaction->currencySymbol))
+            ->addColumn('actions', function (DebtPaymentView $transaction) use ($user) {
                 $debt       = $transaction->debt;
                 $sharedRole = $debt->userSharedRole($debt, $user->id);
 
@@ -53,8 +52,7 @@ class DebtPaymentDataTable extends DataTable
         $query = $model->newQuery()
             ->join('debts_view AS dv', 'dv.id', '=', 'debt_payments_view.debtId')
             ->whereRaw("FIND_IN_SET(?, REPLACE(dv.userIds, ' ', ''))", [$user->id])
-            ->select('debt_payments_view.*')
-            ->orderBy('id', 'desc');
+            ->select('debt_payments_view.*');
 
         if ($request->has('status')) {
             $query->status($request->get('status'));
