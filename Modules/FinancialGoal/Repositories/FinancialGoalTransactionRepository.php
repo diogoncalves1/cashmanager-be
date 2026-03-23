@@ -5,6 +5,7 @@ use App\Repositories\RepositoryApiInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Repositories\TransactionRepository;
 use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Category\Repositories\CategoryRepository;
@@ -19,8 +20,8 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
     protected CategoryRepository $categoryRepository;
     protected ActivityLogRepository $activityRepo;
 
-    public function __construct(FinancialGoalRepository $financialGoalRepository, TransactionRepository $transactionRepository, CategoryRepository $categoryRepository, ActivityLogRepository $activityRepo)
-    {
+    public function __construct(FinancialGoalRepository $financialGoalRepository, TransactionRepository $transactionRepository, CategoryRepository $categoryRepository,
+        ActivityLogRepository $activityRepo) {
         $this->financialGoalRepository = $financialGoalRepository;
         $this->transactionRepository   = $transactionRepository;
         $this->categoryRepository      = $categoryRepository;
@@ -68,9 +69,17 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
 
             $financialGoalTransaction = FinancialGoalTransaction::create($input);
 
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', [
+                'type'            => $input['status'] == 'completed' ? 'financial_transaction_added' : 'financial_transaction_scheduled',
+                'transactionType' => $input['type'],
+                'date'            => $input['date'],
+                'amount'          => $input['amount'],
+                'goalId'          => $financialGoal->id,
+                'amountFallback'  => Helpers::formatMoneyWithCurrency($input['amount'], $financialGoal->currency->code, $financialGoal->currency->symbol, true),
+            ]);
+
             if ($this->checkStatus($financialGoalTransaction->status, 'completed')) {
                 $this->financialGoalRepository->adjustContributedAmount($financialGoalTransaction);
-                $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, 'financial_goal', ['type' => $input['type'] == 'contribution' ? 'contribution_added' : 'withdrawal_added', 'transactionId' => $financialGoalTransaction->id, 'amount' => $transaction->amount, 'transactionDate' => $transaction->date, 'accountName' => $transaction->account->name]);
             }
 
             return $financialGoalTransaction;
@@ -100,10 +109,11 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
     {
         return DB::transaction(function () use ($request, $id) {
             $financialGoalTransaction = $this->show($id);
+            $financialGoal            = $financialGoalTransaction->financialGoal;
 
             $user = $request->user();
 
-            $sharedRole = $financialGoalTransaction->financialGoal->userSharedRole($financialGoalTransaction->financialGoal, $user->id);
+            $sharedRole = $financialGoal->userSharedRole($financialGoal, $user->id);
 
             if (! $sharedRole || ! $sharedRole->hasPermission('updateFinancialGoalTransaction')) {
                 throw new \Modules\FinancialGoal\Exceptions\FinancialGoalTransactions\UnauthorizedUpdateFinancialGoalTransactionException();
@@ -116,12 +126,46 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
 
             $input = $request->only(['amount', 'date', 'description']);
 
+            $old = $financialGoalTransaction->only(['amount', 'date', 'description']);
+
+            $changes = [];
+
+            foreach ($input as $field => $value) {
+
+                if ($old[$field] != $value) {
+
+                    $values = [
+                        'old' => $old[$field],
+                        'new' => $value,
+                    ];
+
+                    if ($field == 'amount') {
+                        $values['subjectId']    = $financialGoal->id;
+                        $values['oldFallback']  = Helpers::formatMoneyWithCurrency($old[$field], $financialGoal->currency->code, $financialGoal->currency->symbol, true);
+                        $values['newFallback']  = Helpers::formatMoneyWithCurrency($value, $financialGoal->currency->code, $financialGoal->currency->symbol, true);
+                        $values['formatAmount'] = true;
+                    }
+                    $changes[$field] = $values;
+                }
+            }
+
             if ($this->checkStatus($financialGoalTransaction->status, 'completed')) {
                 $this->financialGoalRepository->updateContributedAmount($financialGoalTransaction, $financialGoalTransaction->amount - $request->get('amount'));
-                // $this->activityRepo->storeActivity($input['financial_goal_id'], $user->id, $input['type'] == 'contribution' ? 'contribution_added' : 'withdrawal_added', ['transactionId' => $financialGoalTransaction->id, 'amount' => $financialGoalTransaction->amount, 'transactionDate' => $financialGoalTransaction->date, 'accountName' => $financialGoalTransaction->account->name]);
             }
 
             $financialGoalTransaction->update($input);
+
+            if (! empty($changes)) {
+                $this->activityRepo->storeActivity(
+                    $financialGoal->id,
+                    $user->id,
+                    'financial_goal',
+                    [
+                        'type'    => 'financial_transaction_updated',
+                        'changes' => $changes,
+                    ]
+                );
+            }
 
             return $financialGoalTransaction;
         });
@@ -132,9 +176,10 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
         return DB::transaction(function () use ($id, $request) {
             $financialGoalTransaction = $this->show($id);
 
-            $user = $request->user();
+            $user          = $request->user();
+            $financialGoal = $financialGoalTransaction->financialGoal;
 
-            $sharedRole = $financialGoalTransaction->financialGoal->userSharedRole($financialGoalTransaction->financialGoal, $user->id);
+            $sharedRole = $financialGoal->userSharedRole($financialGoal, $user->id);
 
             if (! $sharedRole || ! $sharedRole->hasPermission('destroyFinancialGoalTransaction')) {
                 throw new \Modules\FinancialGoal\Exceptions\FinancialGoalTransactions\UnauthorizedDeleteFinancialGoalTransactionException();
@@ -143,6 +188,14 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
             $this->transactionRepository->destroy($request, $financialGoalTransaction->transaction_id, false);
 
             $financialGoalTransaction->delete();
+
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', [
+                'type'           => 'financial_transaction_deleted',
+                'goalId'         => $financialGoal->id,
+                'amountFallback' => Helpers::formatMoneyWithCurrency($financialGoalTransaction->amount, $financialGoal->currency->code, $financialGoal->currency->symbol, true),
+                'amount'         => $financialGoalTransaction->amount,
+                'date'           => $financialGoalTransaction->date,
+            ]);
 
             if ($financialGoalTransaction->status == 'completed') {
                 $this->financialGoalRepository->reverseContributedAmount($financialGoalTransaction);
@@ -157,9 +210,10 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
         return DB::transaction(function () use ($id, $request) {
             $financialGoalTransaction = $this->show($id);
 
-            $user = $request->user();
+            $user          = $request->user();
+            $financialGoal = $financialGoalTransaction->financialGoal;
 
-            $sharedRole = $financialGoalTransaction->financialGoal->userSharedRole($financialGoalTransaction->financialGoal, $user->id);
+            $sharedRole = $financialGoal->userSharedRole($financialGoal, $user->id);
 
             if (! $sharedRole || ! $sharedRole->hasPermission('confirmScheduledFinancialGoalTransactions')) {
                 throw new \Modules\FinancialGoal\Exceptions\FinancialGoalTransactions\UnauthorizedConfirmFinancialGoalTransactionException();
@@ -174,6 +228,13 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
             $this->transactionRepository->confirm($request, $financialGoalTransaction->transaction_id, false);
 
             $financialGoalTransaction->update(['status' => 'completed']);
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', [
+                'type'           => 'financial_transaction_confirmed',
+                'goalId'         => $financialGoal->id,
+                'amountFallback' => Helpers::formatMoneyWithCurrency($financialGoalTransaction->amount, $financialGoal->currency->code, $financialGoal->currency->symbol, true),
+                'amount'         => $financialGoalTransaction->amount,
+                'date'           => $financialGoalTransaction->date,
+            ]);
 
             $this->financialGoalRepository->adjustContributedAmount($financialGoalTransaction);
 
