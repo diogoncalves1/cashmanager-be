@@ -5,7 +5,9 @@ use App\Repositories\RepositoryApiInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Repositories\TransactionRepository;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Category\Repositories\CategoryRepository;
 use Modules\Debts\Entities\DebtPayment;
 use Modules\Debts\Entities\DebtPaymentView;
@@ -26,7 +28,7 @@ class DebtPaymentRepository implements RepositoryApiInterface
     private TransactionRepository $transactionRepo;
     private CategoryRepository $categoryRepo;
 
-    public function __construct(DebtRepository $debtRepository, TransactionRepository $transactionRepo, CategoryRepository $categoryRepo)
+    public function __construct(DebtRepository $debtRepository, TransactionRepository $transactionRepo, CategoryRepository $categoryRepo, protected ActivityLogRepository $activityRepo)
     {
         $this->debtRepository  = $debtRepository;
         $this->transactionRepo = $transactionRepo;
@@ -78,6 +80,16 @@ class DebtPaymentRepository implements RepositoryApiInterface
 
             $debtPayment = DebtPayment::create($input);
 
+            $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', [
+                'type'               => $input['status'] == 'completed' ? 'payment_added' : 'payment_scheduled',
+                'date'               => $input['date'],
+                'amount'             => $input['amount'],
+                'interest_rate'      => $input['interest_rate'],
+                'is_monthly_payment' => $input['is_monthly_payment'],
+                'debtId'             => $debt->id,
+                'amountFallback'     => Helpers::formatMoneyWithCurrency($input['amount'], $debt->currency->code, $debt->currency->symbol, true),
+            ]);
+
             if ($this->checkStatus($debtPayment, 'completed')) {
                 $this->debtRepository->adjustDebtForPaymentStore($debtPayment);
             }
@@ -105,13 +117,52 @@ class DebtPaymentRepository implements RepositoryApiInterface
 
             $this->transactionRepo->update($request, $debtPayment->transaction_id);
 
-            $input = $request->only(['date', 'amount', 'description', 'interest_rate', 'is_monthly_payment']);
+            $input            = $request->only(['date', 'amount', 'description', 'interest_rate', 'is_monthly_payment']);
+            $isMonthlyPayment = $debtPayment->is_monthly_payment;
 
-            if ($this->checkStatus($debtPayment, 'completed')) {
-                $this->debtRepository->updatePaidAmount($debtPayment, $debtPayment->amount, $request->get('amount'), $debtPayment->interest_rate, $request->get('interest_rate'), $request->get("is_monthly_payment"));
+            $old     = $debtPayment->only(['date', 'amount', 'description', 'interest_rate', 'is_monthly_payment']);
+            $changes = [];
+
+            foreach ($input as $field => $value) {
+
+                if ($old[$field] != $value) {
+
+                    $values = [
+                        'old' => $old[$field],
+                        'new' => $value,
+                    ];
+
+                    if ($field == 'amount') {
+                        $values['subjectId']    = $debt->id;
+                        $values['oldFallback']  = Helpers::formatMoneyWithCurrency($old[$field], $debt->currency->code, $debt->currency->symbol, true);
+                        $values['newFallback']  = Helpers::formatMoneyWithCurrency($value, $debt->currency->code, $debt->currency->symbol, true);
+                        $values['formatAmount'] = true;
+                    }
+                    if ($field == 'is_monthly_payment') {
+                        $values['old'] = __("debts::attributes.debt-payments.is-monthly-payment." . ($old[$field] ? 'yes' : 'no'));
+                        $values['new'] = __("debts::attributes.debt-payments.is-monthly-payment." . ($value ? 'yes' : 'no'));
+                    }
+                    $changes[$field] = $values;
+                }
             }
 
             $debtPayment->update($input);
+
+            if (! empty($changes)) {
+                $this->activityRepo->storeActivity(
+                    $debt->id,
+                    $user->id,
+                    'debt',
+                    [
+                        'type'    => 'payment_updated',
+                        'changes' => $changes,
+                    ]
+                );
+            }
+
+            if ($this->checkStatus($debtPayment, 'completed')) {
+                $this->debtRepository->updatePaidAmount($debtPayment, $isMonthlyPayment, $request->get("is_monthly_payment"));
+            }
 
             return $debtPayment;
         });
@@ -135,6 +186,14 @@ class DebtPaymentRepository implements RepositoryApiInterface
             $this->transactionRepo->destroy($request, $debtPayment->transaction_id, false);
 
             $debtPayment->delete();
+
+            $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', [
+                'type'           => 'payment_deleted',
+                'debtId'         => $debt->id,
+                'amountFallback' => Helpers::formatMoneyWithCurrency($debtPayment->amount, $debt->currency->code, $debt->currency->symbol, true),
+                'amount'         => $debtPayment->amount,
+                'date'           => $debtPayment->date,
+            ]);
 
             if ($debtPayment->status == 'completed') {
                 $this->debtRepository->reversePaidAmount($debtPayment);
@@ -171,6 +230,14 @@ class DebtPaymentRepository implements RepositoryApiInterface
             $this->transactionRepo->confirm($request, $debtPayment->transaction_id);
 
             $debtPayment->update(['status' => 'completed']);
+
+            $this->activityRepo->storeActivity($debt->id, $user->id, 'debt', [
+                'type'           => 'payment_confirmed',
+                'debtId'         => $debt->id,
+                'amountFallback' => Helpers::formatMoneyWithCurrency($debtPayment->amount, $debt->currency->code, $debt->currency->symbol, true),
+                'amount'         => $debtPayment->amount,
+                'date'           => $debtPayment->date,
+            ]);
 
             $this->debtRepository->adjustDebtForPaymentStore($debtPayment);
 

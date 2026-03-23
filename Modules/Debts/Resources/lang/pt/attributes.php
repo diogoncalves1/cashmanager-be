@@ -16,9 +16,14 @@ return [
     ],
 
     'debt-payments'     => [
-        'status' => [
+        'status'             => [
             'completed' => 'Concluído',
             'pending'   => 'Agendado',
+        ],
+
+        'is-monthly-payment' => [
+            'yes' => 'sim',
+            'no'  => 'não',
         ],
     ],
 ];

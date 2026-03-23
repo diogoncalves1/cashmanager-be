@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
 use Modules\ActivityLog\Repositories\ActivityLogRepository;
+use Modules\Currency\Repositories\CurrencyRepository;
 use Modules\Debts\Core\Helpers as CoreHelpers;
 use Modules\FinancialGoal\Entities\FinancialGoal;
 use Modules\FinancialGoal\Entities\FinancialGoalBasicView;
@@ -28,7 +29,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
     protected SharedRoleRepository $sharedRoleRepository;
     protected ActivityLogRepository $activityRepo;
 
-    public function __construct(SharedRoleRepository $sharedRoleRepository, ActivityLogRepository $activityRepo)
+    public function __construct(SharedRoleRepository $sharedRoleRepository, ActivityLogRepository $activityRepo, protected CurrencyRepository $currencyRepo)
     {
         $this->sharedRoleRepository = $sharedRoleRepository;
         $this->activityRepo         = $activityRepo;
@@ -70,7 +71,13 @@ class FinancialGoalRepository implements RepositoryApiInterface
             ];
 
             FinancialGoalUser::create($inputUser);
-            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', ['type' => 'goal_created', 'initialTarget' => $input['total_amount'], 'currencyCode' => $financialGoal->currency->code, 'currencySymbol' => $financialGoal->currency->symbol]);
+
+            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', [
+                'type'                  => 'goal_created',
+                'goalId'                => $financialGoal->id,
+                'initialTarget'         => $input['total_amount'],
+                'initialTargetFallback' => Helpers::formatMoneyWithCurrency($input['total_amount'], $financialGoal->currency->code, $financialGoal->currency->symbol, true),
+                'currencyId'            => $input['currency_id']]);
 
             return $financialGoal;
         });
@@ -114,11 +121,54 @@ class FinancialGoalRepository implements RepositoryApiInterface
             if (! $sharedRole || ! $sharedRole->hasPermission('updateFinancialGoal')) {
                 throw new UnauthorizedUpdateFinancialGoal();
             }
+
             // TODO: Criar uma notificacao no frontend
             // if ($request->get('total_amount') < $financialGoal->contributed_amount) {
             // }
 
+            $old = $financialGoal->only(['name', 'total_amount', 'currency_id', 'start_date', 'due_date', 'description', 'priority']);
+
+            $changes = [];
+
+            foreach ($input as $field => $value) {
+
+                if ($old[$field] != $value) {
+
+                    $values = [
+                        'old' => $old[$field],
+                        'new' => $value,
+                    ];
+                    if ($field == 'priority') {
+                        $values['old'] = __('financialgoal::attributes.financial-goals.priority.' . $old[$field]);
+                        $values['new'] = __('financialgoal::attributes.financial-goals.priority.' . $value);
+                    }
+                    if ($field == 'total_amount') {
+                        $values['subjectId']    = $financialGoal->id;
+                        $values['oldFallback']  = Helpers::formatMoneyWithCurrency($old[$field], $financialGoal->currency->code, $financialGoal->currency->symbol, true);
+                        $values['newFallback']  = Helpers::formatMoneyWithCurrency($value, $financialGoal->currency->code, $financialGoal->currency->symbol, true);
+                        $values['formatAmount'] = true;
+                    }
+                    if ($field == 'currency_id') {
+                        $values['oldFallback'] = $this->currencyRepo->show($old[$field])->name->{$user->preferences->lang};
+                        $values['newFallback'] = $this->currencyRepo->show($value)->name->{$user->preferences->lang};
+                    }
+                    $changes[$field] = $values;
+                }
+            }
+
             $financialGoal->update($input);
+
+            if (! empty($changes)) {
+                $this->activityRepo->storeActivity(
+                    $financialGoal->id,
+                    $user->id,
+                    'financial_goal',
+                    [
+                        'type'    => 'goal_updated',
+                        'changes' => $changes,
+                    ]
+                );
+            }
 
             return $financialGoal;
         });
@@ -138,6 +188,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             }
 
             $financialGoal->delete();
+            $this->activityRepo->destroyByType($financialGoal->id, 'financial_goal');
 
             return $financialGoal;
         });
@@ -161,7 +212,12 @@ class FinancialGoalRepository implements RepositoryApiInterface
             $financialGoal->canceled_at = Carbon::now();
             $this->setStatus($financialGoal, 'canceled');
 
-            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', ['type' => 'goal_paused']);
+            $this->activityRepo->storeActivity(
+                $financialGoal->id,
+                $user->id,
+                'financial_goal',
+                ['type' => 'goal_status_updated', 'status' => $financialGoal->status]
+            );
 
             return $financialGoal;
         });
@@ -187,7 +243,13 @@ class FinancialGoalRepository implements RepositoryApiInterface
             }
             $financialGoal->completed_at = Carbon::now();
             $this->setStatus($financialGoal, 'completed');
-            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', ['type' => 'goal_completed']);
+
+            $this->activityRepo->storeActivity(
+                $financialGoal->id,
+                $user->id,
+                'financial_goal',
+                ['type' => 'goal_status_updated', 'status' => $financialGoal->status]
+            );
 
             return $financialGoal;
         });
@@ -212,7 +274,13 @@ class FinancialGoalRepository implements RepositoryApiInterface
             $financialGoal->canceled_at  = null;
             $financialGoal->completed_at = null;
             $this->setStatus($financialGoal, 'in_progress');
-            $this->activityRepo->storeActivity($financialGoal->id, $user->id, 'financial_goal', ['type' => 'goal_reseted']);
+
+            $this->activityRepo->storeActivity(
+                $financialGoal->id,
+                $user->id,
+                'financial_goal',
+                ['type' => 'goal_status_updated', 'status' => $financialGoal->status]
+            );
 
             return $financialGoal;
         });

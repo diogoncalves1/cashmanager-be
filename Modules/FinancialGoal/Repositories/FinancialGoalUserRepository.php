@@ -47,7 +47,7 @@ class FinancialGoalUserRepository
             }
 
             $relation = $this->destroy($userId, $id);
-            $this->activityRepo->storeActivity($id, $user->id, 'financial_goal', ['type' => 'user_removed', 'userId' => $userId, 'role' => $sharedRoleInvite->code]);
+            $this->activityRepo->storeActivity($id, $user->id, 'financial_goal', ['type' => 'user_revoked', 'userId' => $userId]);
 
             return $relation;
         });
@@ -84,6 +84,7 @@ class FinancialGoalUserRepository
             $input = $request->only(["shared_role_id"]);
 
             $relation = $this->update($userId, $id, $input);
+            $this->activityRepo->storeActivity($id, $user->id, 'financial_goal', ['type' => 'user_role_updated', 'userId' => $userId, 'sharedRoleId' => $input['shared_role_id']]);
 
             return $relation;
         });
@@ -105,6 +106,7 @@ class FinancialGoalUserRepository
             }
 
             $relation = $this->destroy($user->id, $id);
+            $this->activityRepo->storeActivity($id, $user->id, 'financial_goal', ['type' => 'user_leaved', 'userId' => $user->id]);
 
             return $relation;
         });

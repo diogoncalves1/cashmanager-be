@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -33,6 +32,7 @@ return new class extends Migration
                 dp.status AS status,
                 dp.description AS description,
                 dp.interest_rate AS interestRate,
+                dp.interest_paid AS interestPaid,
                 dp.is_monthly_payment AS isMonthlyPayment
 
                 FROM debt_payments AS dp
@@ -52,6 +52,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('debt_payments_view');
+        DB::statement("DROP VIEW IF EXISTS debt_payments_view");
     }
 };

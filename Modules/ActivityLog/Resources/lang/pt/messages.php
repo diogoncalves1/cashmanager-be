@@ -50,6 +50,12 @@ return [
             'debt_updated'        => 'Dívida atualizada',
             'debt_status_updated' => 'Estado atualizado',
 
+            'payment_added'       => 'Pagamento adicionado',
+            'payment_scheduled'   => 'Pagamento agendado',
+            'payment_updated'     => 'Pagamento atualizado',
+            'payment_deleted'     => 'Pagamento apagado',
+            'payment_confirmed'   => 'Pagamento confirmado',
+
             'user_invited'        => 'Utilizador convidado',
             'user_joined'         => 'Utilizador novo',
             'invited_destroyed'   => 'Convite apagado',
@@ -64,6 +70,12 @@ return [
             'debt_updated'        => 'Conta atualizada: :changes',
             'debt_status_updated' => 'Estado atualizado para: :status',
 
+            'payment_added'       => 'Pagamento adicionado no dia :date com o valor de :amount, com taxa de juro de :interest_rate%. Foi um pagamento mensal: :is_monthly_payment',
+            'payment_scheduled'   => 'Pagamento agendado para dia :date com o valor de :amount, com taxa de juro de :interest_rate%. Será um pagamento mensal: :is_monthly_payment',
+            'payment_updated'     => 'Pagamento atualizado: :changes',
+            'payment_deleted'     => 'Pagamento com valor de :amount de dia :date foi apagado',
+            'payment_confirmed'   => 'Pagamento com valor de :amount agendado para :date foi confirmado',
+
             'user_invited'        => ':userName convidado como :roleName',
             'user_joined'         => 'Utilizador :userName entrou na dívida como :roleName',
             'invited_destroyed'   => 'Convite para :userName apagado',
@@ -76,35 +88,43 @@ return [
     // Financial Goals
     'financial_goal' => [
         'titles'   => [
-            'goal_created'       => 'Meta criada',
-            'goal_paused'        => 'Meta cancelada',
-            'contribution_added' => 'Contribuíção adicionada',
-            'goal_reseted'       => 'Meta resetada',
-            'goal_completed'     => 'Meta completada',
+            'goal_created'                    => 'Meta criada',
+            'goal_updated'                    => 'Meta atualizada',
+            'goal_status_updated'             => 'Estado atualizado',
 
-            'user_invited'       => 'Utilizador convidado',
-            'user_joined'        => 'Utilizador novo',
-            'invited_destroyed'  => 'Convite apagado',
-            'invited_revoked'    => 'Convite recusado',
-            'invited_revoked'    => 'Membro removido',
-            'user_role_updated'  => 'Papel de membro atualizado',
-            'user_leaved'        => 'Utilizador saiu',
+            'financial_transaction_added'     => 'Transação adicionada',
+            'financial_transaction_scheduled' => 'Transação agendada',
+            'financial_transaction_updated'   => 'Transação atualizada',
+            'financial_transaction_deleted'   => 'Transação apagada',
+            'financial_transaction_confirmed' => 'Transação confirmada',
+
+            'user_invited'                    => 'Utilizador convidado',
+            'user_joined'                     => 'Utilizador novo',
+            'invited_destroyed'               => 'Convite apagado',
+            'invited_revoked'                 => 'Convite recusado',
+            'invited_revoked'                 => 'Membro removido',
+            'user_role_updated'               => 'Papel de membro atualizado',
+            'user_leaved'                     => 'Utilizador saiu',
 
         ],
 
         'messages' => [
-            'goal_created'       => 'Meta inicial: :initialTarget',
-            'contribution_added' => 'Contribuíção adicionada do valor de :amount da conta :accountName',
-            'goal_paused'        => 'A meta financeira foi cancelada',
-            'goal_reseted'       => 'A meta financeira voltou a estar pendente',
-            'goal_completed'     => 'A meta financeira foi completa',
+            'goal_created'                    => 'Meta inicial: :initialTarget',
+            'goal_updated'                    => 'Meta atualizada: :changes',
+            'goal_status_updated'             => 'Estado atualizado para: :status',
 
-            'user_invited'       => ':userName convidado como :roleName',
-            'user_joined'        => 'Utilizador :userName entrou na meta financeira como :roleName',
-            'invited_destroyed'  => 'Convite para :userName apagado',
-            'invited_revoked'    => ':userName foi removido',
-            'user_role_updated'  => 'Papel de :userName foi atualizado para :roleName',
-            'user_leaved'        => ':userName saiu da meta financeira',
+            'financial_transaction_added'     => ':type adicionada no dia :date com o valor de :amount',
+            'financial_transaction_scheduled' => ':type agendada para dia :date com o valor de :amount',
+            'financial_transaction_updated'   => 'Transação atualizada: :changes',
+            'financial_transaction_deleted'   => 'Transação com valor de :amount foi apagada',
+            'financial_transaction_confirmed' => 'Transação com valor de :amount agendada para :date foi confirmada',
+
+            'user_invited'                    => ':userName convidado como :roleName',
+            'user_joined'                     => 'Utilizador :userName entrou na meta financeira como :roleName',
+            'invited_destroyed'               => 'Convite para :userName apagado',
+            'invited_revoked'                 => ':userName foi removido',
+            'user_role_updated'               => 'Papel de :userName foi atualizado para :roleName',
+            'user_leaved'                     => ':userName saiu da meta financeira',
 
         ],
     ],

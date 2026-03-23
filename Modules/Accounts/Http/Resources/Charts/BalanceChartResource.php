@@ -3,7 +3,6 @@ namespace Modules\Accounts\Http\Resources\Charts;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Modules\Accounts\Core\Helpers;
 
 class BalanceChartResource extends JsonResource
 {
@@ -14,9 +13,8 @@ class BalanceChartResource extends JsonResource
     {
         return [
             'date'              => $this->date,
-            'amount'            => $this->amount,
+            'amount'            => (float) $this->amount,
             'transactionAmount' => (float) $this->transactionAmount,
-            'amountFormated'    => Helpers::formatMoneyWithCurrency($this->amount, $this->currencyCode, $this->currencySymbol),
         ];
     }
 }

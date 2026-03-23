@@ -19,6 +19,7 @@ class AccountIndividualDataResource extends JsonResource
             'revenuesVsLastMonth' => CoreHelpers::percentage($this['lastMonthRevenues'] ?? 0, $this['monthlyRevenues'] ?? 0),
             'expensesVsLastMonth' => CoreHelpers::percentage($this['lastMonthExpenses'] ?? 0, $this['monthlyExpenses'] ?? 0),
             'balanceVsLastMonth'  => CoreHelpers::percentage($this['balanceLastMonth'] ?? 0, $this['balance'] ?? 0),
+            'balanceLastMonth'    => $this['balanceLastMonth'],
             'lastMonthRevenue'    => Helpers::formatMoneyWithCurrency($this['lastMonthRevenues'] ?? 0, $this['currencyCode'] ?? $this->currencyCode, $this['currencySymbol'] ?? $this->currencySymbol, true),
             'lastMonthExpenses'   => Helpers::formatMoneyWithCurrency($this['lastMonthExpenses'] ?? 0, $this['currencyCode'] ?? $this->currencyCode, $this['currencySymbol'] ?? $this->currencySymbol, true),
         ];
