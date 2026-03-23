@@ -13,7 +13,7 @@ class BalanceChartResource extends JsonResource
     {
         return [
             'date'              => $this->date,
-            'amount'            => $this->amount,
+            'amount'            => (float) $this->amount,
             'transactionAmount' => (float) $this->transactionAmount,
         ];
     }
