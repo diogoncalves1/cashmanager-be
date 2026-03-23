@@ -290,29 +290,34 @@ class FinancialGoalRepository implements RepositoryApiInterface
     {
         return FinancialGoal::findOrFail($id);
     }
-
     public function showMonthlyResume(int $id)
     {
-        return FinancialGoalTransaction::query()
-            ->join("financial_goals", "financial_goals.id", "=", "financial_goal_transactions.financial_goal_id")
+
+        $monthlyTotals = FinancialGoalTransaction::query()
+            ->join('financial_goals', 'financial_goals.id', '=', 'financial_goal_transactions.financial_goal_id')
             ->selectRaw("
-                            CONCAT(MONTH(financial_goal_transactions.date), ' ', YEAR(financial_goal_transactions.date)) as monthYear,
-                            SUM(
-                                SUM(
-                                    CASE
-                                        WHEN financial_goal_transactions.type = 'contribution'
-                                        THEN (financial_goal_transactions.amount)
-                                        ELSE -(financial_goal_transactions.amount)
-                                    END
-                                )
-                            ) OVER (ORDER BY MIN(financial_goal_transactions.date)) as balance
-                        ")
+            DATE_FORMAT(financial_goal_transactions.date, '%Y-%m') as monthYear,
+            SUM(
+                CASE
+                    WHEN financial_goal_transactions.type = 'contribution'
+                    THEN financial_goal_transactions.amount
+                    ELSE -financial_goal_transactions.amount
+                END
+            ) as month_total
+        ")
             ->financialGoal($id)
             ->where('financial_goal_transactions.status', 'completed')
-            ->groupByRaw("monthYear")
-            ->orderByRaw("MIN(financial_goal_transactions.date)")
+            ->groupByRaw('DATE_FORMAT(financial_goal_transactions.date, "%Y-%m")')
+            ->orderByRaw('DATE_FORMAT(financial_goal_transactions.date, "%Y-%m")')
             ->get();
 
+        $runningBalance = 0;
+        foreach ($monthlyTotals as $row) {
+            $runningBalance += $row->month_total;
+            $row->balance    = $runningBalance;
+        }
+
+        return $monthlyTotals;
     }
 
     // Extra methods

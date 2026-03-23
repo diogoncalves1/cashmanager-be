@@ -325,28 +325,31 @@ class AccountRepository implements RepositoryApiInterface
 
     public function getAccountIndividualData(AccountsView $account)
     {
-        $monthlyRevenues = (float) $account->transactionsView()
+        $monthlyRevenues = (float) $account->transactions()
             ->where('type', 'revenue')
             ->where('status', 'completed')
             ->whereRaw("MONTH(date) = ?", [date("m")])
             ->whereRaw("YEAR(date) = ?", [date("Y")])
             ->sum('amount');
 
-        $monthlyExpenses = (float) $account->transactionsView()
+        $monthlyExpenses = (float) $account->transactions()
             ->where('type', 'expense')
             ->where('status', 'completed')
             ->whereRaw("MONTH(date) = ?", [date("m")])
+            ->whereRaw("YEAR(date) = ?", [date("Y")])
             ->sum('amount');
 
-        $lastMonthExpenses = (float) $account->transactionsView()
+        $lastMonthExpenses = (float) $account->transactions()
             ->where('type', 'expense')
             ->where('status', 'completed')
             ->whereRaw("MONTH(date) = ?", [date("m", strtotime("-1 month"))])
+            ->whereRaw("YEAR(date) = ?", [date("Y", strtotime("-1 month"))])
             ->sum('amount');
-        $lastMonthRevenues = (float) $account->transactionsView()
+        $lastMonthRevenues = (float) $account->transactions()
             ->where('type', 'revenue')
             ->where('status', 'completed')
             ->whereRaw("MONTH(date) = ?", [date("m", strtotime("-1 month"))])
+            ->whereRaw("YEAR(date) = ?", [date("Y", strtotime("-1 month"))])
             ->sum('amount');
 
         return [
@@ -368,35 +371,33 @@ class AccountRepository implements RepositoryApiInterface
             'annualy'   => 365,
         ];
 
+        // Step 1: Query daily totals only (no running sum in SQL)
         $dailyTotals = Transaction::query()
             ->account($id)
             ->status('completed')
             ->selectRaw("
-                DATE(date) AS date,
-                SUM(CASE WHEN type = 'revenue' THEN amount ELSE -amount END) AS transactionAmount,
-                SUM(
-                    SUM(
-                        CASE
-                            WHEN type = 'revenue' THEN amount
-                            ELSE -amount
-                        END
-                    )
-                ) OVER (ORDER BY DATE(date)) AS cumulative
+            DATE(date) AS date,
+            SUM(CASE WHEN type = 'revenue' THEN amount ELSE -amount END) AS transactionAmount
         ")
             ->groupByRaw('DATE(date)')
             ->orderBy('date')
             ->get();
 
+        // Step 2: Compute cumulative in PHP
+        $cumulative = 0;
+        foreach ($dailyTotals as $row) {
+            $cumulative      += $row->transactionAmount;
+            $row->cumulative  = $cumulative;
+        }
+
+        // Step 3: Build chart data by period
         $charts = [];
-
         foreach ($periods as $period => $days) {
-
             $startDate = Helpers::getOldDate($days)->format('Y-m-d');
 
             $transactions = $dailyTotals->where('date', '>=', $startDate);
 
             $charts[$period] = $transactions->map(function ($row) {
-
                 return (object) [
                     'date'              => $row->date,
                     'transactionAmount' => $row->transactionAmount,
