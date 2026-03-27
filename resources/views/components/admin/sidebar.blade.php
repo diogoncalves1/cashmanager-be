@@ -131,18 +131,42 @@
                                 </li>
                             @endcan
 
+                            @if (Auth::user()->can('authorization', 'viewEmailLayout'))
+                                <li class="nav-item has-treeview {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'settings') ? 'menu-open' : '' !!}">
+                                    <a href="#" class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'settings') ? 'active' : '' !!}">
+                                        <i class="nav-icon fas fa-cogs"></i>
+                                        <p>
+                                            Definições
+                                            <i class="fas fa-angle-left right"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview">
 
+                                        @can('authorization', 'viewEmailLayout')
+                                            <li class="nav-item">
+                                                <a href="{{ route('admin.settings.emailLayouts.index') }}"
+                                                    class="nav-link {!! Str::contains(\Request::route()->getName(), 'settings.emailLayouts') ? 'active' : '' !!}">
+                                                    <i class="far fa-columns nav-icon"></i>
+                                                    <p>Layouts de Email</p>
+                                                </a>
+                                            </li>
+                                        @endcan
+                                    </ul>
+                                </li>
+                            @endif
 
                             @can('authorization', 'superAdmin')
                                 <li class="nav-header">SUPER ADMIN</li>
                                 <li class="nav-item {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') ||
                                 Illuminate\Support\Str::contains(\Request::route()->getName(), 'languages') ||
-                                Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions')
+                                Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions') ||
+                                Illuminate\Support\Str::contains(\Request::route()->getName(), 'emailTypes')
                                     ? 'menu-open'
                                     : '' !!} ">
                                     <a href="#" class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'permissions') ||
                                     Illuminate\Support\Str::contains(\Request::route()->getName(), 'languages') ||
-                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions')
+                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'shared-permissions') ||
+                                    Illuminate\Support\Str::contains(\Request::route()->getName(), 'emailTypes')
                                         ? 'active'
                                         : '' !!} ">
                                         <i class="nav-icon fas fa-user-shield"></i>
@@ -171,6 +195,13 @@
                                                 <p>
                                                     Permissões de Partilha
                                                 </p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{{ route('admin.emailTypes.index') }}"
+                                                class="nav-link {!! Str::contains(\Request::route()->getName(), 'emailTypes') ? 'active' : '' !!}">
+                                                <i class="far fa-envelope nav-icon"></i>
+                                                <p>Tipos de Emails</p>
                                             </a>
                                         </li>
                                         <li class="nav-item">
