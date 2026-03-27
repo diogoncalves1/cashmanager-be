@@ -315,6 +315,7 @@ class AccountRepository implements RepositoryApiInterface
                 MAX(currencySymbol) AS currencySymbol
             ")
                 ->groupByRaw("categoryId")
+                ->orderBy('value', 'desc')
                 ->where('categoryType', 'expense')
                 ->get(),
             'total'         => $total,
