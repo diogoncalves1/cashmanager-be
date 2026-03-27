@@ -30,17 +30,3 @@ Route::group(['prefix' => '', 'as' => 'admin.', 'middleware' => ['auth' /*, 'adm
     Route::resource('emailTypes', 'EmailTypeController', ['except' => ['show']]);
 
 });
-
-Route::group(['prefix' => 'v2', 'as' => 'v2.', 'middleware' => ['auth' /*, 'admin'*/]], function () {
-    Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
-        /**
-         * EmailLayouts
-         */
-        Route::group(['prefix' => 'emailLayouts', 'as' => 'emailLayouts.'], function () {
-            Route::get('/create/{id}', ['as' => 'create', 'uses' => 'EmailLayoutController@create']);
-        });
-        Route::resource('emailLayouts', 'EmailLayoutController',
-            ['except' => ['show', 'create', 'store']]);
-    });
-
-});
