@@ -1,39 +1,39 @@
 <?php
-namespace Modules\ApiResponder\Services;
+namespace App\Services;
 
 use Illuminate\Http\JsonResponse;
 
 class ApiResponse
 {
-    public static function success($data = null, string $message = '', int $code = 200, $additionals = null): JsonResponse
+    public static function success($data = null, string $message = '', int $code = 200, $meta = null): JsonResponse
     {
-        $data = [
+        $payload = [
             'success' => true,
             'message' => $message,
             'data'    => $data,
             'errors'  => null,
         ];
 
-        if ($additionals !== null) {
-            $data['additionals'] = $additionals;
+        if ($meta !== null) {
+            $payload['meta'] = $meta;
         }
 
-        return response()->json($data, $code);
+        return response()->json($payload, $code);
     }
 
-    public static function error(string $message, $errors = null, int $code = 400, $additionals = null): JsonResponse
+    public static function error(string $message, $errors = null, int $code = 400, $meta = null): JsonResponse
     {
-        $data = [
+        $payload = [
             'success' => false,
             'message' => $message,
             'data'    => null,
             'errors'  => $errors,
         ];
 
-        if ($additionals !== null) {
-            $data['additionals'] = $additionals;
+        if ($meta !== null) {
+            $payload['meta'] = $meta;
         }
 
-        return response()->json($data, $code);
+        return response()->json($payload, $code);
     }
 }
