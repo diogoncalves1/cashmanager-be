@@ -1,5 +1,5 @@
 <?php
-namespace App\Traits;
+namespace Modules\ApiResponder\Traits;
 
 use App\Services\ApiResponse;
 

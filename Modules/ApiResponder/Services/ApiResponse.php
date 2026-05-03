@@ -1,5 +1,5 @@
 <?php
-namespace App\Services;
+namespace Modules\ApiResponder\Services;
 
 use Illuminate\Http\JsonResponse;
 
