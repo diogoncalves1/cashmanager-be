@@ -1,7 +1,7 @@
 <?php
 namespace Modules\ApiResponder\Traits;
 
-use App\Services\ApiResponse;
+use Modules\ApiResponder\Services\ApiResponse;
 
 trait RespondsWithApi
 {
