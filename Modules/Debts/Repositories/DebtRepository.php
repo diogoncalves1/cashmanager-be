@@ -106,8 +106,8 @@ class DebtRepository implements RepositoryApiInterface
                     }
                     if ($field == 'total_amount' || 'monthly_amount') {
                         $values['subjectId']    = $debt->id;
-                        $values['oldFallback']  = Helpers::formatMoneyWithCurrency($old[$field], $debt->currency->code, $debt->currency->symbol, true);
-                        $values['newFallback']  = Helpers::formatMoneyWithCurrency($value, $debt->currency->code, $debt->currency->symbol, true);
+                        $values['oldFallback']  = Helpers::formatMoneyWithCurrency((float) $old[$field], $debt->currency->code, $debt->currency->symbol, true);
+                        $values['newFallback']  = Helpers::formatMoneyWithCurrency((float) $value, $debt->currency->code, $debt->currency->symbol, true);
                         $values['formatAmount'] = true;
                     }
                     if ($field == 'currency_id') {

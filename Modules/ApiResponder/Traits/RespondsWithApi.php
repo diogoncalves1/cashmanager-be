@@ -12,7 +12,7 @@ trait RespondsWithApi
 
     protected function fail(string $message, $errors = null, mixed $code = 400, $additionals = null)
     {
-        return ApiResponse::error($message, $errors, $this->normalizeStatus($code, 200), $additionals);
+        return ApiResponse::error($message, $errors, $this->normalizeStatus($code, 500), $additionals);
     }
 
     private function normalizeStatus(mixed $code, int $default): int

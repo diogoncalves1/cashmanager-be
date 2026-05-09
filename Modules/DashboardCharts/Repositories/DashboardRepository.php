@@ -46,25 +46,27 @@ class DashboardRepository
         $totalPercentage = CoreHelpers::calcVarPercentage($oldUserTotal, $userTotal);
         $totalClasses    = CoreHelpers::getClasses($totalPercentage);
 
-        $userTotal     = Helpers::formatMoneyWithSymbol($userTotal);
-        $totalRevenues = Helpers::formatMoneyWithSymbol($totalRevenues);
-        $totalExpenses = Helpers::formatMoneyWithSymbol($totalExpenses);
+        $userTotal             = Helpers::formatMoneyWithSymbolAndCurrency($userTotal, $currency->code, $currency->symbol);
+        $totalRevenuesFormated = Helpers::formatMoneyWithSymbolAndCurrency($totalRevenues, $currency->code, $currency->symbol);
+        $totalExpensesFormated = Helpers::formatMoneyWithSymbolAndCurrency($totalExpenses, $currency->code, $currency->symbol);
 
         $charts = $this->transactionRepo->getChartsData($request);
 
         $data = [
             'charts'    => $charts,
             'dashboard' => [
-                "revenueClasses"     => $revenueClasses,
-                "totalRevenues"      => $totalRevenues,
-                "totalUser"          => $userTotal,
-                "revenuePercentage"  => $revenuePercentage >= 0 ? '+' . $revenuePercentage : $revenuePercentage,
-                "expensesClasses"    => $expensesClasses,
-                "expensesPercentage" => $expensesPercentage >= 0 ? '+' . $expensesPercentage : $expensesPercentage,
-                "totalExpenses"      => $totalExpenses,
-                "totalClasses"       => $totalClasses,
-                "totalPercentage"    => $totalPercentage >= 0 ? '+' . $totalPercentage : $totalPercentage,
-                "currency"           => $currency,
+                "revenueClasses"        => $revenueClasses,
+                "totalRevenues"         => $totalRevenues,
+                "totalRevenuesFormated" => $totalRevenuesFormated,
+                "totalUser"             => $userTotal,
+                "revenuePercentage"     => $revenuePercentage >= 0 ? '+' . $revenuePercentage : $revenuePercentage,
+                "expensesClasses"       => $expensesClasses,
+                "expensesPercentage"    => $expensesPercentage >= 0 ? '+' . $expensesPercentage : $expensesPercentage,
+                "totalExpenses"         => $totalExpenses,
+                "totalExpensesFormated" => $totalExpensesFormated,
+                "totalClasses"          => $totalClasses,
+                "totalPercentage"       => $totalPercentage >= 0 ? '+' . $totalPercentage : $totalPercentage,
+                "currency"              => $currency,
             ],
         ];
 
