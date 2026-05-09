@@ -25,16 +25,15 @@ class EmailLayoutDataTable extends DataTable
         return datatables()
             ->eloquent($query)
             ->addColumn('subject', fn(EmailType $emailType) => $emailType->emailLayout()->first() ? $emailType->emailLayout()->first()->subject : '')
-            ->addColumn('action', function (EmailType $user) use ($canEdit) {
+            ->addColumn('action', function (EmailType $emailType) use ($canEdit) {
                 $btn = '<div class="hstack gap-2 justify-content-end">';
 
                 if ($canEdit) {
-                    $btn .= '
-                     <a title=\'Editar\' data-toggle="tooltip" data-placement="top"
-                                                          href="' . route('v2.settings.emailLayouts.edit', [$user->id]) . '"
-                                                             class="avatar-text avatar-md">
-                                                             <i class="feather feather-edit"></i>
-                                                         </a>';
+                    $btn .= '<a title=\'Editar\'
+                data-toggle="tooltip" data-placement="top"
+                class="btn btn-default mr-1"
+                href="' . route("admin.settings.emailLayouts.edit", $emailType->id) . '">
+                    <span class="m-l-5"><i class="fa fa-pencil-alt"></i></span></a>';
                 }
                 $btn .= '</div>';
 
@@ -68,19 +67,7 @@ class EmailLayoutDataTable extends DataTable
             ->orderBy(0, 'asc')
             ->renderer('bootstrap')
             ->pagingType('simple_numbers')
-            ->dom(
-                "<'row mb-2'
-                <'col-sm-12 col-md-6'l>
-                <'col-sm-12 col-md-6'f>
-            >
-            <'row'
-                <'col-sm-12'tr>
-            >
-            <'row'
-                <'col-sm-12 col-md-5'i>
-                <'col-sm-12 col-md-7'p>
-            >"
-            )
+            ->dom('Bfrtip')
             ->language('/vendor/datatables-portuguese.json')
             ->drawCallback(" function () {
                     $('[data-toggle=\"tooltip\"]').tooltip();

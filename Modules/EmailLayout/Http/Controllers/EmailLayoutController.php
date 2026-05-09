@@ -28,7 +28,7 @@ class EmailLayoutController extends AppController
     {
         $this->allowedAction('viewEmailLayout');
 
-        return $dataTable->render('emaillayout::v2.email_layouts.index');
+        return $dataTable->render('emaillayout::email_layouts.index');
     }
 
     /**
@@ -45,7 +45,7 @@ class EmailLayoutController extends AppController
         }
 
         $emailLayout = $this->repository->showByEmailType($id);
-        return view('emaillayout::v2.email_layouts.edit',
+        return view('emaillayout::email_layouts.edit',
             ['emailLayout' => $emailLayout, 'emailType' => $emailType]);
     }
 

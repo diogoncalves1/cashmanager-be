@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger("debt_id");
             $table->unsignedBigInteger("user_id");
-            $table->unsignedBigInteger("shared_role_id");
+            $table->unsignedBigInteger('shared_role_id')->nullable();
             $table->unsignedBigInteger('invited_by_id');
             $table->enum("status", ["pending", "revoked", "accepted"])->default("pending");
             $table->timestamps();
