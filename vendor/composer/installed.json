@@ -1782,6 +1782,7 @@
         },
         {
             "name": "laravel/sanctum",
+<<<<<<< Updated upstream
             "version": "v4.2.0",
             "version_normalized": "4.2.0.0",
             "source": {
@@ -1793,6 +1794,19 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/laravel/sanctum/zipball/fd6df4f79f48a72992e8d29a9c0ee25422a0d677",
                 "reference": "fd6df4f79f48a72992e8d29a9c0ee25422a0d677",
+=======
+            "version": "v4.3.2",
+            "version_normalized": "4.3.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/sanctum.git",
+                "reference": "2a9bccc18e9907808e0018dd15fa643937886b1e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/sanctum/zipball/2a9bccc18e9907808e0018dd15fa643937886b1e",
+                "reference": "2a9bccc18e9907808e0018dd15fa643937886b1e",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
@@ -1810,7 +1824,11 @@
                 "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^11.3"
             },
+<<<<<<< Updated upstream
             "time": "2025-07-09T19:45:24+00:00",
+=======
+            "time": "2026-04-30T11:46:25+00:00",
+>>>>>>> Stashed changes
             "type": "library",
             "extra": {
                 "laravel": {
@@ -5969,6 +5987,7 @@
         },
         {
             "name": "symfony/clock",
+<<<<<<< Updated upstream
             "version": "v7.3.0",
             "version_normalized": "7.3.0.0",
             "source": {
@@ -5980,6 +5999,19 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/clock/zipball/b81435fbd6648ea425d1ee96a2d8e68f4ceacd24",
                 "reference": "b81435fbd6648ea425d1ee96a2d8e68f4ceacd24",
+=======
+            "version": "v7.4.8",
+            "version_normalized": "7.4.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/clock.git",
+                "reference": "674fa3b98e21531dd040e613479f5f6fa8f32111"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/clock/zipball/674fa3b98e21531dd040e613479f5f6fa8f32111",
+                "reference": "674fa3b98e21531dd040e613479f5f6fa8f32111",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
@@ -5990,7 +6022,11 @@
             "provide": {
                 "psr/clock-implementation": "1.0"
             },
+<<<<<<< Updated upstream
             "time": "2024-09-25T14:21:43+00:00",
+=======
+            "time": "2026-03-24T13:12:05+00:00",
+>>>>>>> Stashed changes
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -6026,7 +6062,11 @@
                 "time"
             ],
             "support": {
+<<<<<<< Updated upstream
                 "source": "https://github.com/symfony/clock/tree/v7.3.0"
+=======
+                "source": "https://github.com/symfony/clock/tree/v7.4.8"
+>>>>>>> Stashed changes
             },
             "funding": [
                 {
@@ -6147,6 +6187,7 @@
         },
         {
             "name": "symfony/css-selector",
+<<<<<<< Updated upstream
             "version": "v7.3.0",
             "version_normalized": "7.3.0.0",
             "source": {
@@ -6158,12 +6199,29 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/css-selector/zipball/601a5ce9aaad7bf10797e3663faefce9e26c24e2",
                 "reference": "601a5ce9aaad7bf10797e3663faefce9e26c24e2",
+=======
+            "version": "v7.4.9",
+            "version_normalized": "7.4.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/css-selector.git",
+                "reference": "b75663ed96cf4756e28e3105476f220f92886cc4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/css-selector/zipball/b75663ed96cf4756e28e3105476f220f92886cc4",
+                "reference": "b75663ed96cf4756e28e3105476f220f92886cc4",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.2"
             },
+<<<<<<< Updated upstream
             "time": "2024-09-25T14:21:43+00:00",
+=======
+            "time": "2026-04-18T13:18:21+00:00",
+>>>>>>> Stashed changes
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -6195,7 +6253,11 @@
             "description": "Converts CSS selectors to XPath expressions",
             "homepage": "https://symfony.com",
             "support": {
+<<<<<<< Updated upstream
                 "source": "https://github.com/symfony/css-selector/tree/v7.3.0"
+=======
+                "source": "https://github.com/symfony/css-selector/tree/v7.4.9"
+>>>>>>> Stashed changes
             },
             "funding": [
                 {
@@ -6369,6 +6431,7 @@
         },
         {
             "name": "symfony/event-dispatcher",
+<<<<<<< Updated upstream
             "version": "v7.3.3",
             "version_normalized": "7.3.3.0",
             "source": {
@@ -6380,6 +6443,19 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/event-dispatcher/zipball/b7dc69e71de420ac04bc9ab830cf3ffebba48191",
                 "reference": "b7dc69e71de420ac04bc9ab830cf3ffebba48191",
+=======
+            "version": "v7.4.9",
+            "version_normalized": "7.4.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/event-dispatcher.git",
+                "reference": "e4a2e29753c7801f7a8340e066cfa788f3bc8101"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/event-dispatcher/zipball/e4a2e29753c7801f7a8340e066cfa788f3bc8101",
+                "reference": "e4a2e29753c7801f7a8340e066cfa788f3bc8101",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
@@ -6396,6 +6472,7 @@
             },
             "require-dev": {
                 "psr/log": "^1|^2|^3",
+<<<<<<< Updated upstream
                 "symfony/config": "^6.4|^7.0",
                 "symfony/dependency-injection": "^6.4|^7.0",
                 "symfony/error-handler": "^6.4|^7.0",
@@ -6405,6 +6482,18 @@
                 "symfony/stopwatch": "^6.4|^7.0"
             },
             "time": "2025-08-13T11:49:31+00:00",
+=======
+                "symfony/config": "^6.4|^7.0|^8.0",
+                "symfony/dependency-injection": "^6.4|^7.0|^8.0",
+                "symfony/error-handler": "^6.4|^7.0|^8.0",
+                "symfony/expression-language": "^6.4|^7.0|^8.0",
+                "symfony/framework-bundle": "^6.4|^7.0|^8.0",
+                "symfony/http-foundation": "^6.4|^7.0|^8.0",
+                "symfony/service-contracts": "^2.5|^3",
+                "symfony/stopwatch": "^6.4|^7.0|^8.0"
+            },
+            "time": "2026-04-18T13:18:21+00:00",
+>>>>>>> Stashed changes
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -6432,7 +6521,11 @@
             "description": "Provides tools that allow your application components to communicate with each other by dispatching events and listening to them",
             "homepage": "https://symfony.com",
             "support": {
+<<<<<<< Updated upstream
                 "source": "https://github.com/symfony/event-dispatcher/tree/v7.3.3"
+=======
+                "source": "https://github.com/symfony/event-dispatcher/tree/v7.4.9"
+>>>>>>> Stashed changes
             },
             "funding": [
                 {
@@ -8092,6 +8185,7 @@
         },
         {
             "name": "symfony/string",
+<<<<<<< Updated upstream
             "version": "v7.3.4",
             "version_normalized": "7.3.4.0",
             "source": {
@@ -8103,12 +8197,31 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/string/zipball/f96476035142921000338bad71e5247fbc138872",
                 "reference": "f96476035142921000338bad71e5247fbc138872",
+=======
+            "version": "v7.4.8",
+            "version_normalized": "7.4.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/string.git",
+                "reference": "114ac57257d75df748eda23dd003878080b8e688"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/string/zipball/114ac57257d75df748eda23dd003878080b8e688",
+                "reference": "114ac57257d75df748eda23dd003878080b8e688",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.2",
+<<<<<<< Updated upstream
                 "symfony/polyfill-ctype": "~1.8",
                 "symfony/polyfill-intl-grapheme": "~1.0",
+=======
+                "symfony/deprecation-contracts": "^2.5|^3.0",
+                "symfony/polyfill-ctype": "~1.8",
+                "symfony/polyfill-intl-grapheme": "~1.33",
+>>>>>>> Stashed changes
                 "symfony/polyfill-intl-normalizer": "~1.0",
                 "symfony/polyfill-mbstring": "~1.0"
             },
@@ -8116,6 +8229,7 @@
                 "symfony/translation-contracts": "<2.5"
             },
             "require-dev": {
+<<<<<<< Updated upstream
                 "symfony/emoji": "^7.1",
                 "symfony/http-client": "^6.4|^7.0",
                 "symfony/intl": "^6.4|^7.0",
@@ -8123,6 +8237,15 @@
                 "symfony/var-exporter": "^6.4|^7.0"
             },
             "time": "2025-09-11T14:36:48+00:00",
+=======
+                "symfony/emoji": "^7.1|^8.0",
+                "symfony/http-client": "^6.4|^7.0|^8.0",
+                "symfony/intl": "^6.4|^7.0|^8.0",
+                "symfony/translation-contracts": "^2.5|^3.0",
+                "symfony/var-exporter": "^6.4|^7.0|^8.0"
+            },
+            "time": "2026-03-24T13:12:05+00:00",
+>>>>>>> Stashed changes
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -8161,7 +8284,11 @@
                 "utf8"
             ],
             "support": {
+<<<<<<< Updated upstream
                 "source": "https://github.com/symfony/string/tree/v7.3.4"
+=======
+                "source": "https://github.com/symfony/string/tree/v7.4.8"
+>>>>>>> Stashed changes
             },
             "funding": [
                 {
@@ -8185,6 +8312,7 @@
         },
         {
             "name": "symfony/translation",
+<<<<<<< Updated upstream
             "version": "v7.3.4",
             "version_normalized": "7.3.4.0",
             "source": {
@@ -8196,13 +8324,30 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/translation/zipball/ec25870502d0c7072d086e8ffba1420c85965174",
                 "reference": "ec25870502d0c7072d086e8ffba1420c85965174",
+=======
+            "version": "v7.4.8",
+            "version_normalized": "7.4.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/translation.git",
+                "reference": "33600f8489485425bfcddd0d983391038d3422e7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/translation/zipball/33600f8489485425bfcddd0d983391038d3422e7",
+                "reference": "33600f8489485425bfcddd0d983391038d3422e7",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.2",
                 "symfony/deprecation-contracts": "^2.5|^3",
                 "symfony/polyfill-mbstring": "~1.0",
+<<<<<<< Updated upstream
                 "symfony/translation-contracts": "^2.5|^3.0"
+=======
+                "symfony/translation-contracts": "^2.5.3|^3.3"
+>>>>>>> Stashed changes
             },
             "conflict": {
                 "nikic/php-parser": "<5.0",
@@ -8221,6 +8366,7 @@
             "require-dev": {
                 "nikic/php-parser": "^5.0",
                 "psr/log": "^1|^2|^3",
+<<<<<<< Updated upstream
                 "symfony/config": "^6.4|^7.0",
                 "symfony/console": "^6.4|^7.0",
                 "symfony/dependency-injection": "^6.4|^7.0",
@@ -8234,6 +8380,21 @@
                 "symfony/yaml": "^6.4|^7.0"
             },
             "time": "2025-09-07T11:39:36+00:00",
+=======
+                "symfony/config": "^6.4|^7.0|^8.0",
+                "symfony/console": "^6.4|^7.0|^8.0",
+                "symfony/dependency-injection": "^6.4|^7.0|^8.0",
+                "symfony/finder": "^6.4|^7.0|^8.0",
+                "symfony/http-client-contracts": "^2.5|^3.0",
+                "symfony/http-kernel": "^6.4|^7.0|^8.0",
+                "symfony/intl": "^6.4|^7.0|^8.0",
+                "symfony/polyfill-intl-icu": "^1.21",
+                "symfony/routing": "^6.4|^7.0|^8.0",
+                "symfony/service-contracts": "^2.5|^3",
+                "symfony/yaml": "^6.4|^7.0|^8.0"
+            },
+            "time": "2026-03-24T13:12:05+00:00",
+>>>>>>> Stashed changes
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -8264,7 +8425,11 @@
             "description": "Provides tools to internationalize your application",
             "homepage": "https://symfony.com",
             "support": {
+<<<<<<< Updated upstream
                 "source": "https://github.com/symfony/translation/tree/v7.3.4"
+=======
+                "source": "https://github.com/symfony/translation/tree/v7.4.8"
+>>>>>>> Stashed changes
             },
             "funding": [
                 {
@@ -8536,6 +8701,7 @@
         },
         {
             "name": "symfony/yaml",
+<<<<<<< Updated upstream
             "version": "v7.3.5",
             "version_normalized": "7.3.5.0",
             "source": {
@@ -8547,20 +8713,43 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/yaml/zipball/90208e2fc6f68f613eae7ca25a2458a931b1bacc",
                 "reference": "90208e2fc6f68f613eae7ca25a2458a931b1bacc",
+=======
+            "version": "v7.4.8",
+            "version_normalized": "7.4.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/yaml.git",
+                "reference": "c58fdf7b3d6c2995368264c49e4e8b05bcff2883"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/c58fdf7b3d6c2995368264c49e4e8b05bcff2883",
+                "reference": "c58fdf7b3d6c2995368264c49e4e8b05bcff2883",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.2",
+<<<<<<< Updated upstream
                 "symfony/deprecation-contracts": "^2.5|^3.0",
+=======
+                "symfony/deprecation-contracts": "^2.5|^3",
+>>>>>>> Stashed changes
                 "symfony/polyfill-ctype": "^1.8"
             },
             "conflict": {
                 "symfony/console": "<6.4"
             },
             "require-dev": {
+<<<<<<< Updated upstream
                 "symfony/console": "^6.4|^7.0"
             },
             "time": "2025-09-27T09:00:46+00:00",
+=======
+                "symfony/console": "^6.4|^7.0|^8.0"
+            },
+            "time": "2026-03-24T13:12:05+00:00",
+>>>>>>> Stashed changes
             "bin": [
                 "Resources/bin/yaml-lint"
             ],
@@ -8591,7 +8780,11 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
+<<<<<<< Updated upstream
                 "source": "https://github.com/symfony/yaml/tree/v7.3.5"
+=======
+                "source": "https://github.com/symfony/yaml/tree/v7.4.8"
+>>>>>>> Stashed changes
             },
             "funding": [
                 {
