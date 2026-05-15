@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Log;
 use Modules\ApiResponder\Traits\RespondsWithApi;
 
 class ApiController extends AppController

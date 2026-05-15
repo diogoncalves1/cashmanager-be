@@ -11,6 +11,7 @@
     "FinancialGoal": true,
     "Friends": true,
     "Language": true,
+    "Notification": true,
     "Permission": true,
     "SharedRoles": true,
     "User": true,
