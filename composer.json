@@ -12,6 +12,7 @@
         "laravel/telescope": "^5.15",
         "laravel/tinker": "^2.10.1",
         "nwidart/laravel-modules": "^12.0",
+        "predis/predis": "^3.4",
         "yajra/laravel-datatables-buttons": "^12.0",
         "yajra/laravel-datatables-html": "^12.6",
         "yajra/laravel-datatables-oracle": "^12.6"

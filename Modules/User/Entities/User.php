@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Modules\Accounts\Entities\AccountsView;
+use Modules\Notification\Entities\UserNotificationPreferences;
 use Modules\Permission\Entities\Role;
 use Modules\UserPreferences\Entities\UserPrefence;
 
@@ -66,6 +67,11 @@ class User extends Authenticatable
     public function preferences()
     {
         return $this->hasOne(UserPrefence::class);
+    }
+
+     public function notificationPreferences()
+    {
+        return $this->hasMany(UserNotificationPreferences::class, 'user_id');
     }
 
     public function getBalance(): float
