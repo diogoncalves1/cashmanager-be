@@ -2,6 +2,7 @@
 namespace Modules\Notification\Services;
 
 use Illuminate\Support\Facades\Cache;
+use Modules\Notification\Entities\BroadcastNotification;
 use Modules\Notification\Entities\Notification;
 
 class NotificationCacheService
@@ -12,11 +13,19 @@ class NotificationCacheService
             "notifications:feed:{$userId}",
             now()->addMinutes(5),
             function () use ($userId) {
-                return Notification::where('user_id', $userId)
+                $userNotifications = Notification::where('user_id', $userId)
                     ->whereNull('archived_at')
                     ->latest()
                     ->take(20)
                     ->get();
+
+                $broadcastNotifications = BroadcastNotification::latest()->take(20)->get();
+
+                return $userNotifications
+                    ->merge($broadcastNotifications)
+                    ->sortByDesc('created_at')
+                    ->take(20)
+                    ->values();
             }
         );
     }

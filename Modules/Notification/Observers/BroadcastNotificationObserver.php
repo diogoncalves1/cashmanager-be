@@ -20,9 +20,7 @@ class BroadcastNotificationObserver
                 $query->whereIn('code', ['admin', 'superAdmin']);
             })
                 ->chunkById($chunkSize, function ($users) use ($broadcastNotification, &$delay) {
-
                     foreach ($users as $user) {
-
                         SendNotificationEmailJob::dispatch($user, $broadcastNotification)
                             ->onQueue('emails')
                             ->delay(now()->addSeconds($delay));

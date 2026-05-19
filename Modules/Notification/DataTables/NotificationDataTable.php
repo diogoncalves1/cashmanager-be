@@ -3,6 +3,7 @@ namespace Modules\Notification\DataTables;
 
 use Illuminate\Support\Facades\Auth;
 use Modules\Notification\Actions\NotificationType\RenderNotificationTemplateAction;
+use Modules\Notification\Entities\BroadcastNotification;
 use Modules\Notification\Entities\Notification;
 use Yajra\DataTables\Services\DataTable;
 
@@ -48,11 +49,15 @@ class NotificationDataTable extends DataTable
 
     public function query(Notification $model)
     {
-        return $model->newQuery()
-            ->where("user_id", Auth::id())
-            ->whereNull("archived_at")
-            ->orderByDesc("created_at")
-            ->orderByDesc('id');
+        $userNotifications = $model->newQuery()
+            ->where('user_id', Auth::id())
+            ->whereNull('archived_at');
+
+        $broadcastNotifications = BroadcastNotification::query();
+
+        return $userNotifications
+            ->unionAll($broadcastNotifications)
+            ->orderByDesc('created_at');
     }
 
 }
