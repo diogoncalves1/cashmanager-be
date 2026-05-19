@@ -105,6 +105,7 @@
                                     </a>
                                 </li>
                             @endcan
+
                             @can('authorization', 'viewSharedRole')
                                 <li class="nav-item">
                                     <a href="{{ route('admin.shared-roles.index') }}"
@@ -126,6 +127,30 @@
                                         <i class="nav-icon fas fa-user-shield"></i>
                                         <p>
                                             Papéis
+                                        </p>
+                                    </a>
+                                </li>
+                            @endcan
+
+                            @can('authorization', 'viewNotifications')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.notifications.index') }}"
+                                        class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'notifications') ? 'active' : '' !!}">
+                                        <i class="nav-icon fas fa-bell"></i>
+                                        <p>
+                                            Notificações
+                                        </p>
+                                    </a>
+                                </li>
+                            @endcan
+
+                            @can('authorization', 'viewNotificationTypes')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.notificationTypes.index') }}"
+                                        class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'notificationTypes') ? 'active' : '' !!}">
+                                        <i class="nav-icon fas fa-layer-group"></i>
+                                        <p>
+                                            Tipos de Notificações
                                         </p>
                                     </a>
                                 </li>
@@ -202,6 +227,15 @@
                                                 class="nav-link {!! Str::contains(\Request::route()->getName(), 'emailTypes') ? 'active' : '' !!}">
                                                 <i class="far fa-envelope nav-icon"></i>
                                                 <p>Tipos de Emails</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{{ route('admin.notificationKeywords.index') }}"
+                                                class="nav-link {!! Illuminate\Support\Str::contains(\Request::route()->getName(), 'notificationKeywords') ? 'active' : '' !!}">
+                                                <i class="nav-icon fas fa-tags"></i>
+                                                <p>
+                                                    Keywords de Notificações
+                                                </p>
                                             </a>
                                         </li>
                                         <li class="nav-item">
