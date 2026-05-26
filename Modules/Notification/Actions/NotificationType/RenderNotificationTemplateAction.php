@@ -23,8 +23,9 @@ class RenderNotificationTemplateAction
         ];
 
         foreach ($keywords as $keyword) {
-            $data['title']         = $this->replace($keyword, $notificationData, $data['title']);
-            $data['message']       = $this->replace($keyword, $notificationData, $data['message']);
+            $data['title']   = $this->replace($keyword, $notificationData, $data['title']);
+            $data['message'] = $this->replace($keyword, $notificationData, $data['message']);
+
             $data['mailSubject']   = $this->replace($keyword, $notificationData, $data['mailSubject']);
             $data['mailMessage']   = $this->replace($keyword, $notificationData, $data['mailMessage']);
             $data['mailSignature'] = $this->replace($keyword, $notificationData, $data['mailSignature']);

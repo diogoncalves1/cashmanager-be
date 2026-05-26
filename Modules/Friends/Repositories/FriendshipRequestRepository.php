@@ -9,7 +9,9 @@ use Modules\Friends\Exceptions\AlreadyFriendsException;
 use Modules\Friends\Exceptions\FriendRequestNotFoundException;
 use Modules\Friends\Exceptions\SelfFriendshipException;
 use Modules\Friends\Exceptions\UserBlockedException;
-use Modules\User\Entities\User;
+use Modules\Notification\Actions\Notifications\SendNotificationAction;
+use Modules\Notification\Data\Notifications\CreateNotificationDto;
+use Modules\Notification\Repositories\NotificationRepository;
 use Modules\User\Repositories\UserRepository;
 
 class FriendshipRequestRepository
@@ -57,6 +59,10 @@ class FriendshipRequestRepository
                 'receiver_id' => $id,
                 'status'      => 'pending',
             ]);
+
+            new SendNotificationAction(new NotificationRepository())->execute(new CreateNotificationDto([
+                'username' => $user->username,
+            ], "FRIEND_REQUEST_RECEIVED"), $this->userRepo->show($id));
 
             return $friendRequest;
         });
