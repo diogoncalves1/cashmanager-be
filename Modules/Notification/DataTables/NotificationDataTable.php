@@ -57,6 +57,7 @@ class NotificationDataTable extends DataTable
 
         return $userNotifications
             ->unionAll($broadcastNotifications)
+            ->select("user_id", "data", "type_code", "created_at", "read_at", "id")
             ->orderByDesc('created_at');
     }
 
