@@ -98,6 +98,10 @@ class FriendshipRequestRepository
             $friendship = $this->friendshipRepository->makeRelation($friendRequest->sender_id, $friendRequest->receiver_id, 'friend');
             $friendRequest->delete();
 
+            new SendNotificationAction(new NotificationRepository())->execute(new CreateNotificationDto([
+                'username' => $user->username,
+            ], "FRIEND_REQUEST_ACCEPTED"), $this->userRepo->show($id));
+
             return $friendship;
         });
     }
