@@ -11,7 +11,6 @@ use Modules\Friends\Exceptions\SelfFriendshipException;
 use Modules\Friends\Exceptions\UserBlockedException;
 use Modules\Notification\Actions\Notifications\SendNotificationAction;
 use Modules\Notification\Data\Notifications\CreateNotificationDto;
-use Modules\Notification\Repositories\NotificationRepository;
 use Modules\User\Repositories\UserRepository;
 
 class FriendshipRequestRepository
@@ -60,7 +59,7 @@ class FriendshipRequestRepository
                 'status'      => 'pending',
             ]);
 
-            new SendNotificationAction(new NotificationRepository())->execute(new CreateNotificationDto([
+            app(SendNotificationAction::class)->execute(new CreateNotificationDto([
                 'username' => $user->username,
             ], "FRIEND_REQUEST_RECEIVED"), $this->userRepo->show($id));
 
@@ -98,7 +97,7 @@ class FriendshipRequestRepository
             $friendship = $this->friendshipRepository->makeRelation($friendRequest->sender_id, $friendRequest->receiver_id, 'friend');
             $friendRequest->delete();
 
-            new SendNotificationAction(new NotificationRepository())->execute(new CreateNotificationDto([
+            app(SendNotificationAction::class)->execute(new CreateNotificationDto([
                 'username' => $user->username,
             ], "FRIEND_REQUEST_ACCEPTED"), $this->userRepo->show($id));
 
@@ -126,6 +125,10 @@ class FriendshipRequestRepository
             $friendRequest = FriendshipRequestModel::query()->sender($id)->receiver($user->id)->status('pending')->first();
 
             $friendRequest->update(['status' => 'declined']);
+
+            app(SendNotificationAction::class)->execute(new CreateNotificationDto([
+                'username' => $user->username,
+            ], "FRIEND_REQUEST_DECLINED"), $this->userRepo->show($id));
 
             return $friendRequest;
         });

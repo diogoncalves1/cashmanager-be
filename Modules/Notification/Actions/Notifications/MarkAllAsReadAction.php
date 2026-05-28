@@ -14,6 +14,7 @@ class MarkAllAsReadAction
     public function execute(User $user): void
     {
         $this->service->forgetUnread($user->id);
+        $this->service->forgetFeed($user->id);
 
         $this->repository->query()
             ->where('user_id', $user->id)

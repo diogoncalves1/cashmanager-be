@@ -42,7 +42,7 @@ class NotificationDataTable extends DataTable
             })
             ->addColumn('createdAt', fn(Notification $notification) => $notification->created_at)
             ->addColumn('readAt', fn(Notification $notification) => $notification->read_at)
-            ->removeColumn(['user_id', 'data', 'type_code', 'created_at', 'read_at', 'updated_at', 'id'])
+            ->removeColumn(['user_id', 'data', 'type_code', 'created_at', 'read_at', 'updated_at'])
             ->rawColumns(['message', 'title']);
 
     }

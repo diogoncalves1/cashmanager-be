@@ -20,6 +20,7 @@ class MarkAsReadAction
         }
 
         $this->service->forgetUnread($notification->user_id);
+        $this->service->forgetFeed($notification->user_id);
 
         $notification->update([
             'read_at' => now(),
