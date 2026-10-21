@@ -1,7 +1,7 @@
 <?php
 namespace Modules\SharedRoles\Traits;
 
-use Modules\SharedRoles\Entities\SharedRole;
+use Modules\SharedRoles\Repositories\SharedRoleRepository;
 
 trait IsShareable
 {
@@ -15,6 +15,6 @@ trait IsShareable
             return null;
         }
 
-        return SharedRole::find($user?->pivot->shared_role_id);
+        return app(SharedRoleRepository::class)->show($user?->pivot->shared_role_id);
     }
 }

@@ -1,0 +1,11 @@
+{
+    "name": "RecurringTransaction",
+    "alias": "recurringtransaction",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\RecurringTransaction\\Providers\\RecurringTransactionServiceProvider"
+    ],
+    "files": []
+}

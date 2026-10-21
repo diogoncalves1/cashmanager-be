@@ -2,7 +2,10 @@
 namespace Modules\Accounts\Providers;
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Modules\Accounts\Entities\Account;
+use Modules\Accounts\Policies\AccountPolicy;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -20,6 +23,8 @@ class AccountsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Account::class, AccountPolicy::class);
+
         $this->registerCommands();
         $this->registerCommandSchedules();
         $this->registerTranslations();
