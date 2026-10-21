@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/recurringtransaction",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\RecurringTransaction\\": "app/",
+            "Modules\\RecurringTransaction\\Database\\Factories\\": "database/factories/",
+            "Modules\\RecurringTransaction\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\RecurringTransaction\\Tests\\": "tests/"
+        }
+    }
+}

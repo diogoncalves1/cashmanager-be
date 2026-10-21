@@ -11,7 +11,9 @@
     "FinancialGoal": true,
     "Friends": true,
     "Language": true,
+    "Notification": true,
     "Permission": true,
+    "RecurringTransaction": true,
     "SharedRoles": true,
     "User": true,
     "UserPreferences": true

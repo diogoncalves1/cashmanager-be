@@ -239,6 +239,6 @@ class ActivityLogMessageResolver
             return $fallback;
         }
 
-        return Helpers::formatMoneyWithCurrency($amount, $currency->code, $currency->symbol);
+        return Helpers::formatMoneyWithCurrency((float) $amount, $currency->code, $currency->symbol);
     }
 }

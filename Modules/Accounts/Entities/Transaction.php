@@ -13,7 +13,7 @@ class Transaction extends Model
     use HasFactory;
 
     protected $table    = 'transactions';
-    protected $fillable = ['user_id', 'account_id', 'type', 'amount', 'date', 'description', 'status', 'category_id' /*, 'currency_id'*/];
+    protected $fillable = ['user_id', 'account_id', 'type', 'amount', 'date', 'description', 'status', 'category_id', 'is_recurring', 'recurring_transaction_id' /*, 'currency_id'*/];
 
     protected static function newFactory()
     {
