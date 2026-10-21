@@ -15,6 +15,7 @@ use Modules\Category\Exceptions\CannotUpdateDefaultCategoryException;
 use Modules\Category\Exceptions\CannotUpdateOthersCategoryException;
 use Modules\Category\Exceptions\DefaultCategoryNameTranslationRequiredException;
 use Modules\Category\Exceptions\UnauthorizedDefaultCategoryException;
+use Modules\RecurringTransaction\Filters\RecurringTransactionFilter;
 use Modules\User\Entities\User;
 
 class CategoryRepository extends ApiController implements RepositoryApiInterface
@@ -128,7 +129,11 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
     public function allUserTransactionsCategories(Request $request)
     {
         $user  = $request->user();
-        $query = Category::query()->join('transactions', 'categories.id', '=', 'transactions.category_id')->where('transactions.user_id', $user->id)->distinct()->select("categories.*");
+        $query = Category::query()
+            ->join('transactions', 'categories.id', '=', 'transactions.category_id')
+            ->where('transactions.user_id', $user->id)
+            ->distinct()
+            ->select("categories.*");
 
         if ($request->has('type')) {
             $query->where("transactions.type", $request->get('type'));
@@ -142,6 +147,19 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
         if ($request->has('dateTo')) {
             $query->where("transactions.date", '<=', $request->get('dateTo'));
         }
+
+        return $query->get();
+    }
+
+    public function allUserRecurringsCategories(Request $request)
+    {
+        $user  = $request->user();
+        $query = Category::query()->join('recurring_transactions', 'categories.id', '=', 'recurring_transactions.category_id')
+            ->where('recurring_transactions.user_id', $user->id)
+            ->distinct()
+            ->select("categories.*");
+
+        $query = (new RecurringTransactionFilter)->filter($request, $query);
 
         return $query->get();
     }

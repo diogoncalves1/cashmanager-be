@@ -2,15 +2,15 @@
 
 return [
     'friendship-requests' => [
-        'send'    => 'Solicitação de amizade enviada com sucesso para :name.',
-        'accept'  => 'Solicitação de amizade de :name aceita com sucesso.',
-        'decline' => 'Solicitação de amizade de :name rejeitada com sucesso.',
-        'cancel'  => 'Solicitação de amizade para :name cancelada com sucesso.',
+        'send'    => 'Pedido de amizade enviado com sucesso para :name.',
+        'accept'  => 'Pedido de amizade de :name aceite com sucesso.',
+        'decline' => 'Pedido de amizade de :name rejeitado com sucesso.',
+        'cancel'  => 'Pedido de amizade para :name cancelado com sucesso.',
         'errors'  => [
-            'send'    => 'Erro ao enviar solicitação de amizade.',
-            'accept'  => 'Erro ao tentar aceitar a solicitação de amizade.',
-            'decline' => 'Erro ao tentar rejeitar a solicitação de amizade.',
-            'cancel'  => 'Erro ao tentar cancelar a solicitação de amizade.',
+            'send'    => 'Não foi possível enviar o pedido de amizade.',
+            'accept'  => 'Não foi possível aceitar o pedido de amizade.',
+            'decline' => 'Não foi possível rejeitar o pedido de amizade.',
+            'cancel'  => 'Não foi possível cancelar o pedido de amizade.',
         ],
     ],
 
@@ -20,8 +20,8 @@ return [
         'unblock' => ':name desbloqueado(a) com sucesso.',
         'errors'  => [
             'remove'  => 'Erro ao tentar encerrar a amizade.',
-            'block'   => 'Erro ao tentar bloquear o usuário.',
-            'unblock' => 'Erro ao tentar desbloquear o usuário.',
+            'block'   => 'Não foi possível bloquear o utilizador.',
+            'unblock' => 'Não foi possível desbloquear o utilizador.',
         ],
     ],
 ];

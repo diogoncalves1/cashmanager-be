@@ -16,9 +16,10 @@ class DebtPaymentViewResource extends JsonResource
         return [
             'id'               => $this->id,
             'status'           => $this->status,
-            'statusTranslated' => __('debt::attributes.debt-payments.status.' . $this->status),
+            'statusTranslated' => __('debts::attributes.debt-payments.status.' . $this->status),
             'amount'           => $this->amount,
             'amountFormated'   => Helpers::formatMoneyWithSymbolAndCurrency($this->amount, $this->currencyCode, $this->currencySymbol),
+            'currencyCode'     => $this->currencyCode,
             'date'             => $this->date,
             'description'      => $this->description,
             'userName'         => $this->userName,

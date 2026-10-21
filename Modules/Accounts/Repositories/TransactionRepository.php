@@ -4,6 +4,7 @@ namespace Modules\Accounts\Repositories;
 use App\Repositories\RepositoryApiInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\AccountsView;
@@ -31,9 +32,9 @@ class TransactionRepository implements RepositoryApiInterface
     public function store(Request $request)
     {
         return DB::transaction(function () use ($request) {
-            $input = $request->only(['account_id', 'type', 'amount', 'date', 'description', 'status', 'category_id']);
+            $input = $request->only(['account_id', 'type', 'amount', 'date', 'description', 'status', 'category_id', 'is_recurring', 'recurring_transaction_id']);
 
-            $user       = $request->user();
+            $user       = Auth::user();
             $account    = $this->accountRepository->show($request->get('account_id'));
             $sharedRole = $account->userSharedRole($account, $user->id);
 
@@ -330,6 +331,10 @@ class TransactionRepository implements RepositoryApiInterface
 
         return [
             'balance'  => Helpers::formatMoneyWithSymbolAndCurrency($res->totalRevenues - $res->totalExpenses ?? 0, $currency->code, $currency->symbol),
+            'incomeAmount' => (float) ($res->totalRevenues ?? 0),
+            'expensesAmount' => (float) ($res->totalExpenses ?? 0),
+            'balanceAmount' => (float) ($res->totalRevenues ?? 0) - (float) ($res->totalExpenses ?? 0),
+            'currencyCode' => $currency->code,
             'expenses' => Helpers::formatMoneyWithSymbolAndCurrency($res->totalExpenses ?? 0, $currency->code, $currency->symbol),
             'income'   => Helpers::formatMoneyWithSymbolAndCurrency($res->totalRevenues ?? 0, $currency->code, $currency->symbol),
         ];

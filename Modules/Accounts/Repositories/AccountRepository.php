@@ -289,6 +289,10 @@ class AccountRepository implements RepositoryApiInterface
             'netWorth'       => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->netWorth ?? 0, $currency->code, $currency->symbol),
             'totalRevenues'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalRevenues ?? 0, $currency->code, $currency->symbol),
             'totalExpenses'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalExpenses ?? 0, $currency->code, $currency->symbol),
+            'netWorthAmount' => (float) ($totalQuery->netWorth ?? 0),
+            'totalRevenuesAmount' => (float) ($totalQuery->totalRevenues ?? 0),
+            'totalExpensesAmount' => (float) ($totalQuery->totalExpenses ?? 0),
+            'currencyCode' => $currency->code,
         ];
 
         return $stats;
@@ -306,17 +310,22 @@ class AccountRepository implements RepositoryApiInterface
         return [
             'data'          => $account->transactionsView()
                 ->selectRaw("
-                COUNT(*) AS count,
-                SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) AS value,
-                categoryName AS category,
-                categoryColor AS color,
-                categoryIcon AS icon,
-                MAX(currencyCode) AS currencyCode,
-                MAX(currencySymbol) AS currencySymbol
-            ")
-                ->groupByRaw("categoryId")
-                ->orderBy('value', 'desc')
+                    COUNT(*) AS count,
+                    SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) AS value,
+                    categoryName AS category,
+                    categoryColor AS color,
+                    categoryIcon AS icon,
+                    MAX(currencyCode) AS currencyCode,
+                    MAX(currencySymbol) AS currencySymbol
+                ")
                 ->where('categoryType', 'expense')
+                ->groupBy(
+                    'categoryId',
+                    'categoryName',
+                    'categoryColor',
+                    'categoryIcon'
+                )
+                ->orderByDesc('value')
                 ->get(),
             'total'         => $total,
             'totalFormated' => $totalFormated,

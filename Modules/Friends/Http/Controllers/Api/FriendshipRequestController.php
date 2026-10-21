@@ -34,7 +34,7 @@ class FriendshipRequestController extends ApiController
             return $this->ok(new FriendshipRequestResource($friendshipRequest), __('friends::messages.friendship-requests.send', ['name' => $friendshipRequest->receiver->name]));
         } catch (\Exception $e) {
             Log::error($e);
-            return $this->fail($e->getMessage() ?? __('friends::messages.friend-requests.errors.send'), $e, $e->getCode());
+            return $this->fail($e->getMessage() ?? __('friends::messages.friendship-requests.errors.send'), $e, $e->getCode());
         }
     }
 
@@ -52,7 +52,7 @@ class FriendshipRequestController extends ApiController
             return $this->ok(new FriendshipResource($friendship), __('friends::messages.friendship-requests.accept', ['name' => $friendship->sender->name]));
         } catch (\Exception $e) {
             Log::error($e);
-            return $this->fail($e->getMessage() ?? __('friends::messages.friend-requests.errors.accept'), $e, $e->getCode());
+            return $this->fail($e->getMessage() ?? __('friends::messages.friendship-requests.errors.accept'), $e, $e->getCode());
         }
     }
 
@@ -70,7 +70,7 @@ class FriendshipRequestController extends ApiController
             return $this->ok(new FriendshipResource($friendshipRequest), __('friends::messages.friendship-requests.decline', ['name' => $friendshipRequest->sender->name]));
         } catch (\Exception $e) {
             Log::error($e);
-            return $this->fail($e->getMessage() ?? __('friends::messages.friend-requests.errors.decline'), $e, $e->getCode());
+            return $this->fail($e->getMessage() ?? __('friends::messages.friendship-requests.errors.decline'), $e, $e->getCode());
         }
     }
 
@@ -88,7 +88,7 @@ class FriendshipRequestController extends ApiController
             return $this->ok(new FriendshipResource($friendshipRequest), __('friends::messages.friendship-requests.cancel', ['name' => $friendshipRequest->receiver->name]));
         } catch (\Exception $e) {
             Log::error($e);
-            return $this->fail($e->getMessage() ?? __('friends::messages.friend-requests.errors.cancel'), $e, $e->getCode());
+            return $this->fail($e->getMessage() ?? __('friends::messages.friendship-requests.errors.cancel'), $e, $e->getCode());
         }
     }
 

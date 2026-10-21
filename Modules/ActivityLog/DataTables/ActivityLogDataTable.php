@@ -30,7 +30,7 @@ class ActivityLogDataTable extends DataTable
             })
             ->addColumn('createdAt', function (ActivityLog $activity) {
                 $date = new Carbon($activity->created_at);
-                return $date->format('Y-m-d');
+                return $date->format('Y-m-d H:i:s');
             })
             ->removeColumn('user_id')
             ->removeColumn('metadata')
