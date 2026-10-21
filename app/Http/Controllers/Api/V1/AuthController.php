@@ -40,6 +40,11 @@ class AuthController extends ApiController
     public function login(Request $request)
     {
         try {
+            $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|string',
+            ]);
+
             $user = User::where('email', $request->email)->first();
 
             if (! $user || ! Hash::check($request->password, $user->password)) {
@@ -53,6 +58,8 @@ class AuthController extends ApiController
             $token = $user->createToken('web-token')->plainTextToken;
 
             return response()->json(['user' => new UserResource($user), 'token' => $token], 201);
+        } catch (ValidationException $e) {
+            return $this->fail($e->getMessage(), $e->errors(), $e->status);
         } catch (\Exception $e) {
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
