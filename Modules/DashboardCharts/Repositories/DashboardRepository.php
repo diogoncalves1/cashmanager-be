@@ -11,7 +11,7 @@ class DashboardRepository
 {
     private TransactionRepository $transactionRepo;
 
-    public function __construct(TransactionRepository $transactionRepo, protected AccountRepository $accountRepo)
+    public function __construct(TransactionRepository $transactionRepo, protected AccountRepository $accountRepo, protected DashboardWidgetsRepository $widgets)
     {
         $this->transactionRepo = $transactionRepo;
     }
@@ -54,6 +54,7 @@ class DashboardRepository
 
         $data = [
             'charts'    => $charts,
+            'widgets' => $this->widgets->get($request),
             'dashboard' => [
                 "revenueClasses"        => $revenueClasses,
                 "totalRevenues"         => $totalRevenues,

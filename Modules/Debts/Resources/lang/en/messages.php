@@ -9,6 +9,7 @@ return [
         'reset'     => 'Debt :name reseted successfully!',
 
         'errors'    => [
+            'complete'  => 'Unable to load the debt details.',
             'store'     => 'Error trying to add debt.',
             'update'    => 'Error trying to update debt.',
             'destroy'   => 'Error trying to delete debt.',

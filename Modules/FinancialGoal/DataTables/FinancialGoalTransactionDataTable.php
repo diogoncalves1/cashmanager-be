@@ -25,6 +25,8 @@ class FinancialGoalTransactionDataTable extends DataTable
         return datatables()
             ->eloquent($query)
             ->addColumn('amountFormated', fn(FinancialGoalTransactionView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
+            ->addColumn('balanceBefore', fn(FinancialGoalTransactionView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency(($transaction->balanceBefore ?? 0), $transaction->currencyCode, $transaction->currencySymbol))
+            ->addColumn('balanceAfter', fn(FinancialGoalTransactionView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency(($transaction->balanceBefore ?? 0) + $transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
             ->addColumn('typeTranslated', fn(FinancialGoalTransactionView $transaction) => __('financialgoal::attributes.financial-goal-transactions.type.' . $transaction->type))
             ->addColumn('statusTranslated', fn(FinancialGoalTransactionView $transaction) => __('financialgoal::attributes.financial-goal-transactions.status.' . $transaction->status))
             ->addColumn('actions', function (FinancialGoalTransactionView $transaction) use ($user) {
@@ -38,8 +40,7 @@ class FinancialGoalTransactionDataTable extends DataTable
                 return ['view' => $canView, 'edit' => $canEdit, 'destroy' => $canDestroy, 'confirm' => $canConfirm];
             })
             ->removeColumn('currencyId')
-            ->removeColumn('userId')
-            ->removeColumn('currencyCode');
+            ->removeColumn('userId');
     }
 
     public function query(FinancialGoalTransactionView $model)
