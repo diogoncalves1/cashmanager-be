@@ -21,6 +21,10 @@ class TransactionsView extends Transaction
     {
         return $this->belongsTo(Category::class, 'categoryId');
     }
+    public function account()
+    {
+        return $this->belongsTo(Account::class, 'accountId');
+    }
 
     public function scopeType($query, $type)
     {
