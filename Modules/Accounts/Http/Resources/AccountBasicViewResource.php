@@ -12,9 +12,10 @@ class AccountBasicViewResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'   => (string) $this->id,
-            'name' => $this->name,
-            'type' => __('accounts::attributes.accounts.type.' . $this->type),
+            'id'      => (string) $this->id,
+            'name'    => $this->name,
+            'type'    => __('accounts::attributes.accounts.type.' . $this->type),
+            'typeOrg' => $this->type,
         ];
     }
 }

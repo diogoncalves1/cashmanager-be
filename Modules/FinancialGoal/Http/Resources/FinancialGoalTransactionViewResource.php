@@ -40,6 +40,7 @@ class FinancialGoalTransactionViewResource extends JsonResource
             'financialGoalName' => $this->financialGoalName,
             'financialGoalId'   => $this->financialGoalId,
             'currencySymbol'    => $this->currencySymbol,
+            'currencyCode'      => $this->currencyCode,
             'currencyId'        => $this->currencyId,
             'accountId'         => $this->accountId,
             'accountName'       => $this->accountName,

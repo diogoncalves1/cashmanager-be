@@ -5,6 +5,7 @@ use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\TransactionsView;
 use Modules\Accounts\Repositories\AccountRepository;
 use Modules\Accounts\Repositories\TransactionRepository;
+use Modules\SharedRoles\Core\CheckPermission;
 use Yajra\DataTables\Services\DataTable;
 
 class TransactionDataTable extends DataTable
@@ -30,15 +31,16 @@ class TransactionDataTable extends DataTable
             ->addColumn('accountTypeTranslated', fn(TransactionsView $transaction) => __('accounts::attributes.accounts.type.' . $transaction->accountType))
             ->addColumn('amountFormated', fn(TransactionsView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
             ->addColumn('actions', function (TransactionsView $transaction) use ($user) {
-                $account    = $this->accountRepository->show($transaction->accountId);
+                $account    = $transaction->account;
                 $sharedRole = $account->userSharedRole($account, $user->id);
 
-                $canConfirm = $transaction->status == 'pending' && $transaction->date <= date('Y-m-d') && $sharedRole?->hasPermission("confirmTransaction");
-                $canView    = $sharedRole?->hasPermission('viewTransaction');
-                $canEdit    = $sharedRole?->hasPermission("editTransaction");
-                $canDestroy = $sharedRole?->hasPermission("destroyTransaction");
+                if (! $sharedRole) {
+                    return ['view' => false, 'confirm' => false, 'edit' => false, 'destroy' => false];
+                }
 
-                return ['view' => $canView, 'confirm' => $canConfirm, 'edit' => $canEdit, 'destroy' => $canDestroy];
+                $canConfirm = $transaction->status == 'pending' && $transaction->date <= date('Y-m-d') && CheckPermission::check($sharedRole, "confirmTransaction");
+
+                return ['confirm' => $canConfirm, ...CheckPermission::checkMultiple($sharedRole, ['view' => 'viewTransaction', 'edit' => 'editTransaction', 'destroy' => 'destroyTransaction'])];
             })
             ->editColumn('categoryName', fn(TransactionsView $transaction) => $transaction->category->name->{$user->preferences->lang} ? $transaction->category->name->{$user->preferences->lang} : $transaction->category->name->en);
     }
@@ -50,6 +52,7 @@ class TransactionDataTable extends DataTable
         $user = $request->user();
 
         $query = $model->newQuery()
+            ->with(['category', 'account'])
             ->join('accounts_view AS av', 'av.id', '=', 'transactions_view.accountId')
             ->whereRaw("FIND_IN_SET(?, REPLACE(av.user_ids, ' ', ''))", [$user->id])
             ->select('transactions_view.*');

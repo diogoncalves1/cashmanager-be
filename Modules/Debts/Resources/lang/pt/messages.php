@@ -9,6 +9,7 @@ return [
         'reset'     => 'Dívida :name reiniciada com sucesso!',
 
         'errors'    => [
+            'complete'  => 'Não foi possível carregar os detalhes da dívida.',
             'store'     => 'Erro ao tentar adicionar a dívida.',
             'update'    => 'Erro ao tentar atualizar a dívida.',
             'destroy'   => 'Erro ao tentar eliminar a dívida.',

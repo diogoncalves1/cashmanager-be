@@ -14,6 +14,8 @@ class AccountIndividualDataResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'monthlyRevenuesAmount' => (float) ($this['monthlyRevenues'] ?? 0),
+            'monthlyExpensesAmount' => (float) ($this['monthlyExpenses'] ?? 0),
             'monthlyRevenues'     => Helpers::formatMoneyWithCurrency($this['monthlyRevenues'] ?? 0, $this['currencyCode'] ?? $this->currencyCode, $this['currencySymbol'] ?? $this->currencySymbol, true),
             'monthlyExpenses'     => Helpers::formatMoneyWithCurrency($this['monthlyExpenses'] ?? 0, $this['currencyCode'] ?? $this->currencyCode, $this['currencySymbol'] ?? $this->currencySymbol, true),
             'revenuesVsLastMonth' => CoreHelpers::percentage($this['lastMonthRevenues'] ?? 0, $this['monthlyRevenues'] ?? 0),

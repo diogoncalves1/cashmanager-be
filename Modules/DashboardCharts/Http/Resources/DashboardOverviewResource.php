@@ -17,6 +17,7 @@ class DashboardOverviewResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'widgets' => $this['widgets'],
             'charts'    => [
                 'monthly'   => new DashboardOverviewMonthlyCollection($this['charts']['monthly']),
                 'quarterly' => new DashboardOverviewQuarterlyCollection($this['charts']['quarterly']),
