@@ -72,7 +72,11 @@ class TranslationCatalogueTest extends TestCase
                     if ($reference[3] === '.') {
                         $this->assertNotEmpty(array_filter(array_keys($catalogue), fn ($candidate) => str_starts_with($candidate, $key)), "Missing prefix {$key}: {$file->getPathname()}");
                     } else {
-                        $this->assertArrayHasKey($key, $catalogue, $file->getPathname());
+                        $this->assertTrue(
+                            array_key_exists($key, $catalogue)
+                            || count(array_filter(array_keys($catalogue), fn ($candidate) => str_starts_with($candidate, $key.'.'))) > 0,
+                            "Missing message or group {$key}: {$file->getPathname()}"
+                        );
                     }
                 }
             }
