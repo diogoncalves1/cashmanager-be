@@ -2,6 +2,7 @@
 return [
     // Accounts
     'accounts'             => [
+        'resume_error' => 'Não foi possível carregar o panorama das contas. Tenta novamente.',
         'store'   => 'Conta :name adicionada com sucesso!',
         'update'  => 'Conta :name atualizada com sucesso!',
         'destroy' => 'Conta :name eliminada com sucesso!',
