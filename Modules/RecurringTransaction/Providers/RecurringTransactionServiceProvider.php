@@ -1,4 +1,5 @@
 <?php
+
 namespace Modules\RecurringTransaction\Providers;
 
 use Illuminate\Support\Facades\Gate;
@@ -41,7 +42,7 @@ class RecurringTransactionServiceProvider extends ModuleServiceProvider
     /**
      * Define module schedules.
      *
-     * @param $schedule
+     * @param  $schedule
      */
     // protected function configureSchedules(Schedule $schedule): void
     // {
@@ -51,6 +52,8 @@ class RecurringTransactionServiceProvider extends ModuleServiceProvider
     #[Override]
     public function boot(): void
     {
+        $this->loadTranslationsFrom(__DIR__.'/../Resources/lang', $this->nameLower);
+
         Gate::policy(RecurringTransaction::class, RecurringTransactionPolicy::class);
 
         Schedule::job(new GenerateRecurringTransactionsJob)
