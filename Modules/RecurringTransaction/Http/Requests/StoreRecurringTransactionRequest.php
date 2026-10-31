@@ -25,8 +25,8 @@ class StoreRecurringTransactionRequest extends RecurringTransactionRequest
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'is_linked' => 'boolean',
-            'linked_type' => 'required_if:is_linked,true|nullable|in:debt,financial_goal',
-            'linked_id' => 'required_if:is_linked,true|nullable|integer',
+            'linked_type' => 'nullable|required_if:is_linked,true|in:debt,financial_goal',
+            'linked_id' => 'nullable|required_if:is_linked,true|integer',
         ];
     }
 }
