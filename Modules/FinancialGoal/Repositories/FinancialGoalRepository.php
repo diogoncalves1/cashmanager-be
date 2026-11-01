@@ -50,7 +50,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             ->join('shared_permission_roles', "shared_permission_roles.shared_role_id", '=', 'shared_roles.id')
             ->join('shared_permissions', "shared_permissions.id", '=', 'shared_permission_roles.shared_permission_id')
             ->where("financial_goal_users.user_id", $user->id)
-            ->where('shared_permissions.code', 'createTransaction')
+            ->where('shared_permissions.code', 'storeFinancialGoalTransaction')
             ->status("in_progress")
             ->select("financial_goal_basic_view.*")->get();
     }
@@ -62,6 +62,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
 
             $input = $request->only(['name', 'total_amount', 'currency_id', 'start_date', 'due_date', 'description', 'priority']);
 
+            $input['funding_mode'] = 'reservation';
             $financialGoal = FinancialGoal::create($input);
 
             $inputUser = [
@@ -112,7 +113,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
         return DB::transaction(function () use ($request, $id) {
             $user = $request->user();
 
-            $financialGoal = $this->show($id);
+            $financialGoal = FinancialGoal::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $input = $request->only(['name', 'total_amount', 'currency_id', 'start_date', 'due_date', 'description', 'priority']);
 
@@ -120,6 +121,16 @@ class FinancialGoalRepository implements RepositoryApiInterface
 
             if (! $sharedRole || ! $sharedRole->hasPermission('updateFinancialGoal')) {
                 throw new UnauthorizedUpdateFinancialGoal();
+            }
+
+            if ($financialGoal->funding_mode === 'reservation' && $financialGoal->transactions()->exists()
+                && (string) $request->input('currency_id') !== (string) $financialGoal->currency_id) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('currency_id', 'currency_locked');
+            }
+
+            if ($financialGoal->funding_mode === 'reservation' && $financialGoal->status === 'completed'
+                && \Modules\FinancialGoal\Services\GoalReservations::cents($request->input('total_amount')) !== \Modules\FinancialGoal\Services\GoalReservations::cents($financialGoal->total_amount)) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('total_amount', 'target_locked');
             }
 
             // TODO: Criar uma notificacao no frontend
@@ -179,7 +190,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
         return DB::transaction(function () use ($request, $id) {
             $user = $request->user();
 
-            $financialGoal = $this->show($id);
+            $financialGoal = FinancialGoal::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $sharedRole = $financialGoal->userSharedRole($financialGoal, $user->id);
 
@@ -187,6 +198,9 @@ class FinancialGoalRepository implements RepositoryApiInterface
                 throw new UnauthorizedUpdateFinancialGoal();
             }
 
+            if ($financialGoal->transactions()->exists()) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'history');
+            }
             $financialGoal->delete();
             $this->activityRepo->destroyByType($financialGoal->id, 'financial_goal');
 
@@ -199,7 +213,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
         return DB::transaction(function () use ($request, $id) {
             $user = $request->user();
 
-            $financialGoal = $this->show($id);
+            $financialGoal = FinancialGoal::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $sharedRole = $financialGoal->userSharedRole($financialGoal, $user->id);
 
@@ -208,6 +222,11 @@ class FinancialGoalRepository implements RepositoryApiInterface
             }
             if ($financialGoal->status !== 'in_progress') {
                 throw new FinancialGoalNotInProgressException();
+            }
+            if ($financialGoal->funding_mode === 'reservation' && (
+                $financialGoal->transactions()->where('status', 'pending')->exists()
+                || \Modules\FinancialGoal\Services\GoalReservations::goalSummary($financialGoal)['reservedAmount'] > 0)) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'release_first');
             }
             $financialGoal->canceled_at = Carbon::now();
             $this->setStatus($financialGoal, 'canceled');
@@ -228,7 +247,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
         return DB::transaction(function () use ($request, $id) {
             $user = $request->user();
 
-            $financialGoal = $this->show($id);
+            $financialGoal = FinancialGoal::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $sharedRole = $financialGoal->userSharedRole($financialGoal, $user->id);
 
@@ -240,6 +259,12 @@ class FinancialGoalRepository implements RepositoryApiInterface
             }
             if ($financialGoal->contributed_amount < $financialGoal->total_amount) {
                 throw new FinancialGoalNotFullyFundedException();
+            }
+            if ($financialGoal->funding_mode === 'reservation') {
+                if ($financialGoal->transactions()->where('status', 'pending')->exists()) {
+                    \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'pending');
+                }
+                $financialGoal->completed_funding = $financialGoal->contributed_amount;
             }
             $financialGoal->completed_at = Carbon::now();
             $this->setStatus($financialGoal, 'completed');
@@ -260,7 +285,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
         return DB::transaction(function () use ($request, $id) {
             $user = $request->user();
 
-            $financialGoal = $this->show($id);
+            $financialGoal = FinancialGoal::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $sharedRole = $financialGoal->userSharedRole($financialGoal, $user->id);
 
@@ -271,6 +296,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
                 throw new FinancialGoalInProgressException();
             }
 
+            $financialGoal->completed_funding = null;
             $financialGoal->canceled_at  = null;
             $financialGoal->completed_at = null;
             $this->setStatus($financialGoal, 'in_progress');
@@ -301,7 +327,8 @@ class FinancialGoalRepository implements RepositoryApiInterface
                 CASE
                     WHEN financial_goal_transactions.type = 'contribution'
                     THEN financial_goal_transactions.amount
-                    ELSE -financial_goal_transactions.amount
+                    WHEN financial_goal_transactions.type = 'withdrawal' THEN -financial_goal_transactions.amount
+                    ELSE 0
                 END
             ) as month_total
         ")
@@ -354,13 +381,15 @@ class FinancialGoalRepository implements RepositoryApiInterface
 
         $totalQuery = FinancialGoalView::query()
             ->from('financial_goal_view as fg')
+            ->join('financial_goals as goal_model', 'goal_model.id', '=', 'fg.id')
+            ->leftJoinSub(FinancialGoalTransaction::where('type', 'usage')->where('status', 'completed')->selectRaw('financial_goal_id, SUM(amount) AS used')->groupBy('financial_goal_id'), 'goal_usage', 'goal_usage.financial_goal_id', '=', 'fg.id')
             ->join('currencies as goal_currency', 'fg.currencyId', '=', 'goal_currency.id')
             ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
             ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
             ->whereRaw("FIND_IN_SET(?, REPLACE(fg.userIds, ' ', ''))", [$user->id])
             ->selectRaw("
         SUM(fg.totalAmount * (user_currency.rate / goal_currency.rate)) as total_target,
-        SUM(fg.contributedAmount * (user_currency.rate / goal_currency.rate)) as total_saved
+        SUM((CASE WHEN goal_model.funding_mode = 'reservation' THEN fg.contributedAmount - COALESCE(goal_usage.used, 0) ELSE fg.contributedAmount END) * (user_currency.rate / goal_currency.rate)) as total_saved
         ")
             ->first();
 
@@ -388,13 +417,15 @@ class FinancialGoalRepository implements RepositoryApiInterface
 
         $totalQuery = FinancialGoalView::query()
             ->from('financial_goal_view as fg')
+            ->join('financial_goals as goal_model', 'goal_model.id', '=', 'fg.id')
+            ->leftJoinSub(FinancialGoalTransaction::where('type', 'usage')->where('status', 'completed')->selectRaw('financial_goal_id, SUM(amount) AS used')->groupBy('financial_goal_id'), 'goal_usage', 'goal_usage.financial_goal_id', '=', 'fg.id')
             ->join('currencies as goal_currency', 'fg.currencyId', '=', 'goal_currency.id')
             ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
             ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
             ->whereRaw("FIND_IN_SET(?, REPLACE(fg.userIds, ' ', ''))", [$user->id])
             ->selectRaw("
                 SUM(fg.totalAmount * (user_currency.rate / goal_currency.rate)) as total_target,
-                SUM(fg.contributedAmount * (user_currency.rate / goal_currency.rate)) as total_saved
+                SUM((CASE WHEN goal_model.funding_mode = 'reservation' THEN fg.contributedAmount - COALESCE(goal_usage.used, 0) ELSE fg.contributedAmount END) * (user_currency.rate / goal_currency.rate)) as total_saved
             ")
             ->first();
 
@@ -415,7 +446,8 @@ class FinancialGoalRepository implements RepositoryApiInterface
                                 CASE
                                     WHEN fgt.type = 'contribution'
                                     THEN fgt.amount * (user_currency.rate / goal_currency.rate)
-                                    ELSE -(fgt.amount * (user_currency.rate / goal_currency.rate))
+                                    WHEN fgt.type = 'withdrawal' THEN -(fgt.amount * (user_currency.rate / goal_currency.rate))
+                                    ELSE 0
                                 END
                             ELSE 0
                         END
@@ -430,7 +462,8 @@ class FinancialGoalRepository implements RepositoryApiInterface
                                 CASE
                                     WHEN fgt.type = 'contribution'
                                     THEN fgt.amount * (user_currency.rate / goal_currency.rate)
-                                    ELSE -(fgt.amount * (user_currency.rate / goal_currency.rate))
+                                    WHEN fgt.type = 'withdrawal' THEN -(fgt.amount * (user_currency.rate / goal_currency.rate))
+                                    ELSE 0
                                 END
                             ELSE 0
                         END

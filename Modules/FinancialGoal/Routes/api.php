@@ -28,6 +28,10 @@ Route::group([
 
                 Route::get('/{id}/activity', [FinancialGoalController::class, 'activity']);
 
+                Route::get('/{id}/reservations', [\Modules\FinancialGoal\Http\Controllers\Api\V1\GoalReservationsController::class, 'context']);
+                Route::get('/{id}/eligible-expenses', [\Modules\FinancialGoal\Http\Controllers\Api\V1\GoalReservationsController::class, 'expenses']);
+                Route::match(['get', 'post'], '/{id}/reservation-conversion', [\Modules\FinancialGoal\Http\Controllers\Api\V1\GoalReservationsController::class, 'conversion']);
+
                 // Updates
                 Route::post('/{id}/cancel', [FinancialGoalController::class, 'cancel']);
                 Route::post('/{id}/complete', [FinancialGoalController::class, 'complete']);

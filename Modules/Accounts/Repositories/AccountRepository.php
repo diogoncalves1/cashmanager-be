@@ -70,7 +70,7 @@ class AccountRepository implements RepositoryApiInterface
     public function update(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $account = $this->show($id);
+            $account = Account::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $user = $request->user();
 
@@ -79,6 +79,11 @@ class AccountRepository implements RepositoryApiInterface
                 throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedUpdateAccountException();
             }
 
+            if ($request->has('currency_id') && (string) $request->input('currency_id') !== (string) $account->currency_id
+                && \Illuminate\Support\Facades\Schema::hasColumn('financial_goal_transactions', 'account_id')
+                && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('account_id', $account->id)->exists()) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('currency_id', 'currency_locked');
+            }
             $input = $request->only('name', 'type', 'currency_id', 'active');
 
             $old = $account->only(['name', 'type', 'currency_id', 'active']);
@@ -131,7 +136,7 @@ class AccountRepository implements RepositoryApiInterface
     public function status(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $account = $this->show($id);
+            $account = Account::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $user = $request->user();
 
@@ -158,7 +163,7 @@ class AccountRepository implements RepositoryApiInterface
     public function destroy(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $account = $this->show($id);
+            $account = Account::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $user = $request->user();
 
@@ -167,6 +172,10 @@ class AccountRepository implements RepositoryApiInterface
                 throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedDeletedAccountException();
             }
 
+            if (\Illuminate\Support\Facades\Schema::hasColumn('financial_goal_transactions', 'account_id')
+                && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('account_id', $account->id)->exists()) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('account_id', 'account_history');
+            }
             $account->delete();
 
             $this->activityRepo->destroyByType($account->id, 'account');

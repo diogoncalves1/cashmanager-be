@@ -14,8 +14,8 @@ class FinancialGoalRequest extends FormRequest
     {
         return [
             'name'         => 'required|string|max:255',
-            'total_amount' => 'required|numeric|min:0.01',
-            'currency_id'  => 'required|exists:currencies,id',
+            'total_amount' => 'required|numeric|min:0.01|max:999999999999.99|decimal:0,2',
+            'currency_id'  => 'required|integer|exists:currencies,id',
             'start_date'   => 'required|date',
             'due_date'     => 'required|date|after_or_equal:start_date',
             'description'  => 'nullable|string',

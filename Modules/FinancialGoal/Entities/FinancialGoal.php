@@ -7,15 +7,6 @@ use Modules\Currency\Entities\Currency;
 use Modules\SharedRoles\Traits\IsShareable;
 use Modules\User\Entities\User;
 
-// O objetivo funciona como uma “subconta” interna.
-// Isto significa que:
-// ➤ Contribuir para o objetivo = mover dinheiro da account para o financial_goal
-// ➤ Levantar dinheiro = mover do financial_goal de volta para uma account
-// Assim, não há confusão:
-// o dinheiro do objetivo é real e deixa de estar disponível para gastar.
-// Estrutura recomendada:
-// Criar uma tabela financial_goal_transactions que também gere transactions normais.
-
 class FinancialGoal extends Model
 {
     use HasFactory, IsShareable;
@@ -23,7 +14,7 @@ class FinancialGoal extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['currency_id', 'name', 'total_amount', 'contributed_amount', 'start_date', 'due_date', 'status', 'description', 'completed_at', 'priority', 'canceled_at'];
+    protected $fillable = ['currency_id', 'name', 'total_amount', 'contributed_amount', 'start_date', 'due_date', 'status', 'description', 'completed_at', 'priority', 'canceled_at', 'funding_mode', 'completed_funding'];
     protected $table    = 'financial_goals';
     protected $cats     = [
         'total_amount' => 'float',

@@ -30,9 +30,9 @@ class FinancialGoalViewResource extends JsonResource
         $canManage             = $sharedRole?->hasPermission("manageFinancialGoalUsers");
         $canCreateTransactions = $sharedRole?->hasPermission("storeFinancialGoalTransaction");
 
-        $actions = ['edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'createTransactions' => $canCreateTransactions];
+        $actions = ['edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'createTransactions' => $canCreateTransactions && $this->financialGoal->funding_mode === 'reservation'];
 
-        return [
+        return array_merge(\Modules\FinancialGoal\Services\GoalReservations::goalSummary($this->financialGoal), [
             'id'                                     => $this->id,
             'name'                                   => $this->name,
             'status'                                 => $this->status,
@@ -77,6 +77,6 @@ class FinancialGoalViewResource extends JsonResource
             'createdAt'                              => $this->createdAt,
 
             'actions'                                => $actions,
-        ];
+        ]);
     }
 }

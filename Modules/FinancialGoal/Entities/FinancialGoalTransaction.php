@@ -13,7 +13,7 @@ class FinancialGoalTransaction extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['financial_goal_id', 'user_id', 'transaction_id', 'type', 'amount', 'date', 'description', 'status'];
+    protected $fillable = ['financial_goal_id', 'user_id', 'transaction_id', 'type', 'amount', 'date', 'description', 'status', 'account_id', 'request_key', 'request_hash', 'expense_created', 'recurring_transaction_id'];
     protected $table    = 'financial_goal_transactions';
 
     protected static function newFactory()
