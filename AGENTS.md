@@ -89,6 +89,8 @@ Enabled modules currently include:
 
 ## Feature Notes
 
+- Transaction category validation on creation must target `TransactionRequest`, not every FormRequest: goal contributions/withdrawals reuse their own FormRequest with a server-assigned internal category. Regression coverage in `PersonalCategoriesTest` checks pending/completed goal movements and manual-selection rejection.
+
 - Personal categories: `Modules/Category/README.md` documents the API and migration. API ownership comes from auth; limit 50 includes archived categories and serializes writes on the user row. `SelectableCategory` protects transaction/recurring assignments and preserves original shared/archived assignments on edits. Existing recurring generation keeps archived references. Focused tests: `php artisan test --filter=PersonalCategoriesTest`. Icon catalogue: `CategoryIcons::ALL` contains 112 names and must match the frontend catalogue and iconMap, including legacy `DollarSign`.
 
 - Currency rates: `CurrencyServiceProvider` schedules `currency:fetch-daily` daily at 10:30 in `Europe/Lisbon`, following Portugal mainland daylight saving changes independently of the application timezone. It uses overlap and single-server locks. The existing minutely `artisan schedule:run` cron handles this command as well as recurring transactions; do not add a separate currency cron. Command output appends to `storage/logs/currency-rates.log`; the API key is configured with `CURRENCY_API_KEY`.

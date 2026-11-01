@@ -12,6 +12,7 @@ use Modules\Accounts\Entities\Transaction;
 use Modules\Accounts\Entities\TransactionsView;
 use Modules\Accounts\Exceptions\InvalidTransactionDateException;
 use Modules\Accounts\Exceptions\Transactions\TransactionNotFoundException;
+use Modules\Accounts\Http\Requests\TransactionRequest;
 use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Category\Repositories\CategoryRepository;
 
@@ -51,7 +52,9 @@ class TransactionRepository implements RepositoryApiInterface
 
             $input["user_id"] = $user->id;
 
-            if ($request instanceof \Illuminate\Foundation\Http\FormRequest) {
+            // Only direct transaction requests select their own category. Goal/debt
+            // repositories assign system categories to their own FormRequests.
+            if ($request instanceof TransactionRequest) {
                 (new \Modules\Category\Rules\SelectableCategory($request->user()->id, $request->input('type')))->lockAndValidate($request->input('category_id'));
             }
 
