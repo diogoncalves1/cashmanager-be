@@ -7,12 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Modules\Accounts\Http\Requests\TransactionUpdateRequest;
 use Modules\Category\Entities\Category;
+use Modules\Category\Http\Requests\CategoryGuestRequest;
 use Modules\Category\Http\Resources\CategoryResource;
 use Modules\Category\Repositories\CategoryRepository;
 use Modules\Category\Rules\SelectableCategory;
+use Modules\Category\Support\CategoryIcons;
 use Modules\RecurringTransaction\Http\Requests\UpdateRecurringTransactionRequest;
 use Modules\User\Entities\User;
 use Tests\TestCase;
@@ -273,6 +276,22 @@ class PersonalCategoriesTest extends TestCase
                 'frequency' => 'monthly', 'start_date' => '2026-11-01',
             ])->assertUnprocessable()->assertJsonValidationErrors('category_id');
         }
+    }
+
+    public function test_the_full_icon_catalogue_is_accepted_and_unknown_icons_are_rejected(): void
+    {
+        $icons = CategoryIcons::ALL;
+        $this->assertCount(112, $icons);
+        $this->assertCount(count($icons), array_unique($icons));
+        $rules = (new CategoryGuestRequest)->rules()['icon'];
+        foreach ($icons as $icon) {
+            $this->assertTrue(Validator::make(['icon' => $icon], ['icon' => $rules])->passes(), $icon);
+        }
+        foreach (['UnknownIcon', '<svg onload=alert(1)>', ['PiggyBank']] as $icon) {
+            $this->assertFalse(Validator::make(['icon' => $icon], ['icon' => $rules])->passes());
+        }
+        $response = $this->postJson('/api/v1/categories', $this->payload(['icon' => 'PiggyBank']))->assertCreated()->assertJsonPath('data.icon', 'PiggyBank');
+        $this->putJson('/api/v1/categories/'.$response->json('data.id'), ['name' => 'Savings', 'icon' => 'DollarSign'])->assertOk()->assertJsonPath('data.icon', 'DollarSign');
     }
 
     public function test_shared_history_can_render_a_personal_category_without_granting_management(): void

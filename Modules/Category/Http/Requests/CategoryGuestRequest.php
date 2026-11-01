@@ -5,6 +5,8 @@ namespace Modules\Category\Http\Requests;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
+use Modules\Category\Support\CategoryIcons;
 
 class CategoryGuestRequest extends FormRequest
 {
@@ -25,7 +27,7 @@ class CategoryGuestRequest extends FormRequest
         return [
             'type' => 'required|in:revenue,expense',
             'name' => 'required|string|max:100',
-            'icon' => 'nullable|string|in:Car,Utensils,Wallet,ShoppingCart,TrendingDown,TrendingUp,Banknote,Briefcase,ShoppingBasket,ChefHat,Bike,CarTaxiFront,Gamepad2,Gamepad,Home,Building,School,Shirt,Pill,Laptop,Hotel,Map,CircleEllipsis,BookOpen,Lightbulb,Wifi,Dumbbell,HeartPulse,GraduationCap,Plane,CircleDollarSign,Receipt,Gift,Landmark,CreditCard,Fuel,Bus,Tv',
+            'icon' => ['nullable', 'string', Rule::in(CategoryIcons::ALL)],
             'color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'user_id' => 'prohibited',
             'is_default' => 'prohibited',
