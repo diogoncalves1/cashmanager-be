@@ -12,7 +12,7 @@ Only the owner can manage or select personal categories. Other members of shared
 
 Archiving hides categories from new selections but leaves existing transactions and recurring generation intact. Restoring makes them selectable again. Permanent deletion is allowed only with no transactions or recurring references, including soft-deleted recurring entries. Name, icon and color edits also update the presentation of existing movements; type is immutable.
 
-These lifecycle, duplicate and sharing rules were proposed during planning and adopted as implementation defaults after the user authorized development. They remain explicit review points in the PR.
+The user explicitly confirmed owner-only selection with visibility on shared-account movements, defaults excluded from the quota, archival of used categories with archived categories still counted, and case/whitespace-insensitive duplicate prevention against personal and default names. Other details above, including type immutability and deletion of unused categories, are documented implementation choices.
 
 ## API
 
