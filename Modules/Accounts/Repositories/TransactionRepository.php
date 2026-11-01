@@ -51,6 +51,10 @@ class TransactionRepository implements RepositoryApiInterface
 
             $input["user_id"] = $user->id;
 
+            if ($request instanceof \Illuminate\Foundation\Http\FormRequest) {
+                (new \Modules\Category\Rules\SelectableCategory($request->user()->id, $request->input('type')))->lockAndValidate($request->input('category_id'));
+            }
+
             $transaction = Transaction::create($input);
 
             $this->activityRepo->storeActivity($account->id, $user->id, 'account', [
@@ -88,6 +92,10 @@ class TransactionRepository implements RepositoryApiInterface
                 throw new \Modules\Accounts\Exceptions\Transactions\UnauthorizedUpdateTransactionException();
             }
 
+            if ($request instanceof \Illuminate\Foundation\Http\FormRequest && $request->has('category_id')) {
+                (new \Modules\Category\Rules\SelectableCategory($request->user()->id, $transaction->type, $transaction->category_id))->lockAndValidate($request->input('category_id'));
+            }
+
             if ($transaction->status == "completed") {
                 $difference = $transaction->amount - $request->get("amount");
                 $this->accountRepository->updateBalance($transaction, $difference);
@@ -113,8 +121,8 @@ class TransactionRepository implements RepositoryApiInterface
                         $values['formatAmount'] = true;
                     }
                     if ($field == 'category_id') {
-                        $values['oldFallback'] = $this->categoryRepo->show($old[$field])->name->{$user->preferences->lang};
-                        $values['newFallback'] = $this->categoryRepo->show($value)->name->{$user->preferences->lang};
+                        $values['oldFallback'] = $this->categoryRepo->show($old[$field])?->localizedName(app()->getLocale());
+                        $values['newFallback'] = $this->categoryRepo->show($value)?->localizedName(app()->getLocale());
                     }
                     $changes[$field] = $values;
                 }

@@ -217,8 +217,8 @@ class ActivityLogMessageResolver
                 $oldModel = $model->find($old);
                 $newModel = $model->find($new);
 
-                $old = $oldModel ? $oldModel->name->{$user->preferences->lang} : $change['oldFallback'];
-                $new = $newModel ? $newModel->name->{$user->preferences->lang} : $change['newFallback'];
+                $old = $oldModel instanceof Category ? $oldModel->localizedName(app()->getLocale()) : ($oldModel ? $oldModel->name->{$user->preferences->lang} : $change['oldFallback']);
+                $new = $newModel instanceof Category ? $newModel->localizedName(app()->getLocale()) : ($newModel ? $newModel->name->{$user->preferences->lang} : $change['newFallback']);
             }
 
             $messages[] = __('activitylog::messages.format-changes.support', [

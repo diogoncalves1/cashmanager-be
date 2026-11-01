@@ -4,6 +4,7 @@ return [
     'summary' => 'Correct the highlighted fields and try again.',
     'messages' => [
         'category_id' => [
+            'integer' => 'Select a valid category.',
             'exists' => 'The selected category is no longer available.',
         ],
         'account_id' => [

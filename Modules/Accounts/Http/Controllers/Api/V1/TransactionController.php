@@ -61,6 +61,8 @@ class TransactionController extends ApiController
             $transaction = $this->repository->store($request);
 
             return $this->ok(new TransactionResource($transaction), __('accounts::messages.transactions.store', ['name' => $transaction->account->name]));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -97,6 +99,8 @@ class TransactionController extends ApiController
             $transaction = $this->repository->update($request, $id);
 
             return $this->ok(new TransactionResource($transaction), __('accounts::messages.transactions.update'));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

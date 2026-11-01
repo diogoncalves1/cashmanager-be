@@ -6,5 +6,6 @@ use Modules\Category\Http\Controllers\CategoryController;
 Route::group([
     'prefix' => 'v1/',
 ], function () {
+    Route::patch('categories/{id}/archive', [\Modules\Category\Http\Controllers\Api\CategoryController::class, 'archive'])->middleware(['auth:sanctum', 'setlocale']);
     Route::middleware(['auth:sanctum', 'setlocale'])->apiResource('categories', \Modules\Category\Http\Controllers\Api\CategoryController::class);
 });
