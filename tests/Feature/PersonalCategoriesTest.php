@@ -9,14 +9,24 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Modules\Accounts\Entities\Account;
 use Modules\Accounts\Http\Requests\TransactionUpdateRequest;
+use Modules\Accounts\Repositories\AccountRepository;
+use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Category\Entities\Category;
 use Modules\Category\Http\Requests\CategoryGuestRequest;
 use Modules\Category\Http\Resources\CategoryResource;
 use Modules\Category\Repositories\CategoryRepository;
 use Modules\Category\Rules\SelectableCategory;
 use Modules\Category\Support\CategoryIcons;
+use Modules\Currency\Entities\Currency;
+use Modules\FinancialGoal\Entities\FinancialGoal;
+use Modules\FinancialGoal\Entities\FinancialGoalTransaction;
+use Modules\FinancialGoal\Http\Requests\CreateFinancialGoalTransactionRequest;
+use Modules\FinancialGoal\Repositories\FinancialGoalRepository;
+use Modules\FinancialGoal\Repositories\FinancialGoalTransactionRepository;
 use Modules\RecurringTransaction\Http\Requests\UpdateRecurringTransactionRequest;
+use Modules\SharedRoles\Entities\SharedRole;
 use Modules\User\Entities\User;
 use Tests\TestCase;
 
@@ -300,5 +310,88 @@ class PersonalCategoriesTest extends TestCase
         $data = (new CategoryResource($category))->resolve(request());
         $this->assertSame('Shared groceries', $data['name']);
         $this->assertFalse($data['canManage']);
+    }
+
+    public function test_goal_contributions_and_withdrawals_use_system_categories_for_pending_and_completed_movements(): void
+    {
+        Schema::table('transactions', function (Blueprint $table) {
+            $table->decimal('amount', 12, 2);
+            $table->date('date');
+            $table->string('status');
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('financial_goals', fn (Blueprint $table) => $table->id());
+        DB::table('financial_goals')->insert(['id' => 1]);
+        Schema::create('financial_goal_transactions', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('financial_goal_id');
+            $table->unsignedBigInteger('transaction_id');
+            $table->unsignedBigInteger('user_id');
+            $table->string('type');
+            $table->decimal('amount', 12, 2);
+            $table->date('date');
+            $table->string('status');
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
+        $role = \Mockery::mock(SharedRole::class)->makePartial();
+        $role->shouldReceive('hasPermission')->andReturnTrue();
+        $currency = new Currency(['code' => 'EUR', 'symbol' => '€']);
+        $account = \Mockery::mock(Account::class)->makePartial();
+        $account->id = 1;
+        $account->setRelation('currency', $currency);
+        $account->shouldReceive('userSharedRole')->andReturn($role);
+        $goal = \Mockery::mock(FinancialGoal::class)->makePartial();
+        $goal->forceFill(['id' => 1, 'status' => 'in_progress'])->setRelation('currency', $currency);
+        $goal->shouldReceive('userSharedRole')->andReturn($role);
+        $this->mock(AccountRepository::class, function ($mock) use ($account) {
+            $mock->shouldReceive('show')->with('1')->andReturn($account);
+            $mock->shouldReceive('adjustBalance')->twice();
+        });
+        $this->mock(FinancialGoalRepository::class, function ($mock) use ($goal) {
+            $mock->shouldReceive('show')->with('1')->andReturn($goal);
+            $mock->shouldReceive('adjustContributedAmount')->twice();
+        });
+        $this->mock(ActivityLogRepository::class, function ($mock) {
+            $mock->shouldReceive('storeActivity')->times(8);
+        });
+        Route::post('/__test/goal-movements', function (CreateFinancialGoalTransactionRequest $request) {
+            $movement = app(FinancialGoalTransactionRepository::class)->store($request);
+
+            return response()->json(['id' => $movement->id], 201);
+        });
+        foreach (['contribution' => 'expense', 'withdrawal' => 'revenue'] as $type => $transactionType) {
+            $category = $this->category([
+                'name' => ['en' => $type], 'type' => $transactionType,
+                'code' => $type === 'contribution' ? 'financialGoalContribution' : 'financialGoalWithdrawal',
+                'is_default' => true, 'user_id' => null,
+            ]);
+            // Internal categories must remain unavailable for manual assignment.
+            foreach (['transactions', 'recurrings'] as $endpoint) {
+                $this->postJson('/api/v1/'.$endpoint, [
+                    'account_id' => 1, 'category_id' => $category->id, 'amount' => 10,
+                    'type' => $transactionType, 'date' => today()->toDateString(), 'status' => 'pending',
+                    'title' => 'Manual', 'frequency' => 'monthly', 'start_date' => today()->toDateString(),
+                ])->assertUnprocessable()->assertJsonValidationErrors('category_id');
+            }
+            foreach (['pending', 'completed'] as $status) {
+                $date = $status === 'pending' ? today()->addDay()->toDateString() : today()->toDateString();
+                $response = $this->postJson('/__test/goal-movements', [
+                    'financial_goal_id' => 1, 'account_id' => 1, 'type' => $type,
+                    'amount' => 10, 'date' => $date, 'status' => $status,
+                    // The server must replace any client-supplied category.
+                    'category_id' => 999,
+                ])->assertCreated();
+                $this->assertDatabaseHas('financial_goal_transactions', [
+                    'id' => $response->json('id'), 'type' => $type, 'status' => $status,
+                ]);
+                $movement = FinancialGoalTransaction::findOrFail($response->json('id'));
+                $this->assertDatabaseHas('transactions', [
+                    'id' => $movement->transaction_id, 'category_id' => $category->id,
+                    'type' => $transactionType, 'status' => $status, 'date' => $date,
+                ]);
+            }
+        }
     }
 }
