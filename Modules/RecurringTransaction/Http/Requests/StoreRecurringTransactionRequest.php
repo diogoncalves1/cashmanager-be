@@ -2,10 +2,14 @@
 
 namespace Modules\RecurringTransaction\Http\Requests;
 
+use Modules\Category\Http\Requests\ValidatesCategorySelection;
+
 use Illuminate\Contracts\Validation\ValidationRule;
 
 class StoreRecurringTransactionRequest extends RecurringTransactionRequest
 {
+    use ValidatesCategorySelection;
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -14,7 +18,7 @@ class StoreRecurringTransactionRequest extends RecurringTransactionRequest
     public function rules(): array
     {
         return [
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'nullable|integer|exists:categories,id',
             'account_id' => 'required|exists:accounts,id',
             'type' => 'required|in:expense,revenue',
             'amount' => 'required|numeric|min:0.01',

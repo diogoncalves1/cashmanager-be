@@ -42,7 +42,7 @@ class TransactionDataTable extends DataTable
 
                 return ['confirm' => $canConfirm, ...CheckPermission::checkMultiple($sharedRole, ['view' => 'viewTransaction', 'edit' => 'editTransaction', 'destroy' => 'destroyTransaction'])];
             })
-            ->editColumn('categoryName', fn(TransactionsView $transaction) => $transaction->category->name->{$user->preferences->lang} ? $transaction->category->name->{$user->preferences->lang} : $transaction->category->name->en);
+            ->editColumn('categoryName', fn(TransactionsView $transaction) => $transaction->category?->localizedName(app()->getLocale()) ?? '');
     }
 
     public function query(TransactionsView $model)

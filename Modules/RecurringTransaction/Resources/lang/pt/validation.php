@@ -4,6 +4,7 @@ return [
     'summary' => 'Corrige os campos indicados e tenta novamente.',
     'messages' => [
         'category_id' => [
+            'integer' => 'Seleciona uma categoria válida.',
             'exists' => 'A categoria selecionada já não está disponível.',
         ],
         'account_id' => [

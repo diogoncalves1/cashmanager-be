@@ -50,6 +50,10 @@ class RecurringTransactionRepository
                 $data['is_linked']   = true;
             }
 
+            if ($request instanceof \Illuminate\Foundation\Http\FormRequest) {
+                (new \Modules\Category\Rules\SelectableCategory($request->user()->id, $request->input('type')))->lockAndValidate($request->input('category_id'));
+            }
+
             $recurring = RecurringTransaction::create([
                  ...$data,
                 'user_id'   => Auth::user()->id,
@@ -67,6 +71,10 @@ class RecurringTransactionRepository
         return DB::transaction(function () use ($request, $id) {
             $recurring = $this->show($id);
             Gate::authorize('update', $recurring);
+
+            if ($request instanceof \Illuminate\Foundation\Http\FormRequest && $request->has('category_id')) {
+                (new \Modules\Category\Rules\SelectableCategory($request->user()->id, $recurring->type, $recurring->category_id))->lockAndValidate($request->input('category_id'));
+            }
 
             $recurring->update($request->only([
                 'category_id', 'amount', 'description',

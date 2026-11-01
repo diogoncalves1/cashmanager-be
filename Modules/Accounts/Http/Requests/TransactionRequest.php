@@ -1,10 +1,14 @@
 <?php
 namespace Modules\Accounts\Http\Requests;
 
+use Modules\Category\Http\Requests\ValidatesCategorySelection;
+
 use Illuminate\Foundation\Http\FormRequest;
 
 class TransactionRequest extends FormRequest
 {
+    use ValidatesCategorySelection;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -23,7 +27,7 @@ class TransactionRequest extends FormRequest
         return [
             'user_id'     => 'nullable|exists:users,id',
             'account_id'  => 'required|exists:accounts,id',
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'required|integer|exists:categories,id',
             'amount'      => 'required|numeric|min:0',
             'type'        => 'required|string|in:revenue,expense',
             'date'        => 'required|date',
