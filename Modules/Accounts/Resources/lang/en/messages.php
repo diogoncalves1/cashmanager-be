@@ -2,6 +2,7 @@
 return [
     // Accounts
     'accounts'             => [
+        'resume_error' => 'Unable to load your account overview. Please try again.',
         'store'   => 'Account :name added successfully!',
         'update'  => 'Account :name updated successfully!',
         'destroy' => 'Account :name deleted successfully!',

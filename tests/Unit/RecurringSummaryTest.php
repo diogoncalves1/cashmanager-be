@@ -4,15 +4,13 @@ namespace Tests\Unit;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Mockery;
 use Modules\Accounts\Entities\Account;
-use Modules\Accounts\Repositories\AccountRepository;
 use Modules\Currency\Entities\Currency;
-use Modules\DashboardCharts\Repositories\DashboardWidgetsRepository;
+use Modules\RecurringTransaction\Repositories\RecurringSummaryRepository;
 use Modules\RecurringTransaction\Entities\RecurringTransaction;
 use Tests\TestCase;
 
-class DashboardWidgetsTest extends TestCase
+class RecurringSummaryTest extends TestCase
 {
     private function item(array $attributes = [], string $currency = 'EUR'): RecurringTransaction
     {
@@ -26,9 +24,9 @@ class DashboardWidgetsTest extends TestCase
 
     private function summary(Collection $items): array
     {
-        $repository = new DashboardWidgetsRepository(Mockery::mock(AccountRepository::class));
+        $repository = new RecurringSummaryRepository;
 
-        return $repository->summarizeRecurring($items, Carbon::parse('2026-10-21'));
+        return $repository->summarize($items, Carbon::parse('2026-10-21'));
     }
 
     public function test_currency_totals_are_numeric_and_never_mix_currencies_or_paused_items(): void

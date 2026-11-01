@@ -131,7 +131,8 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
         $user  = $request->user();
         $query = Category::query()
             ->join('transactions', 'categories.id', '=', 'transactions.category_id')
-            ->where('transactions.user_id', $user->id)
+            ->join('accounts_view as category_accounts', 'category_accounts.id', '=', 'transactions.account_id')
+            ->whereRaw("FIND_IN_SET(?, REPLACE(category_accounts.user_ids, ' ', ''))", [$user->id])
             ->distinct()
             ->select("categories.*");
 
@@ -155,7 +156,9 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
     {
         $user  = $request->user();
         $query = Category::query()->join('recurring_transactions', 'categories.id', '=', 'recurring_transactions.category_id')
-            ->where('recurring_transactions.user_id', $user->id)
+            ->join('accounts_view as category_accounts', 'category_accounts.id', '=', 'recurring_transactions.account_id')
+            ->whereRaw("FIND_IN_SET(?, REPLACE(category_accounts.user_ids, ' ', ''))", [$user->id])
+            ->whereNull('recurring_transactions.deleted_at')
             ->distinct()
             ->select("categories.*");
 

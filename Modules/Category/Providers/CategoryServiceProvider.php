@@ -25,7 +25,7 @@ class CategoryServiceProvider extends ServiceProvider
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
-        $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
+        $this->loadMigrationsFrom(module_path($this->name, 'Database/Migrations'));
         $this->loadTranslationsFrom(__DIR__ . '/../Resources/lang', 'category');
     }
 

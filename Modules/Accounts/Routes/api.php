@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Accounts\Http\Controllers\Api\V1\AccountController;
+use Modules\Accounts\Http\Controllers\Api\V1\AccountResumeController;
 use Modules\Accounts\Http\Controllers\Api\V1\AccountUserController;
 use Modules\Accounts\Http\Controllers\Api\V1\AccountUserInviteController;
 use Modules\Accounts\Http\Controllers\Api\V1\TransactionController;
@@ -15,6 +16,8 @@ Route::group([
             'middleware' => ['auth:sanctum', 'setlocale'],
         ],
         function () {
+            Route::get('account/resume', AccountResumeController::class);
+
             // Accounts
             Route::group([
                 'prefix' => 'accounts',

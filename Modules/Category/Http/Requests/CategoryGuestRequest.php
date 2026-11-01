@@ -2,29 +2,59 @@
 
 namespace Modules\Category\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
+use Modules\Category\Support\CategoryIcons;
 
 class CategoryGuestRequest extends FormRequest
 {
-    /**
-     * Get the validation rules that apply to the request.
-     */
-    public function rules(): array
-    {
-        return [
-            'type' => 'required|string|in:revenue,expense',
-            'name' => 'required|string|max:255',
-            'icon' => 'nullable|string|max:255',
-            'color' => 'nullable|string',
-            'parent_id' => 'nullable|exists:categories,id',
-        ];
-    }
-
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('name'))) {
+            $this->merge(['name' => trim(preg_replace('/\s+/u', ' ', $this->input('name')))]);
+        }
+    }
+
+    public function rules(): array
+    {
+        return [
+            'type' => 'required|in:revenue,expense',
+            'name' => 'required|string|max:100',
+            'icon' => ['nullable', 'string', Rule::in(CategoryIcons::ALL)],
+            'color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'user_id' => 'prohibited',
+            'is_default' => 'prohibited',
+            'code' => 'prohibited',
+            'parent_id' => 'prohibited',
+            'archived_at' => 'prohibited',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => __('category::validation.name_required'),
+            'name.max' => __('category::validation.name_max'),
+            'type.required' => __('category::validation.type'),
+            'type.in' => __('category::validation.type'),
+            'color.regex' => __('category::validation.color'),
+            'icon.in' => __('category::validation.icon'),
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => __('category::validation.summary'),
+            'errors' => $validator->errors(),
+        ], 422));
     }
 }

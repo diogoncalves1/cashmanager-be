@@ -13,11 +13,15 @@ use Modules\RecurringTransaction\Http\Requests\StoreRecurringTransactionRequest;
 use Modules\RecurringTransaction\Http\Requests\UpdateRecurringTransactionRequest;
 use Modules\RecurringTransaction\Http\Resources\RecurringTransactionResource;
 use Modules\RecurringTransaction\Repositories\RecurringTransactionRepository;
+use Modules\RecurringTransaction\Repositories\RecurringSummaryRepository;
 
 class RecurringTransactionController extends ApiController
 {
-    public function __construct(protected RecurringTransactionRepository $repository, protected CategoryRepository $categoryRepo)
-    {}
+    public function __construct(
+        protected RecurringTransactionRepository $repository,
+        protected CategoryRepository $categoryRepo,
+        protected RecurringSummaryRepository $summary,
+    ) {}
 
     /**
      * Retrieve all recurring expenses for the given account
@@ -34,6 +38,10 @@ class RecurringTransactionController extends ApiController
             $data['meta'] = [
                 'categories' => new CategoryCollection($categories),
             ];
+
+            if ($request->boolean('includeSummary')) {
+                $data['meta']['summary'] = $this->summary->forUser($request->user()->id);
+            }
 
             return new DataTableResource($data);
         });

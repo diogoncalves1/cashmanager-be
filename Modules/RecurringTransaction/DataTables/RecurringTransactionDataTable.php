@@ -51,7 +51,7 @@ class RecurringTransactionDataTable extends DataTable
             ->addColumn('linked', fn(RecurringTransaction $transaction) => $transaction->is_linked && $transaction->linked ? ['id' => $transaction->linked->id, 'name' => $transaction->linked->name] : null)
             ->editColumn('linkedType', fn(RecurringTransaction $transaction) => $transaction->is_linked ? $this->linkedTypes[$transaction->linked_type] : null)
             ->editColumn('userName', fn(RecurringTransaction $transaction) => $transaction->user->name)
-            ->editColumn('category', fn(RecurringTransaction $transaction) => new CategoryResource($transaction->category))
+            ->editColumn('category', fn(RecurringTransaction $transaction) => $transaction->category ? new CategoryResource($transaction->category) : null)
             ->removeColumn(['account_id', 'account', 'user', 'category_id', 'user_id', 'linked_type', 'linked_id', 'created_at', 'updated_at', 'deleted_at', 'is_linked', 'last_generated_at', 'is_active', 'end_date', 'custom_frequency_days', 'start_date']);
     }
 

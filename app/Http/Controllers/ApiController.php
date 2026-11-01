@@ -12,6 +12,8 @@ class ApiController extends AppController
     {
         try {
             return $callback();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error($e);
 

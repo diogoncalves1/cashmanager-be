@@ -2,17 +2,18 @@
 
 namespace Modules\DashboardCharts\Repositories;
 
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Modules\Accounts\Repositories\AccountRepository;
 use Modules\Debts\Entities\DebtsView;
 use Modules\FinancialGoal\Entities\FinancialGoalView;
-use Modules\RecurringTransaction\Entities\RecurringTransaction;
+use Modules\RecurringTransaction\Repositories\RecurringSummaryRepository;
 
 class DashboardWidgetsRepository
 {
-    public function __construct(protected AccountRepository $accounts) {}
+    public function __construct(
+        protected AccountRepository $accounts,
+        protected RecurringSummaryRepository $recurring,
+    ) {}
 
     public function get(Request $request): array
     {
@@ -45,51 +46,11 @@ class DashboardWidgetsRepository
                 'statusTranslated' => __('financialgoal::attributes.financial-goals.status.'.$goal->status),
             ])->all();
 
-        $recurring = RecurringTransaction::query()
-            ->join('accounts_view as av', 'av.id', '=', 'recurring_transactions.account_id')
-            ->whereRaw("FIND_IN_SET(?, REPLACE(av.user_ids, ' ', ''))", [$userId])
-            ->select('recurring_transactions.*')->with('account.currency')->get();
-
         return [
             'accounts' => $this->accounts->getStats($request),
             'debts' => $debts,
             'goals' => $goals,
-            'recurring' => $this->summarizeRecurring($recurring, now()->startOfDay()),
-        ];
-    }
-
-    public function summarizeRecurring(Collection $items, Carbon $today): array
-    {
-        $active = $items->filter(fn ($item) => $item->is_active);
-        $currencies = [];
-        foreach ($active as $item) {
-            $code = $item->account->currency->code;
-            $currencies[$code] ??= ['currencyCode' => $code, 'monthlyIncome' => 0.0, 'monthlyExpenses' => 0.0];
-            $amount = (float) $item->amount;
-            $monthly = match ($item->frequency) {
-                'daily' => $amount * 30,
-                'weekly' => $amount * 52 / 12,
-                'monthly' => $amount,
-                'yearly' => $amount / 12,
-                'custom' => $item->custom_frequency_days > 0 ? $amount * 30 / $item->custom_frequency_days : 0,
-                default => 0,
-            };
-            $key = $item->type === 'revenue' ? 'monthlyIncome' : 'monthlyExpenses';
-            $currencies[$code][$key] += $monthly;
-        }
-        $end = $today->copy()->addDays(7)->toDateString();
-        $upcoming = $active->filter(fn ($item) => $item->next_occurrence && $item->next_occurrence <= $end)
-            ->sortBy('next_occurrence')->take(5)->map(fn ($item) => [
-                'id' => $item->id, 'title' => $item->title, 'type' => $item->type,
-                'amount' => (float) $item->amount, 'currencyCode' => $item->account->currency->code,
-                'nextOccurrence' => $item->next_occurrence,
-            ])->values()->all();
-
-        return [
-            'activeCount' => $active->count(), 'pausedRecurring' => $items->count() - $active->count(),
-            'incomeCount' => $active->where('type', 'revenue')->count(),
-            'expenseCount' => $active->where('type', 'expense')->count(),
-            'currencySummaries' => array_values($currencies), 'upcoming' => $upcoming,
+            'recurring' => $this->recurring->forUser($userId),
         ];
     }
 }
