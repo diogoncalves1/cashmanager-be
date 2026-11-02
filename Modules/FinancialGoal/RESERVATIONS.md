@@ -4,7 +4,7 @@ Branch BE: `feature/CM-120`. Frontend: `feature/CM-250`, issue `cashmanager-web#
 
 ## Rules implemented
 
-- New goals use `funding_mode=reservation`. Existing goals default to `legacy` and keep their balances/history until explicitly reconciled.
+- New goals use `funding_mode=reservation`. Existing goals first default to `legacy`; the deployment data migrations recover their account associations and automatically convert their reconciled history to reservations.
 - A goal can reserve across several accounts, all in the goal's currency. No implicit currency conversion or transfer between accounts.
 - `contribution` reserves; `withdrawal` releases; `usage` consumes a reserve through an actual expense. Reserve/release never create account transactions.
 - For each account: `availableAmount = balance - reservedAmount`, across every reservation goal. Existing ordinary spending can produce a shortfall; negative available amounts are displayed without warning messages or clamping to zero. Account balances and available money are informational: zero/negative balances and reservations above the balance never block movements.
@@ -33,11 +33,11 @@ All paths below use `/api/v1`, Sanctum and the existing locale middleware.
 - Validation inside writes returns HTTP 422 with field `errors`; authorization/not-found remain HTTP 403/404.
 - Goal responses expose `fundingMode`, `reservedAmount`, `usedAmount`, `fundedAmount`, `completedFunding`; account responses add reserved/available/shortfall amounts. Transaction detail/list responses expose only visible `goalUsages`.
 
-## Existing data: explicit conversion
+## Existing data: automatic conversion during deployment
 
 The follow-up migration `2026_11_02_180000_backfill_financial_goal_accounts.php` automatically copies each legacy movement's historical account from `transactions.account_id` into `financial_goal_transactions.account_id`, including pending contributions and withdrawals. It runs after the schema migration, also on environments where that migration has already been applied. It fills only missing associations with a valid existing account and preserves existing assignments, amounts, statuses, transaction links, balances and funding mode. Repeating it is safe; rollback keeps recovered associations.
 
-Recovered legacy movements remain outside the new reservation/available calculations until explicit accounting conversion. They already reduced balances in the old model; including them earlier would deduct them a second time. Conversion checks any recovered account against the original transaction rather than overwriting a disagreement.
+Recovered legacy movements remain outside the new reservation/available calculations between the association migration and accounting conversion, so their old account debits are not deducted twice. The following migration, `2026_11_02_190000_convert_legacy_goal_reservations.php`, performs the accounting conversion automatically for every legacy goal, including completed, cancelled and empty goals. It does not require per-user confirmation. This replaces the earlier manual-conversion rollout by explicit user decision on 2026-11-02.
 
 If a historical transaction/account is missing, or a goal has a contributed total without movement history, the migration cannot infer the source. Review those cases explicitly; the converter rejects inconsistent history. This read-only query lists missing account assignments and funded goals without movements:
 
@@ -53,14 +53,17 @@ HAVING unassigned_movements > 0
     OR (movement_count = 0 AND fg.contributed_amount <> 0);
 ```
 
-Conversion must only be confirmed when the old internal movements represent money **still held in the listed accounts**. If that money was spent or moved elsewhere, reconcile the actual situation first. No automatic bulk conversion is run by the schema migration.
+The conversion validates old transaction links, types, statuses, internal categories, amounts, currency, recurring identities, account assignments, per-account nonnegative net reserves and reconciliation with each goal's contributed total. A missing origin or inconsistent total aborts the entire conversion transaction and reports the goal ID. All converted goals, balances, removed account transactions and audit writes roll back together. Repair the historical inconsistency before rerunning; the migration never invents an account or skips a failed goal silently.
 
-1. `GET financial-goals/{id}/reservation-conversion` previews account balances before/after restoring the old internal net contribution, the corresponding reserve and a SHA-256 preview token.
-2. Verify the displayed accounts and the actual location of the money.
-3. `POST` to the same path with `{ "confirm": true, "token": "<preview token>" }` explicitly accepts that interpretation. Any changed snapshot requires another preview.
-4. The converter validates all old transaction links, types, statuses, internal categories, amounts, currency, permissions, per-account nonnegative net reserves and reconciliation with the goal's contributed total. Inconsistencies are rejected for manual review.
-5. In one transaction it stores the complete original goal, movements, account transactions and account balances in `financial_goal_conversions.snapshot`, attaches each movement directly to its account, removes the reconciled internal account transactions, restores their net amount to account balances and switches the goal to reservations. Existing reports then exclude those internal movements without special-case filters.
-6. Every existing transaction used by a legacy goal must remain linked to exactly one goal movement. The converter rejects broken or shared links rather than guessing their meaning. Repeating conversion cannot adjust balances a second time.
+For each reconciled goal, it:
+
+1. Saves the complete original goal, movements, account transactions and account balances in `financial_goal_conversions.snapshot`. System conversions have actor `user_id=0`, source `migration` and balance policy `restore_internal_movements`; no logged-in user or account ownership is required by the deployment migration.
+2. Attaches each movement directly to the account from its original transaction and preserves pending/completed status, amount, date and recurring identity.
+3. Removes only the linked internal goal account transactions. Real expenses and unrelated transactions remain untouched. Historical copies remain in the audit snapshot.
+4. Restores the old net completed contributions to each account balance, reversing old withdrawal credits as part of the same net calculation. Pending movements do not change balances. This is the user-approved policy: existing contributions should behave like the new model, which does not debit the account when reserving.
+5. Switches the goal to reservations without changing its contributed total, lifecycle status or target. Completed goals preserve their funding snapshot and remain able to use/release their reserves. New reservations/usage work immediately after migration.
+
+All old goals are converted in one database transaction; repeating the migration skips converted goals and cannot restore balances twice. Existing reservation goals and their real expenses are left untouched. The old authenticated preview/token endpoint remains available for controlled diagnostics/compatibility; it retains all user permissions and confirmation checks and cannot enable the privileged migration path through request parameters. It is no longer the normal rollout flow.
 
 Keep a database backup before conversion. An audit snapshot is evidence for reconciliation; do not blindly overwrite an account balance from it after newer transactions exist. Converted/new goals prevent schema rollback. Recovery requires a coordinated backup restore or a separately reviewed reconciliation; there is no destructive automatic rollback.
 
@@ -71,10 +74,11 @@ Deliver the schema migration and backend together before enabling the frontend f
 ```sh
 php artisan migrate \
   --path=Modules/FinancialGoal/Database/Migrations/2026_11_01_180000_add_goal_reservations.php \
-  --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_180000_backfill_financial_goal_accounts.php
+  --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_180000_backfill_financial_goal_accounts.php \
+  --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_190000_convert_legacy_goal_reservations.php
 ```
 
-The migration changes goal amount precision to two decimal places, extends the ledger, creates request receipts and conversion audit tables, and replaces `financial_goal_transaction_view`. The follow-up migration recovers historical account associations without converting the accounting or adjusting balances. Legacy goal mutations are blocked with a conversion explanation until reconciled.
+The migration changes goal amount precision to two decimal places, extends the ledger, creates request receipts and conversion audit tables, and replaces `financial_goal_transaction_view`. The second migration recovers account associations; the third automatically converts all reconciled legacy goals, restores the original internal net debits and makes them usable in the new flow. Do not enable the new frontend if conversion fails. Both data migrations must be included; applying only the schema/association migrations leaves the intermediate legacy state. Pause application/recurring writes during deployment, rehearse against a production copy and keep the backup and audit records.
 
 Focused checks:
 

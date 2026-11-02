@@ -89,7 +89,7 @@ Enabled modules currently include:
 
 ## Feature Notes
 
-- Financial-goal reservations (CM-120/CM-250): see `Modules/FinancialGoal/RESERVATIONS.md` for contracts, lifecycle and deployment. New goals reserve money without requiring a positive/sufficient account balance (available/shortfall are informational); `usage` creates/links a real expense. A follow-up data migration recovers legacy movement account IDs from their transactions without changing balances; legacy entries stay outside reservation totals until explicit preview/token conversion with an audit snapshot. Run `php artisan test --filter=GoalReservationsTest`; never auto-convert legacy data.
+- Financial-goal reservations (CM-120/CM-250): see `Modules/FinancialGoal/RESERVATIONS.md`. New reserve/release movements do not debit accounts or require a positive balance. Deployment migrations recover historical account IDs, then automatically convert all reconciled legacy goals and restore the old internal net debits (user-approved policy, 2026-11-02). Conversion is atomic across all goals, idempotent and audited with system actor 0; inconsistent history aborts with a goal ID. Manual preview/token conversion is retained only for diagnostics/compatibility, not the normal rollout. Run `php artisan test --filter=GoalReservationsTest`; never execute production data migrations without deployment authorization.
 
 - Transaction category validation on creation must target `TransactionRequest`, not every FormRequest: goal contributions/withdrawals reuse their own FormRequest with a server-assigned internal category. Regression coverage in `PersonalCategoriesTest` checks pending/completed goal movements and manual-selection rejection.
 
