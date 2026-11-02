@@ -39,12 +39,6 @@ class FinancialGoalController extends ApiController
             $data = $dataTable->ajax()->getData(true);
 
             return response()->json(array_merge($data, ['stats' => $stats]));
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, 500);
@@ -62,12 +56,6 @@ class FinancialGoalController extends ApiController
             $financialGoal = $this->repository->store($request);
 
             return $this->ok(new FinancialGoalResource($financialGoal), __('financialgoal::messages.financial-goals.store', ['name' => $financialGoal->name]));
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -91,12 +79,6 @@ class FinancialGoalController extends ApiController
                 'transactions'   => new FinancialGoalTransactionViewCollection($lastTransactions),
                 'monthlySummary' => new FinancialGoalMonthlyResumeCollection($monthlySummary),
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -115,12 +97,6 @@ class FinancialGoalController extends ApiController
             $financialGoal = $this->repository->update($request, $id);
 
             return $this->ok(new FinancialGoalResource($financialGoal), __('financialgoal::messages.financial-goals.update', ['name' => $financialGoal->name]));
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -139,12 +115,6 @@ class FinancialGoalController extends ApiController
             $financialGoal = $this->repository->destroy($request, $id);
 
             return $this->ok(message: __('financialgoal::messages.financial-goals.destroy', ['name' => $financialGoal->name]));
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -163,12 +133,6 @@ class FinancialGoalController extends ApiController
             $financialGoal = $this->repository->cancel($request, $id);
 
             return $this->ok(new FinancialGoalResource($financialGoal), __('financialgoal::messages.financial-goals.cancel', ['name' => $financialGoal->name]));
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -187,12 +151,6 @@ class FinancialGoalController extends ApiController
             $financialGoal = $this->repository->complete($request, $id);
 
             return $this->ok(new FinancialGoalResource($financialGoal), __('financialgoal::messages.financial-goals.complete', ['name' => $financialGoal->name]));
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -211,12 +169,6 @@ class FinancialGoalController extends ApiController
             $financialGoal = $this->repository->reset($request, $id);
 
             return $this->ok(new FinancialGoalResource($financialGoal), __('financialgoal::messages.financial-goals.reset', ['name' => $financialGoal->name]));
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -235,12 +187,6 @@ class FinancialGoalController extends ApiController
             $financialGoals = $this->repository->allUser($request);
 
             return $this->ok(new FinancialGoalBasicViewCollection($financialGoals));
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -259,12 +205,6 @@ class FinancialGoalController extends ApiController
             $stats = $this->repository->getFormStats($request);
 
             return $this->ok(new FinancialGoalStatsResource($stats));
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -288,12 +228,6 @@ class FinancialGoalController extends ApiController
             $dataTable->id   = $id;
 
             return $dataTable->ajax();
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

@@ -13,22 +13,13 @@ class CreateFinancialGoalTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'financial_goal_id' => 'required|integer|exists:financial_goals,id',
-            'amount'            => 'required|numeric|min:0.01|max:999999999999.99|decimal:0,2',
+            'financial_goal_id' => 'required|exists:financial_goals,id',
+            'amount'            => 'required|numeric|min:0.01',
             'date'              => 'required|date',
             'status'            => 'required|string|in:completed,pending',
-            'type'              => 'required|string|in:withdrawal,contribution,usage',
-            'description'       => 'nullable|string|max:255',
-            'transaction_id' => 'nullable|integer|exists:transactions,id',
-            'category_id' => 'exclude_unless:type,usage|nullable|integer|exists:categories,id',
-            'request_key' => [\Illuminate\Validation\Rule::requiredIf(fn () =>
-                is_scalar($this->input('financial_goal_id'))
-                && \Illuminate\Support\Facades\Schema::hasColumn('financial_goals', 'funding_mode')
-                && \Modules\FinancialGoal\Entities\FinancialGoal::whereKey($this->input('financial_goal_id'))->where('funding_mode', 'reservation')->exists()
-            ), 'nullable', 'string', 'max:100'],
-            'recurring_transaction_id' => 'prohibited',
-            'is_recurring' => 'prohibited',
-            'account_id'        => 'required|integer|exists:accounts,id',
+            'type'              => 'required|in:withdrawal,contribution',
+            'description'       => 'nullable|string',
+            'account_id'        => 'required|exists:accounts,id',
         ];
     }
 

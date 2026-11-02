@@ -21,9 +21,8 @@ return [
         ],
 
         'type'   => [
-            'contribution' => 'Reserva',
-            'usage' => 'Utilização',
-            'withdrawal'   => 'Libertação',
+            'contribution' => 'Contribuíção',
+            'withdrawal'   => 'Retirada',
         ],
     ],
 

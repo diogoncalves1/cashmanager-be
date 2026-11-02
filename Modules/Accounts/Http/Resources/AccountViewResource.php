@@ -34,8 +34,7 @@ class AccountViewResource extends JsonResource
         foreach ($this->invites as &$user) {
             $user->sharedRole = $user->pivot->sharedRole;
         }
-        $reservationAccount = \Modules\Accounts\Entities\Account::find($this->id);
-        return array_merge($reservationAccount ? \Modules\FinancialGoal\Services\GoalReservations::accountSummary($reservationAccount) : [], [
+        return [
             'id'                           => $this->id,
             'name'                         => $this->name,
             'currencySymbol'               => $this->currencySymbol,
@@ -55,6 +54,6 @@ class AccountViewResource extends JsonResource
             'users'                        => new UserShareCollection($this->users),
             'invites'                      => new UserShareCollection($this->invites),
             'actions'                      => $actions,
-        ]);
+        ];
     }
 }

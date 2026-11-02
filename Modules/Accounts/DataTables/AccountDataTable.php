@@ -24,8 +24,6 @@ class AccountDataTable extends DataTable
 
         return datatables()
             ->eloquent($query)
-            ->addColumn('reservedAmount', fn ($account) => \Modules\FinancialGoal\Services\GoalReservations::reserved($account->id))
-            ->addColumn('availableAmount', fn ($account) => (float) $account->balance - \Modules\FinancialGoal\Services\GoalReservations::reserved($account->id))
             ->addColumn('typeTranslated', fn(AccountsView $account) => __('accounts::attributes.accounts.type.' . $account->type))
             ->addColumn('balanceFormated', fn(AccountsView $account) => Helpers::formatMoneyWithSymbolAndCurrency($account->balance, $account->currencyCode, $account->currencySymbol))
             ->addColumn('statusTranslated', fn(AccountsView $account) => __("accounts::attributes.accounts.status." . ($account->status ? 'active' : 'disabled')))

@@ -35,13 +35,6 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
 
     public function store(Request $request)
     {
-        $goal = $this->financialGoalRepository->show($request->get('financial_goal_id'));
-        if ($goal->funding_mode === 'reservation') {
-            return app(\Modules\FinancialGoal\Services\GoalReservations::class)->store($request);
-        }
-        if ($goal->funding_mode === 'legacy') {
-            \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'legacy');
-        }
         return DB::transaction(function () use ($request) {
             $user = $request->user();
 
@@ -114,13 +107,6 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
 
     public function update(Request $request, string $id)
     {
-        $goal = $this->show($id)->financialGoal;
-        if ($goal->funding_mode === 'reservation') {
-            return app(\Modules\FinancialGoal\Services\GoalReservations::class)->change($request, $id, 'update');
-        }
-        if ($goal->funding_mode === 'legacy') {
-            \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'legacy');
-        }
         return DB::transaction(function () use ($request, $id) {
             $financialGoalTransaction = $this->show($id);
             $financialGoal            = $financialGoalTransaction->financialGoal;
@@ -187,13 +173,6 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
 
     public function destroy(Request $request, string $id)
     {
-        $goal = $this->show($id)->financialGoal;
-        if ($goal->funding_mode === 'reservation') {
-            return app(\Modules\FinancialGoal\Services\GoalReservations::class)->change($request, $id, 'destroy');
-        }
-        if ($goal->funding_mode === 'legacy') {
-            \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'legacy');
-        }
         return DB::transaction(function () use ($id, $request) {
             $financialGoalTransaction = $this->show($id);
 
@@ -228,13 +207,6 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
 
     public function confirm(Request $request, string $id)
     {
-        $goal = $this->show($id)->financialGoal;
-        if ($goal->funding_mode === 'reservation') {
-            return app(\Modules\FinancialGoal\Services\GoalReservations::class)->change($request, $id, 'confirm');
-        }
-        if ($goal->funding_mode === 'legacy') {
-            \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'legacy');
-        }
         return DB::transaction(function () use ($id, $request) {
             $financialGoalTransaction = $this->show($id);
 

@@ -18,7 +18,7 @@ class FinancialGoalTransactionResource extends JsonResource
             'userId'          => $this->user_id,
             'transactionId'   => $this->transaction_id,
             'type'            => $this->type,
-            'amount'          => (float) $this->amount,
+            'amount'          => $this->amount,
             'date'            => $this->date,
             'description'     => $this->description,
             'status'          => $this->status,

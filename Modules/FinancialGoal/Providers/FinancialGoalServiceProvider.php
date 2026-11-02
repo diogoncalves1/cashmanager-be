@@ -26,7 +26,7 @@ class FinancialGoalServiceProvider extends ServiceProvider
         $this->registerTranslations();
         $this->registerConfig();
         // $this->registerViews();
-        $this->loadMigrationsFrom(module_path($this->name, 'Database/Migrations'));
+        $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
         $this->loadTranslationsFrom(__DIR__ . '/../Resources/lang', 'financialgoal');
     }
 
@@ -44,7 +44,7 @@ class FinancialGoalServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        $this->commands([\Modules\FinancialGoal\Console\Commands\InspectGoalReservations::class]);
+        // $this->commands([]);
     }
 
     /**

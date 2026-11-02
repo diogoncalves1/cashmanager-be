@@ -24,12 +24,10 @@ class FinancialGoalTransactionViewResource extends JsonResource
         $canConfirm            = $this->status == 'pending' && $this->date <= date('Y-m-d') && $sharedRole?->hasPermission("confirmScheduledFinancialGoalTransactions");
         $canCreateTransactions = $sharedRole?->hasPermission("storeFinancialGoalTransaction");
 
-        $actions = ['edit' => $canEdit && ($this->fundingMode !== 'reservation' || $this->status === 'pending'), 'destroy' => $canDestroy && ($this->fundingMode !== 'reservation' || $this->status === 'pending' || $this->type === 'usage'), 'confirm' => $canConfirm, 'store' => $canCreateTransactions];
+        $actions = ['edit' => $canEdit, 'destroy' => $canDestroy, 'confirm' => $canConfirm, 'store' => $canCreateTransactions];
 
         return [
             'id'                => $this->id,
-            'transactionId' => $this->transactionId,
-            'fundingMode' => $this->fundingMode,
             'type'              => $this->type,
             'typeTranslated'    => __('financialgoal::attributes.financial-goal-transactions.type.' . $this->type),
             'status'            => $this->status,
@@ -47,8 +45,8 @@ class FinancialGoalTransactionViewResource extends JsonResource
             'accountId'         => $this->accountId,
             'accountName'       => $this->accountName,
             'accountType'       => __('accounts::attributes.accounts.type.' . $this->accountType),
-            'sharedRole'        => $this->sharedRoleName?->$lang,
-            'balanceAfter'      => Helpers::formatMoneyWithSymbolAndCurrency(($this->balanceBefore ?? 0) + ($this->status === 'completed' ? ($this->type === 'contribution' ? $this->amount : -$this->amount) : 0), $this->currencyCode, $this->currencySymbol),
+            'sharedRole'        => $this->sharedRoleName->$lang,
+            'balanceAfter'      => Helpers::formatMoneyWithSymbolAndCurrency(($this->balanceBefore ?? 0) + $this->amount, $this->currencyCode, $this->currencySymbol),
             'balanceBefore'     => Helpers::formatMoneyWithSymbolAndCurrency($this->balanceBefore ?? 0, $this->currencyCode, $this->currencySymbol),
 
             'actions'           => $actions,

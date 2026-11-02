@@ -13,9 +13,9 @@ class UpdateFinancialGoalTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount'      => 'required|numeric|min:0.01|max:999999999999.99|decimal:0,2',
+            'amount'      => 'required|numeric|min:0.01',
             'date'        => 'required|date',
-            'description' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
         ];
     }
 
