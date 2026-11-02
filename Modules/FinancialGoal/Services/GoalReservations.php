@@ -29,8 +29,10 @@ class GoalReservations
         if (! Schema::hasColumn('financial_goals', 'funding_mode')) {
             return 0;
         }
-        // Direct account IDs are populated only for new/explicitly converted reservations.
+        // Backfilled legacy entries already affected account balances. Include them
+        // only after explicit conversion, otherwise available money is reduced twice.
         $query = FinancialGoalTransaction::where('account_id', $accountId)->where('status', 'completed')
+            ->whereHas('financialGoal', fn ($goals) => $goals->where('funding_mode', 'reservation'))
             ->when($goalId, fn ($query) => $query->where('financial_goal_id', $goalId));
         if ($currentRead) {
             // A locking read sees the latest committed rows even after a transaction

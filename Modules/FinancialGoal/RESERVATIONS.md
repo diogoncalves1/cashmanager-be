@@ -19,7 +19,7 @@ Branch BE: `feature/CM-120`. Frontend: `feature/CM-250`, issue `cashmanager-web#
 - Deleting a usage **unlinks it**, preserves its expense and restores the reservation; this can expose a shortfall. Unlink usages before editing/deleting an expense or recording a reversal/refund. There is no automatic refund or reimbursement allocation.
 - Both account and goal permissions apply. Candidate expenses/associations require account `viewAccount`, `viewTransaction` and `createTransaction`; goal writes use the existing goal-movement permissions. Names of inaccessible goals are not disclosed from shared transaction details.
 - User/account/goal locks serialize writes. HTTP creation requires a stable `request_key`; receipts survive unlink/deletion so replaying an old purchase request cannot create another expense. Recurring occurrences use a unique recurring ID/date pair.
-- Recurring goal expenses generate reserves; recurring goal revenues generate releases. Missing funds fail without advancing generation. Monthly savings estimates are separate from income/expenses. Real account reports contain only real transactions.
+- Recurring goal expenses generate reserves; recurring goal revenues generate releases. Releases above the goal reserve fail without advancing generation. Monthly savings estimates are separate from income/expenses. Real account reports contain only real transactions.
 
 ## API
 
@@ -34,6 +34,24 @@ All paths below use `/api/v1`, Sanctum and the existing locale middleware.
 - Goal responses expose `fundingMode`, `reservedAmount`, `usedAmount`, `fundedAmount`, `completedFunding`; account responses add reserved/available/shortfall amounts. Transaction detail/list responses expose only visible `goalUsages`.
 
 ## Existing data: explicit conversion
+
+The follow-up migration `2026_11_02_180000_backfill_financial_goal_accounts.php` automatically copies each legacy movement's historical account from `transactions.account_id` into `financial_goal_transactions.account_id`, including pending contributions and withdrawals. It runs after the schema migration, also on environments where that migration has already been applied. It fills only missing associations with a valid existing account and preserves existing assignments, amounts, statuses, transaction links, balances and funding mode. Repeating it is safe; rollback keeps recovered associations.
+
+Recovered legacy movements remain outside the new reservation/available calculations until explicit accounting conversion. They already reduced balances in the old model; including them earlier would deduct them a second time. Conversion checks any recovered account against the original transaction rather than overwriting a disagreement.
+
+If a historical transaction/account is missing, or a goal has a contributed total without movement history, the migration cannot infer the source. Review those cases explicitly; the converter rejects inconsistent history. This read-only query lists missing account assignments and funded goals without movements:
+
+```sql
+SELECT fg.id, fg.name, fg.contributed_amount,
+       COUNT(fgt.id) AS movement_count,
+       SUM(CASE WHEN fgt.id IS NOT NULL AND fgt.account_id IS NULL THEN 1 ELSE 0 END) AS unassigned_movements
+FROM financial_goals fg
+LEFT JOIN financial_goal_transactions fgt ON fgt.financial_goal_id = fg.id
+WHERE fg.funding_mode = 'legacy'
+GROUP BY fg.id, fg.name, fg.contributed_amount
+HAVING unassigned_movements > 0
+    OR (movement_count = 0 AND fg.contributed_amount <> 0);
+```
 
 Conversion must only be confirmed when the old internal movements represent money **still held in the listed accounts**. If that money was spent or moved elsewhere, reconcile the actual situation first. No automatic bulk conversion is run by the schema migration.
 
@@ -51,10 +69,12 @@ Keep a database backup before conversion. An audit snapshot is evidence for reco
 Deliver the schema migration and backend together before enabling the frontend flow. Apply the additive migration in a coordinated deployment, after backup and a staging rehearsal:
 
 ```sh
-php artisan migrate --path=Modules/FinancialGoal/Database/Migrations/2026_11_01_180000_add_goal_reservations.php
+php artisan migrate \
+  --path=Modules/FinancialGoal/Database/Migrations/2026_11_01_180000_add_goal_reservations.php \
+  --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_180000_backfill_financial_goal_accounts.php
 ```
 
-The migration changes goal amount precision to two decimal places, extends the ledger, creates request receipts and conversion audit tables, and replaces `financial_goal_transaction_view`. It does not convert user data. Legacy goal mutations are blocked with a conversion explanation until reconciled.
+The migration changes goal amount precision to two decimal places, extends the ledger, creates request receipts and conversion audit tables, and replaces `financial_goal_transaction_view`. The follow-up migration recovers historical account associations without converting the accounting or adjusting balances. Legacy goal mutations are blocked with a conversion explanation until reconciled.
 
 Focused checks:
 

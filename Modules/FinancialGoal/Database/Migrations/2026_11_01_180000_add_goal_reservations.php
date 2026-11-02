@@ -9,6 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        DB::statement('DROP VIEW IF EXISTS financial_goal_transaction_view');
         Schema::table('financial_goals', function (Blueprint $table) {
             $table->decimal('total_amount', 15, 2)->change();
             $table->decimal('contributed_amount', 15, 2)->default(0)->change();
@@ -40,7 +41,6 @@ return new class extends Migration
             $table->json('snapshot');
             $table->timestamps();
         });
-        DB::statement('DROP VIEW IF EXISTS financial_goal_transaction_view');
         DB::statement("CREATE VIEW financial_goal_transaction_view AS
             SELECT fgt.id, fgt.type, fgt.amount, fgt.date, fgt.description, fgt.status,
                 fgt.transaction_id AS transactionId, fgt.expense_created AS expenseCreated,
@@ -75,6 +75,7 @@ return new class extends Migration
         Schema::table('financial_goal_transactions', function (Blueprint $table) {
             $table->dropForeign(['account_id']);
             $table->dropUnique('goal_recurring_occurrence_unique');
+            $table->dropUnique(['request_key']);
             $table->dropColumn(['account_id', 'request_key', 'request_hash', 'expense_created', 'recurring_transaction_id']);
         });
         Schema::table('financial_goals', fn (Blueprint $table) => $table->dropColumn(['funding_mode', 'completed_funding']));

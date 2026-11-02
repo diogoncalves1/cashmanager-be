@@ -55,7 +55,8 @@ class ConvertGoalReservations
                     $occurrences[$occurrence] = true;
                 }
                 $account = $accounts->get($transaction->account_id);
-                if (! $account || (string) $account->currency_id !== (string) $goal->currency_id) {
+                if (! $account || (string) $account->currency_id !== (string) $goal->currency_id
+                    || ($entry->account_id !== null && (string) $entry->account_id !== (string) $account->id)) {
                     GoalReservations::invalid('account_id', 'conversion');
                 }
                 GoalReservations::permission($account, $user->id, 'viewAccount');
