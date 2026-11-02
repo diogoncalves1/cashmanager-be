@@ -89,7 +89,7 @@ Enabled modules currently include:
 
 ## Feature Notes
 
-- Financial-goal reservations (CM-120/CM-250): see `Modules/FinancialGoal/RESERVATIONS.md` for contracts, lifecycle and deployment. New goals reserve existing account balances; `usage` creates/links a real expense. Legacy goals require explicit preview/token conversion with an audit snapshot. Run `php artisan test --filter=GoalReservationsTest`; never auto-convert legacy data.
+- Financial-goal reservations (CM-120/CM-250): see `Modules/FinancialGoal/RESERVATIONS.md` for contracts, lifecycle and deployment. New goals reserve money without requiring a positive/sufficient account balance (available/shortfall are informational); `usage` creates/links a real expense. Legacy goals require explicit preview/token conversion with an audit snapshot. Run `php artisan test --filter=GoalReservationsTest`; never auto-convert legacy data.
 
 - Transaction category validation on creation must target `TransactionRequest`, not every FormRequest: goal contributions/withdrawals reuse their own FormRequest with a server-assigned internal category. Regression coverage in `PersonalCategoriesTest` checks pending/completed goal movements and manual-selection rejection.
 

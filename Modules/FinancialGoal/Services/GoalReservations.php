@@ -39,7 +39,7 @@ class GoalReservations
             ) / 100;
         }
 
-        return (float) $query->selectRaw("COALESCE(SUM(CASE WHEN type = 'contribution' THEN amount ELSE -amount END), 0) AS reserved")->value('reserved');
+        return round((float) $query->selectRaw("COALESCE(SUM(CASE WHEN type = 'contribution' THEN amount ELSE -amount END), 0) AS reserved")->value('reserved'), 2);
     }
 
     public static function accountSummary(Account $account): array
@@ -163,11 +163,7 @@ class GoalReservations
                 self::invalid('amount', 'amount');
             }
             $reserved = self::cents(self::reserved($account->id, $goal->id, true));
-            $available = self::cents($account->balance) - self::cents(self::reserved($account->id, null, true));
             if ($data['status'] === 'completed') {
-                if ($data['type'] === 'contribution' && $amount > $available) {
-                    self::invalid('amount', 'available');
-                }
                 if ($data['type'] !== 'contribution' && $amount > $reserved) {
                     self::invalid('amount', 'reserved');
                 }
@@ -192,9 +188,6 @@ class GoalReservations
                     $data['date'] = $expense->date;
                     $data['transaction_id'] = $expense->id;
                 } else {
-                    if ($amount > self::cents($account->balance)) {
-                        self::invalid('amount', 'balance');
-                    }
                     if (! $request->input('category_id')) {
                         self::invalid('category_id', 'category');
                     }
@@ -254,11 +247,8 @@ class GoalReservations
                 if ($goal->status !== 'in_progress' || (! $account->active && $entry->type !== 'withdrawal') || (string) $account->currency_id !== (string) $goal->currency_id) {
                     self::invalid('financial_goal_id', 'closed');
                 }
-                $limit = $entry->type === 'contribution'
-                    ? self::cents($account->balance) - self::cents(self::reserved($account->id, null, true))
-                    : self::cents(self::reserved($account->id, $goal->id, true));
-                if (self::cents($entry->amount) > $limit) {
-                    self::invalid('amount', $entry->type === 'contribution' ? 'available' : 'reserved');
+                if ($entry->type !== 'contribution' && self::cents($entry->amount) > self::cents(self::reserved($account->id, $goal->id, true))) {
+                    self::invalid('amount', 'reserved');
                 }
                 $entry->update(['status' => 'completed']);
             } else {

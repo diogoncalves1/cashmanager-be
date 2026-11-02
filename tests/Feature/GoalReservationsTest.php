@@ -228,10 +228,10 @@ class GoalReservationsTest extends TestCase
         $this->assertDatabaseCount('transactions', 0);
     }
 
-    public function test_inadequate_available_balance_currency_permissions_and_categories_roll_back(): void
+    public function test_reserve_limits_currency_permissions_and_categories_roll_back(): void
     {
         $this->add();
-        foreach ([['amount' => 1001], ['type' => 'withdrawal', 'amount' => 2001], ['type' => 'usage', 'category_id' => 999]] as $values) {
+        foreach ([['type' => 'usage', 'amount' => 2001, 'category_id' => 1], ['type' => 'withdrawal', 'amount' => 2001], ['type' => 'usage', 'category_id' => 999]] as $values) {
             try {
                 $this->add($values);
                 $this->fail('Expected validation');
@@ -333,20 +333,39 @@ class GoalReservationsTest extends TestCase
         $this->assertEquals(2000, FinancialGoal::find(1)->completed_funding);
     }
 
-    public function test_one_accounts_money_cannot_fund_two_goals_and_cents_are_preserved(): void
+    public function test_reservations_across_goals_can_exceed_the_balance_and_preserve_cents(): void
     {
         $goal = FinancialGoal::create(['name' => 'Other goal', 'total_amount' => 1000, 'currency_id' => 1, 'funding_mode' => 'reservation']);
         DB::table('financial_goal_users')->insert(['financial_goal_id' => $goal->id, 'user_id' => 1, 'shared_role_id' => 1]);
         $this->add(['amount' => '2999.99']);
         $this->add(['financial_goal_id' => $goal->id, 'amount' => '0.01']);
         $this->assertEquals(0, GoalReservations::accountSummary(Account::find(1))['availableAmount']);
-        try {
-            $this->add(['financial_goal_id' => $goal->id, 'amount' => '0.01']);
-            $this->fail();
-        } catch (ValidationException $e) {
-            $this->assertArrayHasKey('amount', $e->errors());
-        }
-        $this->assertEquals(3000, GoalReservations::reserved(1));
+        $this->add(['financial_goal_id' => $goal->id, 'amount' => '0.01']);
+        $this->assertEquals(3000.01, GoalReservations::reserved(1));
+        $this->assertEquals(-0.01, GoalReservations::accountSummary(Account::find(1))['availableAmount']);
+        $this->assertEquals(0.01, GoalReservations::accountSummary(Account::find(1))['reservationShortfall']);
+        $this->assertEquals(3000, Account::find(1)->balance);
+    }
+
+    public function test_zero_and_negative_balances_allow_reservations_confirmation_and_spending(): void
+    {
+        Account::whereKey(1)->update(['balance' => 0]);
+        $this->postJson('/api/v1/financial-goal-transactions', $this->request(['amount' => '10.01'])->all())->assertOk();
+        $this->assertEquals(0, Account::find(1)->balance);
+        Account::whereKey(1)->update(['balance' => '-100.25']);
+        $this->postJson('/api/v1/financial-goal-transactions', $this->request(['amount' => '20.02'])->all())->assertOk();
+        $pending = $this->add(['status' => 'pending', 'amount' => '30.03']);
+        $this->postJson('/api/v1/financial-goal-transactions/'.$pending->id.'/confirm')->assertOk();
+        $this->postJson('/api/v1/financial-goal-transactions/'.$pending->id.'/confirm')->assertOk();
+        $this->assertEquals(60.06, GoalReservations::reserved(1, 1));
+        $this->assertEquals(-100.25, Account::find(1)->balance);
+        $this->postJson('/api/v1/financial-goal-transactions', $this->request(['type' => 'usage', 'category_id' => 1, 'amount' => '50.05'])->all())->assertOk();
+        $this->assertEquals(-150.30, Account::find(1)->balance);
+        $this->assertEquals(10.01, GoalReservations::reserved(1, 1));
+        $this->postJson('/api/v1/financial-goal-transactions', $this->request(['type' => 'withdrawal', 'amount' => '10.01'])->all())->assertOk();
+        $this->assertEquals(0, GoalReservations::reserved(1, 1));
+        $this->assertEquals(-150.30, Account::find(1)->balance);
+        $this->assertDatabaseCount('transactions', 1);
     }
 
     public function test_a_failure_after_creating_the_expense_rolls_back_the_entire_usage(): void
