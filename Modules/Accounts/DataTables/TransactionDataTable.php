@@ -27,6 +27,8 @@ class TransactionDataTable extends DataTable
 
         return datatables()
             ->eloquent($query)
+            ->addColumn('goalUsages', fn ($transaction) => \Modules\FinancialGoal\Services\GoalReservations::expenseGoals($transaction->id, $user->id))
+            ->addColumn('hasGoalUsage', fn ($transaction) => \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists())
             ->addColumn('statusTranslated', fn(TransactionsView $transaction) => __('accounts::attributes.transactions.status.' . $transaction->status))
             ->addColumn('accountTypeTranslated', fn(TransactionsView $transaction) => __('accounts::attributes.accounts.type.' . $transaction->accountType))
             ->addColumn('amountFormated', fn(TransactionsView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
@@ -40,7 +42,11 @@ class TransactionDataTable extends DataTable
 
                 $canConfirm = $transaction->status == 'pending' && $transaction->date <= date('Y-m-d') && CheckPermission::check($sharedRole, "confirmTransaction");
 
-                return ['confirm' => $canConfirm, ...CheckPermission::checkMultiple($sharedRole, ['view' => 'viewTransaction', 'edit' => 'editTransaction', 'destroy' => 'destroyTransaction'])];
+                $actions = ['confirm' => $canConfirm, ...CheckPermission::checkMultiple($sharedRole, ['view' => 'viewTransaction', 'edit' => 'editTransaction', 'destroy' => 'destroyTransaction'])];
+                if (\Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->exists()) {
+                    $actions['edit'] = $actions['destroy'] = $actions['confirm'] = false;
+                }
+                return $actions;
             })
             ->editColumn('categoryName', fn(TransactionsView $transaction) => $transaction->category?->localizedName(app()->getLocale()) ?? '');
     }

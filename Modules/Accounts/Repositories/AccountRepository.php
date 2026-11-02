@@ -70,7 +70,7 @@ class AccountRepository implements RepositoryApiInterface
     public function update(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $account = $this->show($id);
+            $account = Account::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $user = $request->user();
 
@@ -79,6 +79,11 @@ class AccountRepository implements RepositoryApiInterface
                 throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedUpdateAccountException();
             }
 
+            if ($request->has('currency_id') && (string) $request->input('currency_id') !== (string) $account->currency_id
+                && \Illuminate\Support\Facades\Schema::hasColumn('financial_goal_transactions', 'account_id')
+                && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('account_id', $account->id)->exists()) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('currency_id', 'currency_locked');
+            }
             $input = $request->only('name', 'type', 'currency_id', 'active');
 
             $old = $account->only(['name', 'type', 'currency_id', 'active']);
@@ -131,7 +136,7 @@ class AccountRepository implements RepositoryApiInterface
     public function status(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $account = $this->show($id);
+            $account = Account::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $user = $request->user();
 
@@ -158,7 +163,7 @@ class AccountRepository implements RepositoryApiInterface
     public function destroy(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $account = $this->show($id);
+            $account = Account::whereKey($id)->lockForUpdate()->firstOrFail();
 
             $user = $request->user();
 
@@ -167,6 +172,10 @@ class AccountRepository implements RepositoryApiInterface
                 throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedDeletedAccountException();
             }
 
+            if (\Illuminate\Support\Facades\Schema::hasColumn('financial_goal_transactions', 'account_id')
+                && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('account_id', $account->id)->exists()) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('account_id', 'account_history');
+            }
             $account->delete();
 
             $this->activityRepo->destroyByType($account->id, 'account');
@@ -245,40 +254,25 @@ class AccountRepository implements RepositoryApiInterface
 
         $currency = $user->preferences->currency;
 
-        $totalQuery = AccountsView::query()
+        // Balances belong to accounts, independently of their visible transactions.
+        // EXISTS avoids multiplying totals by shared permissions or equal balances.
+        $base = AccountsView::query()
             ->from('accounts_view as a')
             ->join('currencies as account_currency', 'a.currencyId', '=', 'account_currency.id')
             ->join('user_preferences', 'user_preferences.user_id', '=', DB::raw((int) $user->id))
             ->join('currencies as user_currency', 'user_currency.id', '=', 'user_preferences.currency_id')
-            ->join('transactions as t', 't.account_id', '=', 'a.id')
-            ->join("account_users as au", "au.account_id", "=", "a.id")
-            ->join("shared_roles as sr", "sr.id", "=", "au.shared_role_id")
-            ->join("shared_permission_roles as spr", "spr.shared_role_id", "=", "sr.id")
-            ->join("shared_permissions as sp", "sp.id", "=", "spr.shared_permission_id")
-            ->where("au.user_id", $user->id)
-            ->selectRaw("
-            SUM(
-           DISTINCT CASE
-                WHEN sp.code = 'updateUserBalance'
-                THEN a.balance * (user_currency.rate / account_currency.rate)
-                ELSE 0
-            END
-            ) as netWorth,
-            SUM(
-            CASE
-                WHEN sp.code = 'updateUserBalance'
-                THEN CASE WHEN t.type = 'revenue' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate)  ELSE 0 END
-                ELSE 0
-            END
-            ) as totalRevenues,
-            SUM(
-              CASE
-                WHEN sp.code = 'updateUserBalance'
-                THEN CASE WHEN t.type = 'expense' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate) ELSE 0 END
-                ELSE 0
-            END
-            ) as totalExpenses
-            ")
+            ->whereExists(function ($query) use ($user) {
+                $query->selectRaw('1')->from('account_users as au')
+                    ->join('shared_permission_roles as spr', 'spr.shared_role_id', '=', 'au.shared_role_id')
+                    ->join('shared_permissions as sp', 'sp.id', '=', 'spr.shared_permission_id')
+                    ->whereColumn('au.account_id', 'a.id')->where('au.user_id', $user->id)
+                    ->where('sp.code', 'updateUserBalance');
+            });
+        $netWorth = (float) (clone $base)->selectRaw('COALESCE(SUM(a.balance * (user_currency.rate / account_currency.rate)), 0) AS amount')->value('amount');
+        $totalQuery = (clone $base)->join('transactions as t', 't.account_id', '=', 'a.id')
+            ->tap(fn ($query) => \Modules\Accounts\Entities\Transaction::excludeNeutralizedGoals($query, 't.id'))
+            ->selectRaw("SUM(CASE WHEN t.type = 'revenue' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate) ELSE 0 END) AS totalRevenues,
+                SUM(CASE WHEN t.type = 'expense' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate) ELSE 0 END) AS totalExpenses")
             ->first();
 
         $stats = [
@@ -286,10 +280,10 @@ class AccountRepository implements RepositoryApiInterface
                 ->where('status', '1')
                 ->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])
                 ->count(),
-            'netWorth'       => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->netWorth ?? 0, $currency->code, $currency->symbol),
+            'netWorth'       => Helpers::formatMoneyWithSymbolAndCurrency($netWorth, $currency->code, $currency->symbol),
             'totalRevenues'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalRevenues ?? 0, $currency->code, $currency->symbol),
             'totalExpenses'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalExpenses ?? 0, $currency->code, $currency->symbol),
-            'netWorthAmount' => (float) ($totalQuery->netWorth ?? 0),
+            'netWorthAmount' => (float) ($netWorth),
             'totalRevenuesAmount' => (float) ($totalQuery->totalRevenues ?? 0),
             'totalExpensesAmount' => (float) ($totalQuery->totalExpenses ?? 0),
             'currencyCode' => $currency->code,

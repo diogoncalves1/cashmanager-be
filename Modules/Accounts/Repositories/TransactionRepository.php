@@ -33,10 +33,12 @@ class TransactionRepository implements RepositoryApiInterface
     public function store(Request $request)
     {
         return DB::transaction(function () use ($request) {
+            \Modules\User\Entities\User::whereKey(($request->user() ?? Auth::user())->id)->lockForUpdate()->firstOrFail();
             $input = $request->only(['account_id', 'type', 'amount', 'date', 'description', 'status', 'category_id', 'is_recurring', 'recurring_transaction_id']);
 
-            $user       = Auth::user();
+            $user       = $request->user() ?? Auth::user();
             $account    = $this->accountRepository->show($request->get('account_id'));
+            $account->setRawAttributes(\Modules\Accounts\Entities\Account::whereKey($account->id)->lockForUpdate()->firstOrFail()->getAttributes(), true);
             $sharedRole = $account->userSharedRole($account, $user->id);
 
             if ($request->get("date") > Carbon::now() && $request->get("status") == "completed" || (Carbon::parse($request->get("date"))->isBefore(Carbon::today()) && $request->get('status') == 'pending')) {
@@ -59,6 +61,7 @@ class TransactionRepository implements RepositoryApiInterface
             }
 
             $transaction = Transaction::create($input);
+            $transaction->setRelation('account', $account);
 
             $this->activityRepo->storeActivity($account->id, $user->id, 'account', [
                 'type'            => $input['status'] == 'completed' ? 'transaction_added' : 'transaction_scheduled',
@@ -77,13 +80,20 @@ class TransactionRepository implements RepositoryApiInterface
         });
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id, bool $fromFinancialGoal = false)
     {
-        return DB::transaction(function () use ($request, $id) {
+        return DB::transaction(function () use ($request, $id, $fromFinancialGoal) {
+            \Modules\User\Entities\User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             $input = $request->only(['amount', 'date', 'description', 'category_id']);
 
             $transaction = $this->show($id);
+            $lockedAccount = \Modules\Accounts\Entities\Account::whereKey($transaction->account_id)->lockForUpdate()->firstOrFail();
+            $transaction = Transaction::whereKey($id)->lockForUpdate()->firstOrFail();
+            $transaction->setRelation('account', $lockedAccount);
 
+            if (! $fromFinancialGoal) {
+                $this->guardHistoricalGoalTransaction($transaction);
+            }
             $user       = $request->user();
             $account    = $transaction->account;
             $sharedRole = $account->userSharedRole($account, $user->id);
@@ -97,6 +107,10 @@ class TransactionRepository implements RepositoryApiInterface
 
             if ($request instanceof \Illuminate\Foundation\Http\FormRequest && $request->has('category_id')) {
                 (new \Modules\Category\Rules\SelectableCategory($request->user()->id, $transaction->type, $transaction->category_id))->lockAndValidate($request->input('category_id'));
+            }
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('financial_goals', 'funding_mode') && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists()) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('transaction_id', 'linked');
             }
 
             if ($transaction->status == "completed") {
@@ -152,8 +166,15 @@ class TransactionRepository implements RepositoryApiInterface
     public function destroy(Request $request, string $id, bool $checkPermission = true)
     {
         return DB::transaction(function () use ($request, $id, $checkPermission) {
+            \Modules\User\Entities\User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             $transaction = $this->show($id);
+            $lockedAccount = \Modules\Accounts\Entities\Account::whereKey($transaction->account_id)->lockForUpdate()->firstOrFail();
+            $transaction = Transaction::whereKey($id)->lockForUpdate()->firstOrFail();
+            $transaction->setRelation('account', $lockedAccount);
 
+            if ($checkPermission) {
+                $this->guardHistoricalGoalTransaction($transaction);
+            }
             $user       = $request->user();
             $account    = $transaction->account;
             $sharedRole = $account->userSharedRole($transaction->account, $user->id);
@@ -161,6 +182,10 @@ class TransactionRepository implements RepositoryApiInterface
             if ($checkPermission && (! $sharedRole || ! $sharedRole->hasPermission("destroyTransaction"))) {
                 throw new \Modules\Accounts\Exceptions\Transactions\UnauthorizedDeletedTransactionException();
             }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('financial_goals', 'funding_mode') && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists()) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('transaction_id', 'linked');
+            }
+
             if ($transaction->status == "completed" && $transaction->account) {
                 $this->accountRepository->reverseBalance($transaction);
             }
@@ -181,8 +206,15 @@ class TransactionRepository implements RepositoryApiInterface
     public function confirm(Request $request, string $id, bool $checkPermission = true)
     {
         return DB::transaction(function () use ($request, $id, $checkPermission) {
+            \Modules\User\Entities\User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             $transaction = $this->show($id);
+            $lockedAccount = \Modules\Accounts\Entities\Account::whereKey($transaction->account_id)->lockForUpdate()->firstOrFail();
+            $transaction = Transaction::whereKey($id)->lockForUpdate()->firstOrFail();
+            $transaction->setRelation('account', $lockedAccount);
 
+            if ($checkPermission) {
+                $this->guardHistoricalGoalTransaction($transaction);
+            }
             $user       = $request->user();
             $account    = $transaction->account;
             $sharedRole = $account->userSharedRole($transaction->account, $user->id);
@@ -190,6 +222,10 @@ class TransactionRepository implements RepositoryApiInterface
             if ($checkPermission && (! $sharedRole || ! $sharedRole->hasPermission("confirmTransaction"))) {
                 throw new \Modules\Accounts\Exceptions\Transactions\UnauthorizedConfirmTransactionException();
             }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('financial_goals', 'funding_mode') && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists()) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('transaction_id', 'linked');
+            }
+
             if ($transaction->status == "completed") {
                 throw new \Modules\Accounts\Exceptions\Transactions\TransactionAlreadyConfirmedException();
             }
@@ -206,6 +242,15 @@ class TransactionRepository implements RepositoryApiInterface
 
             return $transaction;
         });
+    }
+
+    private function guardHistoricalGoalTransaction(Transaction $transaction): void
+    {
+        if (\Illuminate\Support\Facades\Schema::hasTable('financial_goal_transactions')
+            && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)
+                ->whereIn('type', ['contribution', 'withdrawal'])->exists()) {
+            \Modules\FinancialGoal\Services\GoalReservations::invalid('transaction_id', 'historical_linked');
+        }
     }
 
     public function show(string $id): Transaction
@@ -287,6 +332,7 @@ class TransactionRepository implements RepositoryApiInterface
             ->join('user_preferences as up', 'up.user_id', '=', 'au.user_id')
             ->join('currencies as user_currency', 'user_currency.id', '=', 'up.currency_id')
             ->join('transactions as t', 't.account_id', '=', 'a.id')
+            ->tap(fn ($query) => \Modules\Accounts\Entities\Transaction::excludeNeutralizedGoals($query, 't.id'))
             ->where('au.user_id', $user->id)
             ->whereExists(function ($q) {
                 $q->selectRaw(1)

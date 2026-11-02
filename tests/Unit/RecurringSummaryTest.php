@@ -78,4 +78,21 @@ class RecurringSummaryTest extends TestCase
         ]));
         $this->assertSame(112.0, $summary['currencySummaries'][0]['monthlyExpenses']);
     }
+    public function test_goal_reservations_and_releases_are_not_income_or_consumption(): void
+    {
+        $goal = new \Modules\FinancialGoal\Entities\FinancialGoal(['funding_mode' => 'reservation']);
+        $reserve = $this->item(['amount' => 200, 'is_linked' => true, 'linked_type' => $goal::class])->setRelation('linked', $goal);
+        $release = $this->item(['amount' => 50, 'type' => 'revenue', 'is_linked' => true, 'linked_type' => $goal::class])->setRelation('linked', $goal);
+        $summary = $this->summary(collect([$reserve, $release, $this->item(['amount' => 10])]));
+        $this->assertSame(3, $summary['activeCount']);
+        $this->assertSame(0, $summary['incomeCount']);
+        $this->assertSame(1, $summary['expenseCount']);
+        $this->assertSame(0.0, $summary['currencySummaries'][0]['monthlyIncome']);
+        $this->assertSame(10.0, $summary['currencySummaries'][0]['monthlyExpenses']);
+        $this->assertSame(200.0, $summary['currencySummaries'][0]['monthlyReservations']);
+        $this->assertSame(50.0, $summary['currencySummaries'][0]['monthlyReleases']);
+        $this->assertSame('reservation', $summary['upcoming'][0]['movementKind']);
+        $this->assertSame('release', $summary['upcoming'][1]['movementKind']);
+    }
+
 }

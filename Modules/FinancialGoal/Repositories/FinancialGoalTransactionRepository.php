@@ -36,6 +36,56 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
     public function store(Request $request)
     {
         return DB::transaction(function () use ($request) {
+            \Modules\User\Entities\User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+            \Modules\Accounts\Entities\Account::whereKey($request->input('account_id'))->lockForUpdate()->firstOrFail();
+            $goal = \Modules\FinancialGoal\Entities\FinancialGoal::whereKey($request->input('financial_goal_id'))->lockForUpdate()->firstOrFail();
+
+            return $goal->funding_mode === 'reservation'
+                ? app(\Modules\FinancialGoal\Services\GoalReservations::class)->store($request)
+                : $this->storeLegacy($request);
+        }, 3);
+    }
+
+    public function update(Request $request, string $id)
+    {
+        return $this->changeUnderLock($request, $id, 'update');
+    }
+
+    public function destroy(Request $request, string $id)
+    {
+        return $this->changeUnderLock($request, $id, 'destroy');
+    }
+
+    public function confirm(Request $request, string $id)
+    {
+        return $this->changeUnderLock($request, $id, 'confirm');
+    }
+
+    private function changeUnderLock(Request $request, string $id, string $action)
+    {
+        return DB::transaction(function () use ($request, $id, $action) {
+            \Modules\User\Entities\User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+            $original = $this->show($id);
+            $accountId = $original->account_id ?? $original->transaction?->account_id;
+            if ($accountId === null) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('account_id', 'conversion');
+            }
+            \Modules\Accounts\Entities\Account::whereKey($accountId)->lockForUpdate()->firstOrFail();
+            $goal = \Modules\FinancialGoal\Entities\FinancialGoal::whereKey($original->financial_goal_id)->lockForUpdate()->firstOrFail();
+            FinancialGoalTransaction::whereKey($id)->lockForUpdate()->firstOrFail();
+
+            return $goal->funding_mode === 'reservation'
+                ? app(\Modules\FinancialGoal\Services\GoalReservations::class)->change($request, $id, $action)
+                : $this->{$action.'Legacy'}($request, $id);
+        }, 3);
+    }
+
+    private function storeLegacy(Request $request)
+    {
+        if ($request->input('type') === 'usage') {
+            \Modules\FinancialGoal\Services\GoalReservations::invalid('type', 'legacy');
+        }
+        return DB::transaction(function () use ($request) {
             $user = $request->user();
 
             $financialGoal = $this->financialGoalRepository->show($request->get('financial_goal_id'));
@@ -105,7 +155,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
         });
     }
 
-    public function update(Request $request, string $id)
+    private function updateLegacy(Request $request, string $id)
     {
         return DB::transaction(function () use ($request, $id) {
             $financialGoalTransaction = $this->show($id);
@@ -122,7 +172,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
                 throw new ContributionBeforeCurrentDateException();
             }
 
-            $this->transactionRepository->update($request, (string) $financialGoalTransaction->transaction_id);
+            $this->transactionRepository->update($request, (string) $financialGoalTransaction->transaction_id, true);
 
             $input = $request->only(['amount', 'date', 'description']);
 
@@ -171,7 +221,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
         });
     }
 
-    public function destroy(Request $request, string $id)
+    private function destroyLegacy(Request $request, string $id)
     {
         return DB::transaction(function () use ($id, $request) {
             $financialGoalTransaction = $this->show($id);
@@ -205,7 +255,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
         });
     }
 
-    public function confirm(Request $request, string $id)
+    private function confirmLegacy(Request $request, string $id)
     {
         return DB::transaction(function () use ($id, $request) {
             $financialGoalTransaction = $this->show($id);
@@ -221,7 +271,7 @@ class FinancialGoalTransactionRepository implements RepositoryApiInterface
             if (! $this->checkStatus($financialGoalTransaction->status, 'pending')) {
                 throw new \Modules\FinancialGoal\Exceptions\FinancialGoalTransactions\ContributionNotScheduledException();
             }
-            if ($financialGoalTransaction->date < Carbon::now()->format('Y-m-d')) {
+            if ($financialGoalTransaction->date > Carbon::now()->format('Y-m-d')) {
                 throw new ContributionBeforeCurrentDateException();
             }
 

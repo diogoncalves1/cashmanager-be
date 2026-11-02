@@ -89,7 +89,7 @@ Enabled modules currently include:
 
 ## Feature Notes
 
-- Financial goals (CM-120/CM-250): reservation/conversion implementation rolled back on 2026-11-02 at the user's request. Runtime uses the previous contribution/withdrawal model. See `Modules/FinancialGoal/RESERVATIONS.md` for the replacement proposal and read-only historical-account SQL. Account origins already follow `financial_goal_transactions.transaction_id -> transactions.account_id`; do not generate receipt metadata to recover those links. Production schema/data state must be checked separately before deploying the old runtime; no database reversal was performed.
+- Financial-goal reservations (CM-120/CM-250): rebuilt rollout preserves original transaction links, neutralizes internal movements and restores their net account effects once. See `Modules/FinancialGoal/RESERVATIONS.md` and `PRODUCTION-ROLLOUT.md`. New migrations are `210000` preparation and `220000` conversion; do not restore the four retired migrations. `php artisan goals:reservation-rollout` is read-only by default (`--goal`, `--apply`, `--fail-on-review`). Unreconciled goals stay usable in the previous model. Original transaction values reconcile stale goal totals; snapshots record corrections. Neutralized transactions are excluded through the Transaction/TransactionsView scope and raw account-report filters. Never run production writes without deployment authorization.
 
 - Transaction category validation on creation must target `TransactionRequest`, not every FormRequest: goal contributions/withdrawals reuse their own FormRequest with a server-assigned internal category. Regression coverage in `PersonalCategoriesTest` checks pending/completed goal movements and manual-selection rejection.
 
