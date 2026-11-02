@@ -14,20 +14,20 @@ class ReservationRollout extends Command
 
     public function handle(MigrateGoalReservations $rollout): int
     {
-        if ($this->option('apply') && (! Schema::hasTable('financial_goal_reservation_rollouts') || ! Schema::hasTable('financial_goal_neutralized_transactions'))) {
+        if ($this->option('apply') && (! Schema::hasTable('financial_goal_reservation_rollouts') || ! Schema::hasTable('financial_goal_neutralized_transactions') || ! Schema::hasTable('financial_goal_reservation_rollout_events'))) {
             $this->error('Apply the 210000 preparation migration first. Preview can run before schema changes.');
 
             return self::FAILURE;
         }
         try {
             $reports = $rollout->run((bool) $this->option('apply'), $this->option('goal'));
-        } catch (\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
             $this->error($e->getMessage());
 
             return self::FAILURE;
         }
         $this->line(json_encode(['mode' => $this->option('apply') ? 'apply' : 'preview', 'goals' => $reports], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
 
-        return $this->option('fail-on-review') && collect($reports)->contains('status', 'needs_review') ? self::FAILURE : self::SUCCESS;
+        return $this->option('fail-on-review') && collect($reports)->contains('status', 'blocked') ? self::FAILURE : self::SUCCESS;
     }
 }

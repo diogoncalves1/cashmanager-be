@@ -18,7 +18,6 @@ class FinancialGoalDataTable extends DataTable
 
         return datatables()
             ->eloquent($query)
-            ->addColumn('fundingMode', fn ($goal) => $goal->financialGoal->funding_mode)
             ->addColumn('reservedAmount', fn ($goal) => \Modules\FinancialGoal\Services\GoalReservations::goalSummary($goal->financialGoal)['reservedAmount'])
             ->addColumn('usedAmount', fn ($goal) => \Modules\FinancialGoal\Services\GoalReservations::goalSummary($goal->financialGoal)['usedAmount'])
             ->addColumn('completedFunding', fn ($goal) => $goal->financialGoal->completed_funding)

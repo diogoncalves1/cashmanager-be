@@ -80,9 +80,9 @@ class TransactionRepository implements RepositoryApiInterface
         });
     }
 
-    public function update(Request $request, string $id, bool $fromFinancialGoal = false)
+    public function update(Request $request, string $id)
     {
-        return DB::transaction(function () use ($request, $id, $fromFinancialGoal) {
+        return DB::transaction(function () use ($request, $id) {
             \Modules\User\Entities\User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             $input = $request->only(['amount', 'date', 'description', 'category_id']);
 
@@ -91,9 +91,7 @@ class TransactionRepository implements RepositoryApiInterface
             $transaction = Transaction::whereKey($id)->lockForUpdate()->firstOrFail();
             $transaction->setRelation('account', $lockedAccount);
 
-            if (! $fromFinancialGoal) {
-                $this->guardHistoricalGoalTransaction($transaction);
-            }
+            $this->guardHistoricalGoalTransaction($transaction);
             $user       = $request->user();
             $account    = $transaction->account;
             $sharedRole = $account->userSharedRole($account, $user->id);
@@ -109,7 +107,7 @@ class TransactionRepository implements RepositoryApiInterface
                 (new \Modules\Category\Rules\SelectableCategory($request->user()->id, $transaction->type, $transaction->category_id))->lockAndValidate($request->input('category_id'));
             }
 
-            if (\Illuminate\Support\Facades\Schema::hasColumn('financial_goals', 'funding_mode') && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists()) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('financial_goal_transactions') && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists()) {
                 \Modules\FinancialGoal\Services\GoalReservations::invalid('transaction_id', 'linked');
             }
 
@@ -182,7 +180,7 @@ class TransactionRepository implements RepositoryApiInterface
             if ($checkPermission && (! $sharedRole || ! $sharedRole->hasPermission("destroyTransaction"))) {
                 throw new \Modules\Accounts\Exceptions\Transactions\UnauthorizedDeletedTransactionException();
             }
-            if (\Illuminate\Support\Facades\Schema::hasColumn('financial_goals', 'funding_mode') && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists()) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('financial_goal_transactions') && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists()) {
                 \Modules\FinancialGoal\Services\GoalReservations::invalid('transaction_id', 'linked');
             }
 
@@ -222,7 +220,7 @@ class TransactionRepository implements RepositoryApiInterface
             if ($checkPermission && (! $sharedRole || ! $sharedRole->hasPermission("confirmTransaction"))) {
                 throw new \Modules\Accounts\Exceptions\Transactions\UnauthorizedConfirmTransactionException();
             }
-            if (\Illuminate\Support\Facades\Schema::hasColumn('financial_goals', 'funding_mode') && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists()) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('financial_goal_transactions') && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('transaction_id', $transaction->id)->where('type', 'usage')->exists()) {
                 \Modules\FinancialGoal\Services\GoalReservations::invalid('transaction_id', 'linked');
             }
 

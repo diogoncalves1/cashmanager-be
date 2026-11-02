@@ -4,7 +4,6 @@ return [
     'historical_linked' => 'Gere este movimento histórico a partir da meta financeira para manter os valores consistentes.',
     'target_locked' => 'Reabre a meta antes de alterar o valor do objetivo concluído.',
     'account_history' => 'Não podes eliminar uma conta com histórico de reservas. Podes desativá-la e libertar as reservas restantes.',
-    'legacy' => 'Esta meta mantém contribuições e levantamentos no modelo anterior. A utilização de reservas fica disponível depois da revisão dos movimentos.',
     'currency' => 'A conta e a meta devem usar a mesma moeda.',
     'inactive' => 'Escolhe uma conta ativa.',
     'retry' => 'Este pedido já foi usado noutra operação. Atualiza e tenta novamente.',

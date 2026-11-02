@@ -21,11 +21,7 @@ class CreateFinancialGoalTransactionRequest extends FormRequest
             'description'       => 'nullable|string|max:255',
             'transaction_id' => 'nullable|integer|exists:transactions,id',
             'category_id' => 'exclude_unless:type,usage|nullable|integer|exists:categories,id',
-            'request_key' => [\Illuminate\Validation\Rule::requiredIf(fn () =>
-                is_scalar($this->input('financial_goal_id'))
-                && \Illuminate\Support\Facades\Schema::hasColumn('financial_goals', 'funding_mode')
-                && \Modules\FinancialGoal\Entities\FinancialGoal::whereKey($this->input('financial_goal_id'))->where('funding_mode', 'reservation')->exists()
-            ), 'nullable', 'string', 'max:100'],
+            'request_key' => 'required|string|max:100',
             'recurring_transaction_id' => 'prohibited',
             'is_recurring' => 'prohibited',
             'account_id'        => 'required|integer|exists:accounts,id',

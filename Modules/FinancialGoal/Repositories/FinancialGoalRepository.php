@@ -62,7 +62,6 @@ class FinancialGoalRepository implements RepositoryApiInterface
 
             $input = $request->only(['name', 'total_amount', 'currency_id', 'start_date', 'due_date', 'description', 'priority']);
 
-            $input['funding_mode'] = 'reservation';
             $financialGoal = FinancialGoal::create($input);
 
             $inputUser = [
@@ -123,12 +122,12 @@ class FinancialGoalRepository implements RepositoryApiInterface
                 throw new UnauthorizedUpdateFinancialGoal();
             }
 
-            if ($financialGoal->funding_mode === 'reservation' && $financialGoal->transactions()->exists()
+            if ($financialGoal->transactions()->exists()
                 && (string) $request->input('currency_id') !== (string) $financialGoal->currency_id) {
                 \Modules\FinancialGoal\Services\GoalReservations::invalid('currency_id', 'currency_locked');
             }
 
-            if ($financialGoal->funding_mode === 'reservation' && $financialGoal->status === 'completed'
+            if ($financialGoal->status === 'completed'
                 && \Modules\FinancialGoal\Services\GoalReservations::cents($request->input('total_amount')) !== \Modules\FinancialGoal\Services\GoalReservations::cents($financialGoal->total_amount)) {
                 \Modules\FinancialGoal\Services\GoalReservations::invalid('total_amount', 'target_locked');
             }
@@ -223,7 +222,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             if ($financialGoal->status !== 'in_progress') {
                 throw new FinancialGoalNotInProgressException();
             }
-            if ($financialGoal->funding_mode === 'reservation' && (
+            if ((
                 $financialGoal->transactions()->where('status', 'pending')->exists()
                 || \Modules\FinancialGoal\Services\GoalReservations::goalSummary($financialGoal)['reservedAmount'] > 0)) {
                 \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'release_first');
@@ -260,12 +259,10 @@ class FinancialGoalRepository implements RepositoryApiInterface
             if ($financialGoal->contributed_amount < $financialGoal->total_amount) {
                 throw new FinancialGoalNotFullyFundedException();
             }
-            if ($financialGoal->funding_mode === 'reservation') {
-                if ($financialGoal->transactions()->where('status', 'pending')->exists()) {
-                    \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'pending');
-                }
-                $financialGoal->completed_funding = $financialGoal->contributed_amount;
+            if ($financialGoal->transactions()->where('status', 'pending')->exists()) {
+                \Modules\FinancialGoal\Services\GoalReservations::invalid('financial_goal_id', 'pending');
             }
+            $financialGoal->completed_funding = $financialGoal->contributed_amount;
             $financialGoal->completed_at = Carbon::now();
             $this->setStatus($financialGoal, 'completed');
 
@@ -389,7 +386,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             ->whereRaw("FIND_IN_SET(?, REPLACE(fg.userIds, ' ', ''))", [$user->id])
             ->selectRaw("
         SUM(fg.totalAmount * (user_currency.rate / goal_currency.rate)) as total_target,
-        SUM((CASE WHEN goal_model.funding_mode = 'reservation' THEN fg.contributedAmount - COALESCE(goal_usage.used, 0) ELSE fg.contributedAmount END) * (user_currency.rate / goal_currency.rate)) as total_saved
+        SUM((fg.contributedAmount - COALESCE(goal_usage.used, 0)) * (user_currency.rate / goal_currency.rate)) as total_saved
         ")
             ->first();
 
@@ -425,7 +422,7 @@ class FinancialGoalRepository implements RepositoryApiInterface
             ->whereRaw("FIND_IN_SET(?, REPLACE(fg.userIds, ' ', ''))", [$user->id])
             ->selectRaw("
                 SUM(fg.totalAmount * (user_currency.rate / goal_currency.rate)) as total_target,
-                SUM((CASE WHEN goal_model.funding_mode = 'reservation' THEN fg.contributedAmount - COALESCE(goal_usage.used, 0) ELSE fg.contributedAmount END) * (user_currency.rate / goal_currency.rate)) as total_saved
+                SUM((fg.contributedAmount - COALESCE(goal_usage.used, 0)) * (user_currency.rate / goal_currency.rate)) as total_saved
             ")
             ->first();
 

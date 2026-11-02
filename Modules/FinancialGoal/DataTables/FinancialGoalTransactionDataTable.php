@@ -37,7 +37,7 @@ class FinancialGoalTransactionDataTable extends DataTable
                 $canDestroy = $sharedRole?->hasPermission('destroyFinancialGoalTransaction');
                 $canConfirm = ($transaction->status == 'pending' && $transaction->date < Carbon::now()) && $sharedRole?->hasPermission('confirmScheduledFinancialGoalTransactions');
 
-                return ['view' => $canView, 'edit' => $canEdit && ($transaction->fundingMode !== 'reservation' || $transaction->status === 'pending'), 'destroy' => $canDestroy && ($transaction->fundingMode !== 'reservation' || $transaction->status === 'pending' || $transaction->type === 'usage'), 'confirm' => $canConfirm];
+                return ['view' => $canView, 'edit' => $canEdit && ($transaction->status === 'pending'), 'destroy' => $canDestroy && ($transaction->status === 'pending' || $transaction->type === 'usage'), 'confirm' => $canConfirm];
             })
             ->removeColumn('currencyId')
             ->removeColumn('userId');

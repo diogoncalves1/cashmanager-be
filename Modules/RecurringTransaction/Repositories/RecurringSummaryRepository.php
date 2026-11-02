@@ -23,8 +23,7 @@ class RecurringSummaryRepository
 
     private function isReservation($item): bool
     {
-        return $item->is_linked && $item->linked_type === \Modules\FinancialGoal\Entities\FinancialGoal::class
-            && $item->linked?->funding_mode === 'reservation';
+        return $item->is_linked && $item->linked_type === \Modules\FinancialGoal\Entities\FinancialGoal::class;
     }
 
     public function summarize(Collection $items, Carbon $today): array

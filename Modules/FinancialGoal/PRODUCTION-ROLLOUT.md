@@ -1,91 +1,69 @@
-# Entrega de reservas das metas — CM-120 / CM-250
+# Produção: modelo único de reservas (CM-120 / CM-250)
 
-## O que muda
+Atualizado em 2026-11-02. Este procedimento substitui a entrega anterior, que distinguia metas por `funding_mode`. A aplicação passa a ter um único ledger para todas as metas; a migration remove esse campo e o contrato API deixa de expor `fundingMode`.
 
-Reservar e libertar dinheiro mantém o saldo da conta. Utilizar cria uma despesa real ou associa uma já existente sem outro débito. O saldo pode ser negativo. Atingir o objetivo ou concluir a meta não cria uma despesa.
+## Correção do histórico misto
 
-A migração descobre a conta através de `financial_goal_transactions.transaction_id -> transactions.account_id`. Mantém a transação original, a ligação e um snapshot dos dados anteriores. Os movimentos internos antigos passam a constar de `financial_goal_neutralized_transactions`, ficando fora das listagens e dos cálculos de receitas/despesas. Continuam consultáveis pelo histórico da meta e para auditoria. O saldo atual das contas é apresentado independentemente da existência de transações visíveis.
+A conversão examina cada movimento, independentemente de qualquer classificação anterior da meta. Uma meta pode conter movimentos históricos sem `account_id`, reservas recentes sem transação e utilizações ligadas a despesas reais. Todos entram no mesmo cálculo.
 
-Para cada transação interna concluída, repõe o débito de uma contribuição ou desfaz o crédito de um levantamento. Estes ajustes e a passagem da meta para reservas são gravados na mesma transação de BD. O registo por transação impede uma segunda reposição. Não substitui o saldo atual pelo saldo antigo de um snapshot.
+Caso de regressão analisado: 22 movimentos concluídos, com 131,40 € de contribuições, 10 € de levantamentos e nenhuma utilização. O reservado é **121,40 €**. Os 10 € recentes não substituem os 21 movimentos históricos cuja conta ainda está por preencher.
 
-## Origem dos valores
+- O ledger da meta é a fonte dos valores/estados/datas da reserva. Não sobrescrever esses valores com o montante da transação de conta.
+- A transação original identifica a conta e o efeito contabilístico a neutralizar. O ajuste do saldo usa o valor/estado reais dessa transação; se diferirem do movimento da meta, as diferenças ficam no relatório.
+- A ligação exclusiva de uma contribuição/levantamento à transação identifica a sua origem interna, mesmo que a categoria tenha sido editada. Tipo de transação incompatível, referência partilhada com outra obrigação e origem não recuperável bloqueiam a conversão.
+- As transações e ligações originais são preservadas. As neutralizadas deixam de contar como receitas/despesas. `financial_goal_neutralized_transactions` evita repor o mesmo débito/crédito duas vezes.
+- Reservas recentes já diretamente associadas a uma conta não recebem ajuste de saldo. Despesas de utilização não são reembolsadas nem neutralizadas.
+- Auditorias de uma conversão anterior podem recuperar a conta de transações que essa versão eliminou. A política de reposição registada nessa auditoria é respeitada para não repor dinheiro outra vez.
+- Recibos e chaves existentes são preservados. Não é necessário fabricar recibos para recuperar a conta.
 
-O valor, estado, data e conta da transação original são a fonte para reconciliar movimentos antigos. Esse registo é o que determinou o efeito no saldo. Se o movimento da meta ou o seu total estiverem desatualizados, são corrigidos a partir dessa origem, ficando os valores anteriores no snapshot e as diferenças no relatório.
+A conversão financeira é **atómica para todas as metas selecionadas**: ou converte o conjunto completo ou não grava nenhuma alteração financeira. Não há metas mantidas num segundo modelo. Uma origem em falta faz a migration falhar com identificação da meta/movimento; deve ser reconciliada explicitamente, sem atribuir uma conta por suposição. A pré-visualização assinala esses casos como `blocked`.
 
-Exemplo de ensaio: meta com total guardado de 999 €, movimento de 80 € e transação original de 125,25 €. A reserva passa a 125,25 €, na conta da transação. O ajuste dessa conta é +125,25 €, uma vez. O relatório identifica a correção de -873,75 € no total e preserva os três valores anteriores. Não cria recibos para justificar a associação à conta.
+## Antes de executar no servidor
 
-Transações reais de compras, ligações duplicadas, moedas incompatíveis, movimentos sem transação, metas financiadas sem histórico e líquidos negativos por conta não são convertidos por suposição. A meta fica `legacy`, com relatório `needs_review`, mantendo as operações anteriores através da meta. Os outros objetivos são migrados. Um relatório com `historyComplete=false` devolve `fundedAmount`/`difference` nulos, pois não existe uma soma reconciliada completa.
-
-No modelo anterior, as contribuições/levantamentos continuam a afetar o saldo. O frontend explica essa diferença e mantém o formulário disponível. A utilização de reservas fica disponível depois da reconciliação. Editar/confirmar/apagar uma transação interna isoladamente pela área de transações é recusado; fazê-lo através da meta atualiza os dois registos.
-
-## Compatibilidade com as tentativas anteriores
-
-- As duas migrations novas têm nomes diferentes das quatro retiradas. Não apagar registos da tabela `migrations` para tentar forçar uma nova execução.
-- A preparação adiciona apenas os campos/tabelas em falta e recria a view dos movimentos. Suporta o esquema original e o esquema de reservas já instalado.
-- `request_key`, `request_hash`, recibos e auditorias já existentes são preservados. Não existe backfill obrigatório de recibos para o histórico.
-- Metas já em `reservation` não recebem novos ajustes de saldo. O total derivado é reconciliado com o seu ledger de reservas, preservando os dados de auditoria existentes.
-- As transações eliminadas por uma conversão anterior que tenha concluído não são recriadas automaticamente. Essa versão deixou cópias em `financial_goal_conversions`; a nova versão preserva essas auditorias e os movimentos já convertidos.
-
-Confirmar que o deployment remove efetivamente os ficheiros antigos, incluindo em servidores que copiam ficheiros sem eliminar os que desapareceram do Git:
-
-```text
-2026_11_01_180000_add_goal_reservations.php
-2026_11_02_180000_backfill_financial_goal_accounts.php
-2026_11_02_185000_backfill_financial_goal_request_receipts.php
-2026_11_02_190000_convert_legacy_goal_reservations.php
-```
-
-## Procedimento de produção
-
-Ensaiar primeiro numa cópia recente de produção, na mesma versão MySQL/MariaDB e com tabelas InnoDB. A validação local com dados fictícios não substitui esse ensaio. Guardar um backup completo e os relatórios; contêm valores financeiros e devem ficar fora de diretórios públicos.
-
-1. Ativar manutenção e suspender também workers/agendamentos que geram movimentos. Publicar o novo BE sem permitir escritas financeiras durante a entrega.
-2. Fazer a pré-visualização, que é só de leitura e funciona antes de alterar o esquema:
+Publicar primeiro a versão corrigida de BE e FE, guardar um backup completo e ativar manutenção. Suspender também workers/agendamentos que geram movimentos. Ensaiar previamente uma cópia recente da BD de produção, com tabelas InnoDB. A pré-visualização só lê dados:
 
 ```sh
 php artisan goals:reservation-rollout
+php artisan goals:reservation-rollout --goal=7
 ```
 
-Para investigar apenas uma meta:
+Os relatórios têm dados financeiros: guardá-los fora de diretórios públicos.
 
-```sh
-php artisan goals:reservation-rollout --goal=1
-```
+## Comandos de migração
 
-3. Aplicar a preparação e a conversão, por esta ordem:
+Executar, por esta ordem, na raiz do backend:
 
 ```sh
 php artisan migrate --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_210000_prepare_goal_reservation_rollout.php --force
-php artisan migrate --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_220000_migrate_goal_reservations_preserving_transactions.php --force
+php artisan migrate --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_230000_unify_all_goal_reservations.php --force
 ```
 
-4. Consultar novamente o estado:
+A `230000` também prepara os campos/tabelas em falta, converte o histórico misto e elimina `funding_mode`. Funciona quando a `210000` e/ou a `220000` da entrega anterior já estão registadas como executadas; não é necessário nem adequado fazer rollback delas. Se forem usadas as migrations do módulo em conjunto, a `220000` usa o mesmo conversor atómico e a repetição é segura.
+
+Não voltar a instalar/executar as quatro migrations retiradas (`2026_11_01_180000`, `2026_11_02_180000`, `185000`, `190000`). Confirmar que esses ficheiros antigos foram removidos do servidor, inclusive em deploys que copiam ficheiros sem eliminar os retirados do Git.
+
+## Verificação e reabertura
+
+Depois de ambas concluírem:
 
 ```sh
-php artisan goals:reservation-rollout
+php artisan goals:reservation-rollout --fail-on-review
+php artisan goals:reservation-rollout --goal=7
 ```
 
-Metas convertidas aparecem como `already_reservation` e não recebem outro ajuste. Os relatórios da aplicação ficam em `financial_goal_reservation_rollouts`, com snapshot anterior, valores por conta, ajustes e correções. `needs_review` identifica casos pendentes e os movimentos concretos; não significa que as outras metas falharam. Confirmar os saldos, reservas por conta e a separação de receitas/despesas.
+Uma segunda leitura deve mostrar `unchanged`, sem origens em falta. Para os movimentos analisados, a meta 7 deve apresentar 121,40 € reservados, distribuídos pelas contas das transações originais. Se a BD real tiver movimentos adicionais, confirmar o respetivo líquido no relatório.
 
-5. Depois de reconciliar um caso pendente, pré-visualizar e aplicar apenas essa meta:
+A auditoria resumida fica em `financial_goal_reservation_rollouts`; cada aplicação adicional guarda um evento e snapshot em `financial_goal_reservation_rollout_events`, preservando também o snapshot inicial. Confirmar saldos, reservas por conta e exclusão das transações internas das despesas. Só depois reativar workers/agendamentos e executar `php artisan up`. Recarregar a interface para obter o novo contrato.
 
-```sh
-php artisan goals:reservation-rollout --goal=1
-php artisan goals:reservation-rollout --goal=1 --apply
-```
+## Falhas e recuperação
 
-O comando sem `--apply` nunca grava. `--fail-on-review` é opcional para verificações automatizadas com código de saída não zero perante casos pendentes.
+Se a conversão financeira falhar, não reabrir a aplicação. Consultar a pré-visualização, corrigir a origem apontada e repetir a migration. Nenhuma outra meta é deixada parcialmente convertida por essa execução. A preparação e remoção do campo são DDL, que no MySQL não formam uma única transação com os dados; esses passos são repetíveis. Se o erro ocorrer no DDL após a conversão financeira, os registos por transação continuam a impedir reposições duplicadas.
 
-6. Publicar o FE correspondente, renovar as caches da aplicação conforme o deployment habitual, retomar workers/agendamentos e desativar a manutenção. Recarregar sessões abertas para usar o novo formulário com chaves de repetição.
+As migrations são `forward-only`; `down()` recusa uma reversão cega de saldos. Não usar `migrate:rollback` nem apagar linhas da tabela `migrations` para repetir a conversão. Antes de novas escritas, recuperar com um backup coordenado com a versão de código; depois de novas escritas, reconciliar os movimentos posteriores ou corrigir para a frente.
 
-## Interrupções e recuperação
+## Validação realizada
 
-A preparação contém DDL, que no MySQL não é uma transação única; pode ser repetida após resolver um erro de esquema. A conversão é atómica por meta. Se uma falha inesperada interromper o processo, as metas já concluídas ficam marcadas; repetir o comando ou a migration não repõe esses saldos outra vez. Uma falha na escrita do saldo anula também as alterações do movimento e da neutralização dessa meta.
-
-As migrations são deliberadamente `forward-only`: `down()` recusa apagar reservas ou desfazer saldos sem reconciliação. Não usar `migrate:rollback` para esta entrega. Antes de novas escritas, a recuperação pode usar o backup coordenado com a versão de código correspondente. Depois de novas escritas, corrigir para a frente ou reconciliar os movimentos posteriores; não sobrepor saldos atuais com snapshots antigos.
-
-## Verificação realizada
-
-- Testes isolados cobrem o ciclo do carro, saldo negativo, cêntimos, permissões, pendentes, associação de despesa, repetição de pedidos e de migração, correções de totais, preservação de transações/recibos, casos pendentes e falha atómica de saldo.
-- Ensaio em MySQL **9.6.0** local, sem rede e com dados fictícios: esquema original e esquema da tentativa anterior; preparação duas vezes e conversão duas vezes em cada cenário. Ligações, saldos, reservas e recibos foram verificados.
-- O frontend passou o build de produção, a verificação TypeScript e os testes de metas/categorias/recorrentes. Nenhuma migration foi executada na base de dados real de produção nesta tarefa.
+- Teste sanitizado com os 22 valores do caso da meta 7, incluindo 21 contas por recuperar e uma reserva recente: 121,40 € no total e por conta; repetição sem outra reposição.
+- Ensaios adicionais em **MySQL 8.0.40 isolado**, a versão indicada no export: esquema original e esquema da tentativa anterior, executando a `230000` duas vezes. Confirmadas contas, saldo, transações preservadas, recibos e eliminação do campo de modo.
+- Testes BE cobrem atomicidade entre metas, valores da meta diferentes da transação, pendentes, utilizações, chaves, auditorias anteriores e saldos negativos. FE verifica o contrato sem modo, traduções, erros, tipos e build.
+- Nenhuma alteração foi executada em bases de dados reais de produção nesta tarefa.

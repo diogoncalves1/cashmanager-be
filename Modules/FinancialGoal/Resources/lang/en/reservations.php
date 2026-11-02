@@ -4,7 +4,6 @@ return [
     'historical_linked' => 'Manage this historical goal movement from its financial goal to keep amounts consistent.',
     'target_locked' => 'Reopen the goal before changing its completed target amount.',
     'account_history' => 'An account with reservation history cannot be deleted. You can deactivate it and release its remaining reserves.',
-    'legacy' => 'This goal keeps contributions and withdrawals in the previous model. Reservation spending becomes available after its movements are reconciled.',
     'currency' => 'The account and goal must use the same currency.',
     'inactive' => 'Choose an active account.',
     'retry' => 'This request was already used for a different operation. Refresh and try again.',

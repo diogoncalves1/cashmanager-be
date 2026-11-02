@@ -80,7 +80,7 @@ class RecurringSummaryTest extends TestCase
     }
     public function test_goal_reservations_and_releases_are_not_income_or_consumption(): void
     {
-        $goal = new \Modules\FinancialGoal\Entities\FinancialGoal(['funding_mode' => 'reservation']);
+        $goal = new \Modules\FinancialGoal\Entities\FinancialGoal();
         $reserve = $this->item(['amount' => 200, 'is_linked' => true, 'linked_type' => $goal::class])->setRelation('linked', $goal);
         $release = $this->item(['amount' => 50, 'type' => 'revenue', 'is_linked' => true, 'linked_type' => $goal::class])->setRelation('linked', $goal);
         $summary = $this->summary(collect([$reserve, $release, $this->item(['amount' => 10])]));

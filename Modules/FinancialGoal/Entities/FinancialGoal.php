@@ -14,7 +14,7 @@ class FinancialGoal extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['currency_id', 'name', 'total_amount', 'contributed_amount', 'start_date', 'due_date', 'status', 'description', 'completed_at', 'priority', 'canceled_at', 'funding_mode', 'completed_funding'];
+    protected $fillable = ['currency_id', 'name', 'total_amount', 'contributed_amount', 'start_date', 'due_date', 'status', 'description', 'completed_at', 'priority', 'canceled_at', 'completed_funding'];
     protected $table    = 'financial_goals';
     protected $cats     = [
         'total_amount' => 'float',

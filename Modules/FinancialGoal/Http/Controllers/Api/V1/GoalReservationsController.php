@@ -60,8 +60,8 @@ class GoalReservationsController extends ApiController
                 GoalReservations::invalid('account_id', 'currency');
             }
             $expenses = Transaction::where('account_id', $account->id)->where('type', 'expense')->where('status', 'completed')->whereDate('date', '<=', today())
-                ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('financial_goal_transactions as legacy')
-                    ->whereColumn('legacy.transaction_id', 'transactions.id')->where('legacy.type', '!=', 'usage'))
+                ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('financial_goal_transactions as historical')
+                    ->whereColumn('historical.transaction_id', 'transactions.id')->where('historical.type', '!=', 'usage'))
                 ->select('transactions.*')->selectRaw("amount - COALESCE((SELECT SUM(amount) FROM financial_goal_transactions WHERE transaction_id = transactions.id AND type = 'usage'), 0) AS unallocated")
                 ->when($request->filled('search'), fn ($query) => $query->where('description', 'like', '%'.$request->input('search').'%'))
                 ->orderByDesc('date')->orderByDesc('id')->paginate(20);

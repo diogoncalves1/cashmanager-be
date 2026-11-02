@@ -26,13 +26,10 @@ class GoalReservations
 
     public static function reserved(int|string $accountId, int|string|null $goalId = null, bool $currentRead = false): float
     {
-        if (! Schema::hasColumn('financial_goals', 'funding_mode')) {
+        if (! Schema::hasColumn('financial_goal_transactions', 'account_id')) {
             return 0;
         }
-        // Historical debits are neutralized during the rollout. Until a goal is
-        // reconciled, keep its previous accounting outside reservation totals.
         $query = FinancialGoalTransaction::where('account_id', $accountId)->where('status', 'completed')
-            ->whereHas('financialGoal', fn ($goals) => $goals->where('funding_mode', 'reservation'))
             ->when($goalId, fn ($query) => $query->where('financial_goal_id', $goalId));
         if ($currentRead) {
             // A locking read sees the latest committed rows even after a transaction
@@ -56,21 +53,19 @@ class GoalReservations
     public static function goalSummary(FinancialGoal $goal): array
     {
         $used = (float) $goal->transactions()->where('type', 'usage')->where('status', 'completed')->sum('amount');
-        $funded = $goal->funding_mode === 'reservation'
-            ? $goal->transactions()->where('status', 'completed')->get(['type', 'amount'])->sum(fn ($entry) => self::cents($entry->amount) * match ($entry->type) {
+        $funded = $goal->transactions()->where('status', 'completed')->get(['type', 'amount'])
+            ->sum(fn ($entry) => self::cents($entry->amount) * match ($entry->type) {
                 'contribution' => 1, 'withdrawal' => -1, default => 0,
-            }) / 100
-            : (float) $goal->contributed_amount;
+            }) / 100;
 
-        return ['fundingMode' => $goal->funding_mode ?? 'legacy',
-            'reservedAmount' => $goal->funding_mode === 'reservation' ? round($funded - $used, 2) : null,
+        return ['reservedAmount' => round($funded - $used, 2),
             'usedAmount' => $used, 'fundedAmount' => $funded,
             'completedFunding' => $goal->completed_funding === null ? null : (float) $goal->completed_funding];
     }
 
     public static function expenseGoals(int|string $transactionId, int|string $userId): array
     {
-        if (! Schema::hasColumn('financial_goals', 'funding_mode')) {
+        if (! Schema::hasTable('financial_goal_transactions')) {
             return [];
         }
 
@@ -108,9 +103,6 @@ class GoalReservations
             $goal = FinancialGoal::whereKey($request->input('financial_goal_id'))->lockForUpdate()->firstOrFail();
             self::permission($goal, $user->id, 'storeFinancialGoalTransaction');
             self::permission($account, $user->id, 'createTransaction');
-            if ($goal->funding_mode !== 'reservation') {
-                self::invalid('financial_goal_id', 'legacy');
-            }
             if ((string) $goal->currency_id !== (string) $account->currency_id) {
                 self::invalid('account_id', 'currency');
             }

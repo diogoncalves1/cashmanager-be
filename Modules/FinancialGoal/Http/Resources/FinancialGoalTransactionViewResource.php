@@ -24,12 +24,11 @@ class FinancialGoalTransactionViewResource extends JsonResource
         $canConfirm            = $this->status == 'pending' && $this->date <= date('Y-m-d') && $sharedRole?->hasPermission("confirmScheduledFinancialGoalTransactions");
         $canCreateTransactions = $sharedRole?->hasPermission("storeFinancialGoalTransaction");
 
-        $actions = ['edit' => $canEdit && ($this->fundingMode !== 'reservation' || $this->status === 'pending'), 'destroy' => $canDestroy && ($this->fundingMode !== 'reservation' || $this->status === 'pending' || $this->type === 'usage'), 'confirm' => $canConfirm, 'store' => $canCreateTransactions];
+        $actions = ['edit' => $canEdit && ($this->status === 'pending'), 'destroy' => $canDestroy && ($this->status === 'pending' || $this->type === 'usage'), 'confirm' => $canConfirm, 'store' => $canCreateTransactions];
 
         return [
             'id'                => $this->id,
             'transactionId' => $this->transactionId,
-            'fundingMode' => $this->fundingMode,
             'type'              => $this->type,
             'typeTranslated'    => __('financialgoal::attributes.financial-goal-transactions.type.' . $this->type),
             'status'            => $this->status,

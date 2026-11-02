@@ -19,7 +19,6 @@ return new class extends Migration
             $table->decimal('total_amount', 15, 2)->change();
             $table->decimal('contributed_amount', 15, 2)->default(0)->change();
         });
-        $this->column('financial_goals', 'funding_mode', fn ($t) => $t->string('funding_mode', 20)->default('legacy'));
         $this->column('financial_goals', 'completed_funding', fn ($t) => $t->decimal('completed_funding', 15, 2)->nullable());
         Schema::table('financial_goal_transactions', function (Blueprint $table) {
             $table->string('type', 20)->change();
@@ -59,6 +58,15 @@ return new class extends Migration
                 $t->timestamp('created_at');
             });
         }
+        if (! Schema::hasTable('financial_goal_reservation_rollout_events')) {
+            Schema::create('financial_goal_reservation_rollout_events', function (Blueprint $t) {
+                $t->id();
+                $t->unsignedBigInteger('financial_goal_id')->index('goal_rollout_event_goal_idx');
+                $t->json('report');
+                $t->json('snapshot');
+                $t->timestamp('created_at');
+            });
+        }
         $this->view();
     }
 
@@ -75,7 +83,6 @@ return new class extends Migration
         DB::statement("CREATE VIEW financial_goal_transaction_view AS
             SELECT fgt.id, fgt.type, fgt.amount, fgt.date, fgt.description, fgt.status,
                 fgt.transaction_id AS transactionId, fgt.expense_created AS expenseCreated,
-                fg.funding_mode AS fundingMode,
                 u.name AS userName, fgt.user_id AS userId, fg.name AS financialGoalName,
                 fgt.financial_goal_id AS financialGoalId,
                 c.symbol AS currencySymbol, c.code AS currencyCode, c.id AS currencyId,
