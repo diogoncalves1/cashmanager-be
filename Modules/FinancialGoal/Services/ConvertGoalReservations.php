@@ -21,6 +21,10 @@ class ConvertGoalReservations
 
     public function migrateLegacyGoals(): int
     {
+        // Also support deployments that explicitly run only the conversion file.
+        // Receipt metadata is independent of the financial conversion transaction.
+        app(BackfillGoalRequestReceipts::class)->run();
+
         // A deployment converts every old goal or rolls all conversions back.
         // Running the migration again skips already converted goals.
         return DB::transaction(function () {
@@ -98,8 +102,25 @@ class ConvertGoalReservations
                     $deltas[$account->id] += GoalReservations::cents($entry->amount) * ($expected === 'expense' ? 1 : -1);
                 }
             }
-            if (array_sum($deltas) !== GoalReservations::cents($goal->contributed_amount) || count(array_filter($deltas, fn ($amount) => $amount < 0))) {
-                GoalReservations::invalid('financial_goal_id', 'conversion');
+            $calculated = array_sum($deltas);
+            $stored = GoalReservations::cents($goal->contributed_amount);
+            $mismatches = [];
+            if ($calculated !== $stored) {
+                $mismatches[] = __('financialgoal::reservations.conversion_total', [
+                    'stored' => number_format($stored / 100, 2, '.', ''),
+                    'calculated' => number_format($calculated / 100, 2, '.', ''),
+                    'difference' => number_format(($calculated - $stored) / 100, 2, '.', ''),
+                ]);
+            }
+            foreach ($deltas as $accountId => $amount) {
+                if ($amount < 0) {
+                    $mismatches[] = __('financialgoal::reservations.conversion_negative', [
+                        'account' => $accountId, 'amount' => number_format($amount / 100, 2, '.', ''),
+                    ]);
+                }
+            }
+            if ($mismatches) {
+                throw ValidationException::withMessages(['financial_goal_id' => $mismatches]);
             }
             $snapshot = ['goal' => $goal->getAttributes(), 'entries' => $entries->map->getAttributes()->all(),
                 'transactions' => $transactions->map->getAttributes()->values()->all(),

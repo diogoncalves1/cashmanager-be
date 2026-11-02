@@ -44,7 +44,7 @@ class FinancialGoalServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        $this->commands([\Modules\FinancialGoal\Console\Commands\InspectGoalReservations::class]);
     }
 
     /**

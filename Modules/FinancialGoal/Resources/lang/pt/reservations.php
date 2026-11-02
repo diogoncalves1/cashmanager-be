@@ -22,6 +22,8 @@ return [
     'pending' => 'Resolve os movimentos pendentes antes de concluir esta meta.',
     'linked' => 'Esta despesa está associada a uma meta. Desassocia as utilizações antes de a editar ou eliminar.',
     'conversion' => 'Não foi possível reconciliar automaticamente os movimentos antigos. Revê as contas, moedas e valores.',
+    'conversion_total' => 'A meta guarda :stored, mas as contribuições concluídas menos os levantamentos somam :calculated (diferença: :difference).',
+    'conversion_negative' => 'A conta :account tem uma reserva líquida de :amount: os levantamentos concluídos excedem as contribuições nessa conta.',
     'stale' => 'Os saldos ou movimentos mudaram desde a pré-visualização. Carrega uma nova pré-visualização.',
     'converted' => 'Esta meta já usa reservas.',
     'confirm' => 'Confirma que os movimentos antigos representam dinheiro que continua nas tuas contas.',

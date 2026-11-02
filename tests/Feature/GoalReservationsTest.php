@@ -15,6 +15,7 @@ use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\FinancialGoal\Entities\FinancialGoal;
 use Modules\FinancialGoal\Entities\FinancialGoalTransaction;
 use Modules\FinancialGoal\Repositories\FinancialGoalRepository;
+use Modules\FinancialGoal\Services\BackfillGoalRequestReceipts;
 use Modules\FinancialGoal\Services\ConvertGoalReservations;
 use Modules\FinancialGoal\Services\GoalReservations;
 use Modules\User\Entities\User;
@@ -149,6 +150,11 @@ class GoalReservationsTest extends TestCase
     private function automaticConversionMigration()
     {
         return require base_path('Modules/FinancialGoal/Database/Migrations/2026_11_02_190000_convert_legacy_goal_reservations.php');
+    }
+
+    private function receiptBackfillMigration()
+    {
+        return require base_path('Modules/FinancialGoal/Database/Migrations/2026_11_02_185000_backfill_financial_goal_request_receipts.php');
     }
 
     private function request(array $values = []): Request
@@ -497,6 +503,194 @@ class GoalReservationsTest extends TestCase
             'type' => 'contribution', 'amount' => 100, 'date' => today()->toDateString(), 'status' => 'completed']);
         $this->getJson('/api/v1/financial-goals/1/reservation-conversion')->assertUnprocessable()->assertJsonValidationErrors('account_id');
         $this->assertEquals(3000, Account::find(1)->balance);
+        $this->assertDatabaseCount('financial_goal_conversions', 0);
+    }
+
+    public function test_conversion_reports_the_exact_total_difference_and_the_inspection_command_is_read_only(): void
+    {
+        FinancialGoal::whereKey(1)->update(['funding_mode' => 'legacy', 'contributed_amount' => '90.01']);
+        DB::table('categories')->where('id', 1)->update(['code' => 'financialGoalContribution', 'is_default' => true, 'user_id' => null]);
+        foreach ([['100.02', 'completed'], ['500.00', 'pending']] as [$amount, $status]) {
+            $transaction = Transaction::create(['account_id' => 1, 'user_id' => 1, 'category_id' => 1, 'type' => 'expense', 'amount' => $amount, 'date' => today()->toDateString(), 'status' => $status]);
+            FinancialGoalTransaction::create(['financial_goal_id' => 1, 'user_id' => 1, 'transaction_id' => $transaction->id,
+                'type' => 'contribution', 'amount' => $amount, 'date' => today()->toDateString(), 'status' => $status]);
+        }
+        $this->getJson('/api/v1/financial-goals/1/reservation-conversion')->assertUnprocessable()
+            ->assertJsonPath('errors.financial_goal_id.0', 'The goal stores 90.01, but completed contributions minus withdrawals total 100.02 (difference: 10.01).');
+        $before = [];
+        foreach (['financial_goals', 'financial_goal_transactions', 'transactions', 'accounts', 'financial_goal_conversions'] as $table) {
+            $before[$table] = DB::table($table)->orderBy('id')->get()->toArray();
+        }
+        $this->artisan('goals:inspect-reservations', ['goal' => 1])
+            ->expectsOutput('Stored funding: 90.01')
+            ->expectsOutput('Completed movement net: 100.02')
+            ->expectsOutput('Difference (movements - stored): 10.01')
+            ->expectsTable(['Account ID', 'Contributions', 'Withdrawals', 'Net reserved', 'Pending entries'], [[1, '100.02', '0.00', '100.02', 1]])
+            ->assertExitCode(1);
+        foreach ($before as $table => $rows) {
+            $this->assertEquals($rows, DB::table($table)->orderBy('id')->get()->toArray());
+        }
+        try {
+            $this->automaticConversionMigration()->up();
+            $this->fail('An unexplained funding difference cannot be converted');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('goal 1', $error->getMessage());
+            $this->assertStringContainsString('90.01', $error->getMessage());
+            $this->assertStringContainsString('100.02', $error->getMessage());
+            $this->assertStringContainsString('10.01', $error->getMessage());
+        }
+        $this->assertEquals(3000, Account::find(1)->balance);
+        $this->assertEquals(90.01, FinancialGoal::find(1)->contributed_amount);
+        $this->assertDatabaseCount('financial_goal_conversions', 0);
+    }
+
+    public function test_receipt_migration_fills_all_historical_movements_preserves_money_and_can_replay_after_conversion(): void
+    {
+        FinancialGoal::whereKey(1)->update(['funding_mode' => 'legacy', 'contributed_amount' => '120.25']);
+        Account::whereKey(1)->update(['balance' => 1000]);
+        DB::table('categories')->where('id', 1)->update(['code' => 'financialGoalContribution', 'is_default' => true, 'user_id' => null]);
+        DB::table('categories')->insert(['id' => 2, 'name' => 'Release', 'type' => 'revenue', 'code' => 'financialGoalWithdrawal', 'is_default' => true]);
+        foreach ([['contribution', '150.25', 'completed'], ['withdrawal', '30.00', 'completed'], ['contribution', '25.50', 'pending']] as [$type, $amount, $status]) {
+            $transaction = Transaction::create(['account_id' => 1, 'user_id' => 1, 'category_id' => $type === 'contribution' ? 1 : 2,
+                'type' => $type === 'contribution' ? 'expense' : 'revenue', 'amount' => $amount, 'date' => today()->toDateString(), 'status' => $status]);
+            FinancialGoalTransaction::create(['financial_goal_id' => 1, 'user_id' => 1, 'transaction_id' => $transaction->id,
+                'type' => $type, 'amount' => $amount, 'status' => $status, 'date' => today()->toDateString()]);
+        }
+        DB::table('financial_goal_transactions')->where('status', 'pending')->update(['request_key' => '0']);
+        $originalTransactions = DB::table('transactions')->orderBy('id')->get()->toArray();
+        $originalEntries = DB::table('financial_goal_transactions')->orderBy('id')->get()->toArray();
+        $this->receiptBackfillMigration()->up();
+        $this->receiptBackfillMigration()->up();
+        $this->receiptBackfillMigration()->down();
+        $this->assertEquals(0, app(BackfillGoalRequestReceipts::class)->run());
+        foreach ($originalEntries as $original) {
+            $entry = FinancialGoalTransaction::findOrFail($original->id);
+            $this->assertEquals($original->request_key ?? 'historical-goal-entry:'.$entry->id, $entry->request_key);
+            $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $entry->request_hash);
+            $this->assertDatabaseHas('financial_goal_request_receipts', [
+                'request_key' => $entry->request_key, 'request_hash' => $entry->request_hash,
+                'entry_id' => $entry->id, 'financial_goal_id' => 1, 'user_id' => 1,
+            ]);
+            foreach (get_object_vars($original) as $field => $value) {
+                if (! in_array($field, ['request_key', 'request_hash'])) {
+                    $this->assertEquals($value, $entry->getRawOriginal($field));
+                }
+            }
+        }
+        $this->assertDatabaseCount('financial_goal_request_receipts', 3);
+        $this->assertEquals(1000, Account::find(1)->balance);
+        $this->assertEquals(120.25, FinancialGoal::find(1)->contributed_amount);
+        $this->assertEquals($originalTransactions, DB::table('transactions')->orderBy('id')->get()->toArray());
+        $this->automaticConversionMigration()->up();
+        $this->assertEquals(1120.25, Account::find(1)->balance);
+        $first = FinancialGoalTransaction::orderBy('id')->firstOrFail();
+        $replayed = $this->add(['financial_goal_id' => '1', 'account_id' => '1', 'amount' => '150.25', 'description' => null, 'request_key' => $first->request_key]);
+        $this->assertSame($first->id, $replayed->id);
+        $pending = FinancialGoalTransaction::where('status', 'pending')->firstOrFail();
+        $pendingReplay = $this->add(['financial_goal_id' => '1', 'account_id' => '1', 'amount' => '25.50', 'description' => null, 'status' => 'pending', 'request_key' => '0']);
+        $this->assertSame($pending->id, $pendingReplay->id);
+        $this->assertEquals(120.25, FinancialGoal::find(1)->contributed_amount);
+        $this->assertDatabaseCount('financial_goal_transactions', 3);
+        $this->assertDatabaseCount('transactions', 0);
+        $this->assertDatabaseCount('financial_goal_request_receipts', 3);
+    }
+
+    public function test_receipt_backfill_recovers_partial_metadata_and_keeps_existing_hashes_and_deleted_usage_receipts(): void
+    {
+        $reserve = $this->add(['amount' => 50, 'request_key' => 'known-reserve']);
+        $usage = $this->add(['amount' => 20, 'type' => 'usage', 'category_id' => 1, 'request_key' => 'known-usage']);
+        $reserveHash = $reserve->request_hash;
+        $usageHash = $usage->request_hash;
+        DB::table('financial_goal_transactions')->where('id', $reserve->id)->update(['request_key' => null, 'request_hash' => null]);
+        DB::table('financial_goal_request_receipts')->where('request_key', 'known-usage')->delete();
+        $this->assertEquals(2, app(BackfillGoalRequestReceipts::class)->run());
+        $this->assertEquals('known-reserve', $reserve->fresh()->request_key);
+        $this->assertEquals($reserveHash, $reserve->fresh()->request_hash);
+        $this->assertEquals($usageHash, $usage->fresh()->request_hash);
+        $this->assertDatabaseHas('financial_goal_request_receipts', ['request_key' => 'known-usage', 'request_hash' => $usageHash, 'entry_id' => $usage->id]);
+        $this->assertEquals(2980, Account::find(1)->balance);
+        app(GoalReservations::class)->change($this->request(), (string) $usage->id, 'destroy');
+        $this->assertEquals(0, app(BackfillGoalRequestReceipts::class)->run());
+        $this->assertDatabaseCount('financial_goal_request_receipts', 2);
+        $this->assertDatabaseCount('transactions', 1);
+        try {
+            $this->add(['amount' => 20, 'type' => 'usage', 'category_id' => 1, 'request_key' => 'known-usage']);
+            $this->fail('A receipt of a deleted usage must still prevent another expense');
+        } catch (ValidationException $error) {
+            $this->assertArrayHasKey('request_key', $error->errors());
+        }
+        $this->assertDatabaseCount('transactions', 1);
+        $this->assertEquals(2980, Account::find(1)->balance);
+    }
+
+    public function test_receipt_backfill_rolls_back_on_conflicting_hashes_instead_of_overwriting_request_history(): void
+    {
+        $first = $this->add(['amount' => 50]);
+        DB::table('financial_goal_request_receipts')->where('entry_id', $first->id)->delete();
+        DB::table('financial_goal_transactions')->where('id', $first->id)->update(['request_key' => null, 'request_hash' => null]);
+        $second = $this->add(['amount' => 10, 'request_key' => 'existing-request']);
+        DB::table('financial_goal_request_receipts')->where('entry_id', $second->id)->update(['request_hash' => str_repeat('a', 64)]);
+        try {
+            app(BackfillGoalRequestReceipts::class)->run();
+            $this->fail('A conflicting receipt must be reviewed');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('goal movement '.$second->id, $error->getMessage());
+            $this->assertStringContainsString('different hashes', $error->getMessage());
+        }
+        $this->assertNull($first->fresh()->request_key);
+        $this->assertNull($first->fresh()->request_hash);
+        $this->assertEquals($second->request_hash, $second->fresh()->request_hash);
+        $this->assertDatabaseCount('financial_goal_request_receipts', 1);
+        $this->assertEquals(3000, Account::find(1)->balance);
+        DB::table('financial_goal_request_receipts')->where('entry_id', $second->id)->update(['request_hash' => $second->request_hash]);
+        $this->assertEquals(1, app(BackfillGoalRequestReceipts::class)->run());
+        $this->assertDatabaseCount('financial_goal_request_receipts', 2);
+    }
+
+    public function test_conversion_reports_negative_net_reservations_separately_from_positive_bank_balances(): void
+    {
+        FinancialGoal::whereKey(1)->update(['funding_mode' => 'legacy', 'contributed_amount' => 50]);
+        Account::create(['id' => 2, 'name' => 'Savings', 'balance' => 1000, 'currency_id' => 1, 'active' => true]);
+        DB::table('account_users')->insert(['account_id' => 2, 'user_id' => 1, 'shared_role_id' => 1]);
+        DB::table('categories')->where('id', 1)->update(['code' => 'financialGoalContribution', 'is_default' => true, 'user_id' => null]);
+        DB::table('categories')->insert(['id' => 2, 'name' => 'Release', 'type' => 'revenue', 'code' => 'financialGoalWithdrawal', 'is_default' => true]);
+        foreach ([[1, 'contribution', 100], [2, 'withdrawal', 50]] as [$accountId, $type, $amount]) {
+            $transaction = Transaction::create(['account_id' => $accountId, 'user_id' => 1, 'category_id' => $type === 'contribution' ? 1 : 2,
+                'type' => $type === 'contribution' ? 'expense' : 'revenue', 'amount' => $amount, 'date' => today()->toDateString(), 'status' => 'completed']);
+            FinancialGoalTransaction::create(['financial_goal_id' => 1, 'user_id' => 1, 'transaction_id' => $transaction->id,
+                'type' => $type, 'amount' => $amount, 'date' => today()->toDateString(), 'status' => 'completed']);
+        }
+        $this->getJson('/api/v1/financial-goals/1/reservation-conversion')->assertUnprocessable()
+            ->assertJsonPath('errors.financial_goal_id.0', 'Account 2 has a net reservation of -50.00: completed withdrawals exceed contributions in that account.');
+        $this->artisan('goals:inspect-reservations', ['goal' => 1])
+            ->expectsOutput('Stored funding: 50.00')
+            ->expectsOutput('Completed movement net: 50.00')
+            ->expectsOutput('Difference (movements - stored): 0.00')
+            ->expectsOutput('At least one account has more completed withdrawals than contributions for this goal.')
+            ->assertExitCode(1);
+        $this->assertEquals(3000, Account::find(1)->balance);
+        $this->assertEquals(1000, Account::find(2)->balance);
+        $this->assertDatabaseCount('financial_goal_conversions', 0);
+    }
+
+    public function test_inspection_distinguishes_converted_missing_and_unassigned_goals_without_writing(): void
+    {
+        $this->artisan('goals:inspect-reservations', ['goal' => 1])
+            ->expectsOutput('This goal already uses reservations; historical conversion is not needed.')->assertExitCode(0);
+        $this->artisan('goals:inspect-reservations', ['goal' => 999])
+            ->expectsOutput('Financial goal not found.')->assertExitCode(1);
+        $this->artisan('goals:inspect-reservations', ['goal' => 0])
+            ->expectsOutput('Enter a positive financial goal ID.')->assertExitCode(1);
+        FinancialGoal::whereKey(1)->update(['funding_mode' => 'legacy', 'contributed_amount' => 10]);
+        $entry = FinancialGoalTransaction::create(['financial_goal_id' => 1, 'user_id' => 1, 'type' => 'contribution', 'amount' => 10,
+            'status' => 'completed', 'date' => today()->toDateString()]);
+        $this->artisan('goals:inspect-reservations', ['goal' => 1])
+            ->expectsOutput('Stored funding: 10.00')
+            ->expectsOutput('Completed movement net: 10.00')
+            ->expectsOutput('Movements without a historical account: '.$entry->id)->assertExitCode(1);
+        $this->assertNull($entry->fresh()->account_id);
+        $this->assertEquals('legacy', FinancialGoal::find(1)->funding_mode);
+        $this->assertDatabaseCount('transactions', 0);
         $this->assertDatabaseCount('financial_goal_conversions', 0);
     }
 

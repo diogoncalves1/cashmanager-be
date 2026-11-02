@@ -22,6 +22,8 @@ return [
     'pending' => 'Resolve pending movements before completing this goal.',
     'linked' => 'This expense is associated with a goal. Unlink its goal usages before editing or deleting it.',
     'conversion' => 'The previous movements could not be reconciled automatically. Review their accounts, currencies and amounts.',
+    'conversion_total' => 'The goal stores :stored, but completed contributions minus withdrawals total :calculated (difference: :difference).',
+    'conversion_negative' => 'Account :account has a net reservation of :amount: completed withdrawals exceed contributions in that account.',
     'stale' => 'Balances or movements changed since the preview. Load a new preview.',
     'converted' => 'This goal already uses reservations.',
     'confirm' => 'Confirm that these previous movements represent money still held in your accounts.',

@@ -37,7 +37,11 @@ All paths below use `/api/v1`, Sanctum and the existing locale middleware.
 
 The follow-up migration `2026_11_02_180000_backfill_financial_goal_accounts.php` automatically copies each legacy movement's historical account from `transactions.account_id` into `financial_goal_transactions.account_id`, including pending contributions and withdrawals. It runs after the schema migration, also on environments where that migration has already been applied. It fills only missing associations with a valid existing account and preserves existing assignments, amounts, statuses, transaction links, balances and funding mode. Repeating it is safe; rollback keeps recovered associations.
 
-Recovered legacy movements remain outside the new reservation/available calculations between the association migration and accounting conversion, so their old account debits are not deducted twice. The following migration, `2026_11_02_190000_convert_legacy_goal_reservations.php`, performs the accounting conversion automatically for every legacy goal, including completed, cancelled and empty goals. It does not require per-user confirmation. This replaces the earlier manual-conversion rollout by explicit user decision on 2026-11-02.
+The additional metadata migration `2026_11_02_185000_backfill_financial_goal_request_receipts.php` fills missing `request_key`/`request_hash` values for every existing financial-goal movement, including pending movements and entries already using reservations, and creates matching `financial_goal_request_receipts` rows (`entry_id`, goal, user, key and hash). Missing keys use the stable namespace `historical-goal-entry:<entry ID>`. Missing hashes are SHA-256 fingerprints of a stable request reconstructed from the stored movement and historical account/expense; this cannot recover the exact original HTTP payload. Existing valid keys/hashes take priority and are preserved, including recovery from an existing receipt. Conflicting ownership, keys or hashes abort the metadata transaction instead of overwriting receipts. Historical timestamps, account transactions, balances and goal totals are unchanged. Deleted-movement receipts are retained and rollback does not remove replay protection.
+
+The conversion service also runs this metadata backfill before its financial transaction, so explicitly executing only the `190000` migration file still fills all receipts. Receipt metadata can therefore be completed even when financial conversion later fails; it does not resolve a total mismatch or a negative per-account reservation. Both phases are individually transactional and idempotent. Run deployments with application/recurring writes paused.
+
+Recovered legacy movements remain outside the new reservation/available calculations between the association migration and accounting conversion, so their old account debits are not deducted twice. The final migration, `2026_11_02_190000_convert_legacy_goal_reservations.php`, performs the accounting conversion automatically for every legacy goal, including completed, cancelled and empty goals. It does not require per-user confirmation. This replaces the earlier manual-conversion rollout by explicit user decision on 2026-11-02.
 
 If a historical transaction/account is missing, or a goal has a contributed total without movement history, the migration cannot infer the source. Review those cases explicitly; the converter rejects inconsistent history. This read-only query lists missing account assignments and funded goals without movements:
 
@@ -75,10 +79,19 @@ Deliver the schema migration and backend together before enabling the frontend f
 php artisan migrate \
   --path=Modules/FinancialGoal/Database/Migrations/2026_11_01_180000_add_goal_reservations.php \
   --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_180000_backfill_financial_goal_accounts.php \
+  --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_185000_backfill_financial_goal_request_receipts.php \
   --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_190000_convert_legacy_goal_reservations.php
 ```
 
-The migration changes goal amount precision to two decimal places, extends the ledger, creates request receipts and conversion audit tables, and replaces `financial_goal_transaction_view`. The second migration recovers account associations; the third automatically converts all reconciled legacy goals, restores the original internal net debits and makes them usable in the new flow. Do not enable the new frontend if conversion fails. Both data migrations must be included; applying only the schema/association migrations leaves the intermediate legacy state. Pause application/recurring writes during deployment, rehearse against a production copy and keep the backup and audit records.
+The migration changes goal amount precision to two decimal places, extends the ledger, creates request receipts and conversion audit tables, and replaces `financial_goal_transaction_view`. The second migration recovers account associations; the third fills request metadata and durable receipts; the fourth automatically converts all reconciled legacy goals, restores the original internal net debits and makes them usable in the new flow. Do not enable the new frontend if conversion fails. All data migrations must be included; applying only the schema/association migrations leaves the intermediate legacy state. Pause application/recurring writes during deployment, rehearse against a production copy and keep the backup and audit records.
+
+If conversion fails during total reconciliation, inspect the affected goal without changing data:
+
+```sh
+php artisan goals:inspect-reservations 1
+```
+
+The command prints stored funding, completed contributions minus withdrawals, their difference and per-account contributions/withdrawals/net reserves/pending counts. It reports missing historical origins and negative per-account net reserves, and returns exit code 1 for these discrepancies (or an unknown goal). Matching totals do not validate every conversion requirement. Errors during reconciliation now include the exact stored/calculated amounts and difference, or the account ID and its negative net reserve. These checks are independent of current account balances. Do not infer that missing receipt metadata caused a total mismatch; review the displayed values first.
 
 Focused checks:
 

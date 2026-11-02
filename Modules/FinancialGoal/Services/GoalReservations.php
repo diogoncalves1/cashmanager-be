@@ -121,7 +121,8 @@ class GoalReservations
                 $recurringId = null;
             }
             $hash = hash('sha256', json_encode([$data, $request->input('transaction_id'), $request->input('category_id')], JSON_PRESERVE_ZERO_FRACTION));
-            if (! empty($data['request_key'])) {
+            $hasRequestKey = isset($data['request_key']) && $data['request_key'] !== '';
+            if ($hasRequestKey) {
                 $receipt = DB::table('financial_goal_request_receipts')->where('request_key', $data['request_key'])->first();
                 if ($receipt) {
                     if ((string) $receipt->financial_goal_id !== (string) $goal->id || (string) $receipt->user_id !== (string) $user->id || $receipt->request_hash !== $hash) {
@@ -135,7 +136,7 @@ class GoalReservations
                     return $replayed;
                 }
             }
-            $existing = ! empty($data['request_key']) ? FinancialGoalTransaction::where('request_key', $data['request_key'])->first() : null;
+            $existing = $hasRequestKey ? FinancialGoalTransaction::where('request_key', $data['request_key'])->first() : null;
             if ($recurringId) {
                 $existing = FinancialGoalTransaction::where('recurring_transaction_id', $recurringId)->where('date', $data['date'])->first();
             }
@@ -202,7 +203,7 @@ class GoalReservations
                 }
             }
             $entry = FinancialGoalTransaction::create($data);
-            if (! empty($data['request_key'])) {
+            if ($hasRequestKey) {
                 DB::table('financial_goal_request_receipts')->insert([
                     'request_key' => $data['request_key'], 'request_hash' => $hash,
                     'financial_goal_id' => $goal->id, 'user_id' => $user->id, 'entry_id' => $entry->id,
