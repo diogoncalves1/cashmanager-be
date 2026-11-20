@@ -1,13 +1,14 @@
 <?php
 
-namespace Tests\Unit;
+namespace Modules\RecurringTransaction\Tests\Unit;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Modules\Accounts\Entities\Account;
 use Modules\Currency\Entities\Currency;
-use Modules\RecurringTransaction\Repositories\RecurringSummaryRepository;
+use Modules\FinancialGoal\Entities\FinancialGoal;
 use Modules\RecurringTransaction\Entities\RecurringTransaction;
+use Modules\RecurringTransaction\Repositories\RecurringSummaryRepository;
 use Tests\TestCase;
 
 class RecurringSummaryTest extends TestCase
@@ -78,9 +79,10 @@ class RecurringSummaryTest extends TestCase
         ]));
         $this->assertSame(112.0, $summary['currencySummaries'][0]['monthlyExpenses']);
     }
+
     public function test_goal_reservations_and_releases_are_not_income_or_consumption(): void
     {
-        $goal = new \Modules\FinancialGoal\Entities\FinancialGoal();
+        $goal = new FinancialGoal;
         $reserve = $this->item(['amount' => 200, 'is_linked' => true, 'linked_type' => $goal::class])->setRelation('linked', $goal);
         $release = $this->item(['amount' => 50, 'type' => 'revenue', 'is_linked' => true, 'linked_type' => $goal::class])->setRelation('linked', $goal);
         $summary = $this->summary(collect([$reserve, $release, $this->item(['amount' => 10])]));
@@ -94,5 +96,4 @@ class RecurringSummaryTest extends TestCase
         $this->assertSame('reservation', $summary['upcoming'][0]['movementKind']);
         $this->assertSame('release', $summary['upcoming'][1]['movementKind']);
     }
-
 }

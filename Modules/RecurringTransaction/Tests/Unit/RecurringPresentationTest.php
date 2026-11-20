@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Modules\RecurringTransaction\Tests\Unit;
 
 use Illuminate\Http\Request;
 use Mockery;
