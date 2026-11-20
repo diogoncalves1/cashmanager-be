@@ -11,6 +11,42 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="Accounts">
+            <directory>Modules/Accounts/Tests</directory>
+        </testsuite>
+        <testsuite name="ActivityLog">
+            <directory>Modules/ActivityLog/Tests</directory>
+        </testsuite>
+        <testsuite name="Category">
+            <directory>Modules/Category/Tests</directory>
+        </testsuite>
+        <testsuite name="Currency">
+            <directory>Modules/Currency/Tests</directory>
+        </testsuite>
+        <testsuite name="Debts">
+            <directory>Modules/Debts/Tests</directory>
+        </testsuite>
+        <testsuite name="FinancialGoal">
+            <directory>Modules/FinancialGoal/Tests</directory>
+        </testsuite>
+        <testsuite name="Friends">
+            <directory>Modules/Friends/Tests</directory>
+        </testsuite>
+        <testsuite name="Language">
+            <directory>Modules/Language/Tests</directory>
+        </testsuite>
+        <testsuite name="Notification">
+            <directory>Modules/Notification/Tests</directory>
+        </testsuite>
+        <testsuite name="RecurringTransaction">
+            <directory>Modules/RecurringTransaction/Tests</directory>
+        </testsuite>
+        <testsuite name="SharedRoles">
+            <directory>Modules/SharedRoles/Tests</directory>
+        </testsuite>
+        <testsuite name="User">
+            <directory>Modules/User/Tests</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
