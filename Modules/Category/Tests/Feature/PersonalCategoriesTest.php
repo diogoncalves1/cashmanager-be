@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Modules\Category\Tests\Feature;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
@@ -16,8 +16,6 @@ use Modules\Category\Http\Resources\CategoryResource;
 use Modules\Category\Repositories\CategoryRepository;
 use Modules\Category\Rules\SelectableCategory;
 use Modules\Category\Support\CategoryIcons;
-use Modules\Currency\Entities\Currency;
-use Modules\FinancialGoal\Entities\FinancialGoal;
 use Modules\RecurringTransaction\Http\Requests\UpdateRecurringTransactionRequest;
 use Modules\User\Entities\User;
 use Tests\TestCase;
@@ -214,12 +212,22 @@ class PersonalCategoriesTest extends TestCase
 
     public function test_historical_filters_include_shared_categories_without_exposing_private_accounts(): void
     {
-        Schema::create('accounts_view', function (Blueprint $table) {
-            $table->unsignedBigInteger('id');
-            $table->string('user_ids');
+        Schema::create('account_users', function (Blueprint $table) {
+            $table->unsignedBigInteger('account_id');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('shared_role_id');
         });
-        DB::connection()->getPdo()->sqliteCreateFunction('FIND_IN_SET', fn ($id, $members) => in_array((string) $id, explode(',', $members), true) ? 1 : 0, 2);
-        DB::table('accounts_view')->insert([['id' => 1, 'user_ids' => '1, 2'], ['id' => 2, 'user_ids' => '2']]);
+        Schema::create('shared_permissions', function (Blueprint $table) {
+            $table->id();
+            $table->string('code');
+        });
+        Schema::create('shared_permission_roles', function (Blueprint $table) {
+            $table->unsignedBigInteger('shared_role_id');
+            $table->unsignedBigInteger('shared_permission_id');
+        });
+        DB::table('shared_permissions')->insert(['id' => 1, 'code' => 'viewTransaction']);
+        DB::table('shared_permission_roles')->insert(['shared_role_id' => 1, 'shared_permission_id' => 1]);
+        DB::table('account_users')->insert([['account_id' => 1, 'user_id' => 1, 'shared_role_id' => 1], ['account_id' => 1, 'user_id' => 2, 'shared_role_id' => 1], ['account_id' => 2, 'user_id' => 2, 'shared_role_id' => 1]]);
         $shared = $this->category(['name' => 'Shared category', 'user_id' => 2]);
         $private = $this->category(['name' => 'Private category', 'user_id' => 2]);
         foreach (['transactions', 'recurring_transactions'] as $table) {
