@@ -1,16 +1,17 @@
 <?php
+
 namespace Modules\Debts\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Modules\ActivityLog\Paginates\ActivityLogPaginate;
-use Modules\Debts\DataTables\DebtDataTable;
 use Modules\Debts\Http\Requests\DebtRequest;
 use Modules\Debts\Http\Resources\DebtBasicViewCollection;
 use Modules\Debts\Http\Resources\DebtResource;
 use Modules\Debts\Http\Resources\DebtStatsResource;
 use Modules\Debts\Http\Resources\DebtViewResource;
+use Modules\Debts\Paginates\DebtPaginate;
 use Modules\Debts\Repositories\DebtRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -25,29 +26,21 @@ class DebtController extends ApiController
 
     /**
      * Display a listing of the resource.
-     * @param Request $request
-     * @param DebtDataTable $dataTable
+     *
+     * @param  DebtPaginate  $dataTable
      * @return JsonResponse
      */
-    public function index(Request $request, DebtDataTable $dataTable): JsonResponse
+    public function index(Request $request, DebtPaginate $paginate): \Illuminate\Http\JsonResponse
     {
-        try {
-            $stats = $this->debtRepository->getStats($request);
-
-            $data = $dataTable->ajax()->getData(true);
-
-            return response()->json(array_merge($data, ['stats' => $stats]));
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+        return $this->safe(function () use ($request, $paginate) {
+            return $this->respondModulePaginated($paginate, $request, ['stats' => $this->debtRepository->getStats($request)]);
+        });
     }
 
     /**
      * Return a resume of all user debts.
-     * @param Request $request
-     * @param string $id
-     * @return JsonResponse
+     *
+     * @param  string  $id
      */
     public function allUser(Request $request): JsonResponse
     {
@@ -57,14 +50,13 @@ class DebtController extends ApiController
             return $this->ok(new DebtBasicViewCollection($financialGoals));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Store a newly created resource in storage.
-     * @param DebtRequest $request
-     * @return JsonResponse
      */
     public function store(DebtRequest $request): JsonResponse
     {
@@ -74,15 +66,13 @@ class DebtController extends ApiController
             return $this->ok(new DebtResource($debt), __('debts::messages.debts.store', ['name' => $debt->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Show the specified resource.
-     * @param Request $request
-     * @param string $id
-     * @return JsonResponse
      */
     public function show(Request $request, string $id): JsonResponse
     {
@@ -92,14 +82,14 @@ class DebtController extends ApiController
             return $this->ok(new DebtViewResource($debt));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Update the specified resource in storage.
-     * @param DebtRequest $request
-     * @param string $id
+     *
      * @return JsonResponse
      */
     public function update(DebtRequest $request, string $id)
@@ -110,14 +100,14 @@ class DebtController extends ApiController
             return $this->ok(new DebtResource($debt), __('debts::messages.debts.update', ['name' => $debt->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Remove the specified resource from storage.
-     * @param Request $request
-     * @param string $id
+     *
      * @return JsonResponse
      */
     public function destroy(Request $request, string $id)
@@ -128,14 +118,14 @@ class DebtController extends ApiController
             return $this->ok(message: __('debts::messages.debts.destroy', ['name' => $debt->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage() ?? __('debts::messages.debts.errors.destroy'), $e, $e->getCode());
         }
     }
 
     /**
      * Mark paid the specified resource from storage.
-     * @param Request $request
-     * @param string $id
+     *
      * @return JsonResponse
      */
     public function markPaid(Request $request, string $id)
@@ -146,14 +136,14 @@ class DebtController extends ApiController
             return $this->ok(message: __('debts::messages.debts.mark-paid', ['name' => $debt->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage() ?? __('debts::messages.debts.errors.mark-paid'), $e, $e->getCode());
         }
     }
 
     /**
      * Reset status the specified resource from storage.
-     * @param Request $request
-     * @param string $id
+     *
      * @return JsonResponse
      */
     public function reset(Request $request, string $id)
@@ -164,14 +154,15 @@ class DebtController extends ApiController
             return $this->ok(message: __('debts::messages.debts.reset', ['name' => $debt->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage() ?? __('debts::messages.debts.errors.reset'), $e, $e->getCode());
         }
     }
 
     /**
      * Return a stats of all user debts.
-     * @param Request $request
-     * @param string $id
+     *
+     * @param  string  $id
      * @return JsonResponse
      */
     public function getStats(Request $request)
@@ -182,15 +173,15 @@ class DebtController extends ApiController
             return $this->ok(new DebtStatsResource($stats));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage() ?? __('debts::messages.debts.errors.complete'), $e, $e->getCode());
         }
     }
 
     /**
      * Return a activity of debt.
-     * @param Request $request
-     * @param ActivityLogPaginate $dataTable
-     * @param string $id
+     *
+     * @param  ActivityLogPaginate  $dataTable
      * @return JsonResponse
      */
     public function activity(Request $request, ActivityLogPaginate $paginate, string $id): \Illuminate\Http\JsonResponse
