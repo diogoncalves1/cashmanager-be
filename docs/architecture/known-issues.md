@@ -61,7 +61,7 @@ Vieram da leitura de controllers, requests, repositories e resources durante a e
   - exceções de SharedRoles (que usam 401 ou 500);
   - Friends;
   - `revoke-user` sobre si próprio, que lança `new \Exception()` vazia.
-- **Membros sem shared role:** vários caminhos chamam métodos sobre um shared role `null` e dão um erro PHP com 500. Acontece em debt show/update/activity, payment store, `leave`, `user-role` e `POST recurrings` (`AccountPolicy::isOwner(null)`).
+- **Membros sem shared role:** vários caminhos chamam métodos sobre um shared role `null` e dão um erro PHP com 500. Acontece em debt show/update/activity, payment store, `leave`, `user-role`.
 - **`register`:** a validação devolve 500. Além disso, `UserRepository::store` engole exceções e responde 200 mesmo quando o utilizador não é criado.
 
 ### Validação
@@ -71,7 +71,7 @@ Vieram da leitura de controllers, requests, repositories e resources durante a e
 - **`POST debt-payments`:** exige `interest_rate` e `is_monthly_payment` no body sem os validar (undefined index → 500).
 - **`PUT me`:** não tem validação. Sem `lang` dá 500, e um email ou username duplicado também dá 500.
 - **`check-username`:** sem o parâmetro devolve `exists: true`.
-- **Filtros de recorrentes:** um filtro sem operador ou com operador não permitido dá 500.
+- **Filtros de recorrentes:** a migração ModuleFilter corrige os erros de parsing: escalares equivalem a eq quando permitido e operadores inválidos dão 422.
 
 ### Cálculos e dados
 - **`Helpers::percentage(total, x)`:** devolve `(x − total)/total × 100`. Por isso `percentageCompleted` sai negativo e `difLastMonth` sai errado.

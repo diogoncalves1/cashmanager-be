@@ -38,10 +38,10 @@
 ### Contas (`Repositories/AccountRepository.php`)
 - `store`: cria conta + `AccountUser` com role `creator`.
 - `update`/`status` (toggle `active`): Gate `update` → policy aceita creator ou `editAccount`; Request aceita atualização parcial em PUT/PATCH. Mudar moeda é bloqueado se houver movimentos de metas na conta.
-- `destroy`: chama Gate `destroy`, mas a policy define `delete`, pelo que a autorização está desalinhada. Após autorização, o fluxo bloqueia histórico de metas e elimina a conta/activity log.
+- `destroy`: chama Gate `delete`, definido pela policy e limitado ao creator. Após autorização, o fluxo bloqueia histórico de metas e elimina a conta/activity log.
 - `showToUser`: Gate `show`, cuja policy aceita membership sem verificar `viewAccount`. Não confundir com Account Resume, que exige essa permissão.
 - `getStats` (património, receitas, despesas): só contas onde o role tem `updateUserBalance`, convertidas para a moeda do utilizador.
-- `getAccountsByUserPermission` (picker): contas ativas do utilizador com relação de permissão; a relação de `accountUsers` não está limitada ao próprio membro, ver problemas conhecidos.
+- `getAccountsByUserPermission` (picker): contas ativas do utilizador com relação de permissão; a relação de accountUsers exige o próprio user_id e a permissão nesse mesmo membro.
 
 ### Account Resume (`Repositories/AccountResumeRepository.php`)
 `GET /api/v1/account/resume?period=3m|12m|ytd|all&currency=XXX`

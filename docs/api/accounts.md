@@ -256,7 +256,7 @@ Atualiza nome, tipo, moeda e estado. Regista `account_updated` com as alteraçõ
 
 ### `DELETE /api/v1/accounts/{id}`
 
-Elimina a conta e o seu activity log. **Autorização em revisão:** o repository chama o Gate `destroy`, mas a policy define `delete`. Sem outra definição desse Gate, a ação é recusada, antes da eliminação. As flags da lista continuam a anunciar `destroyAccount`.
+Elimina a conta e o seu activity log. **Permissão:** Gate delete da AccountPolicy, limitado ao creator. As flags da lista continuam a anunciar destroyAccount e não substituem a autorização da policy.
 
 **Parâmetros de rota:** `id` (int, obrigatório).
 

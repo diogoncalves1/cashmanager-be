@@ -125,3 +125,5 @@ Enabled modules currently include:
 
 - Listing architecture: `docs/architecture/module-listings.md`. Concrete classes live in each module's Paginates/Filters/Searches; base classes in app/. Lists return pagination + optional meta. Never use DataTables in API controllers. Keep each domain's tests in Modules/<Module>/Tests/{Feature,Unit}, registered in phpunit.xml; global tests are cross-cutting only.
 - GitHub workflow: all issues must belong to Cash Manager project #2 and have its Version field set to the intended delivery iteration (currently Version 1.6.2 for this migration). See docs/process/git-workflow.md. Prepare PRs and wait for the owner's explicit confirmation before merging; never enable auto-merge.
+
+- Opening a PR must immediately move its associated issues to Code Complete in the Cash Manager GitHub project. Verify the project Status field; this does not authorize merge or issue closure.

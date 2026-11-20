@@ -67,6 +67,7 @@
 ## 4. Pull Requests e integração
 
 - **Regra do responsável (20/11/2026):** preparar alterações, testes, commits e pull requests, e aguardar confirmação explícita do responsável antes de qualquer merge/integração. Não integrar automaticamente nem ativar auto-merge. A existência de PR ou checks verdes não substitui essa confirmação.
+- **Ao abrir um PR, passar imediatamente as issues associadas para `Code Complete` no projeto Cash Manager.** Confirmar o estado no campo Status do projeto. Code Complete significa código pronto e PR aberto para revisão; não autoriza merge nem fecho da issue.
 - Criar PRs separados por módulo/subcategoria. Quando há dependências, encadear as branches/PRs e indicar a ordem de integração na descrição.
 
 
