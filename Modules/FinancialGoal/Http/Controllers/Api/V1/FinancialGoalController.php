@@ -5,7 +5,7 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Modules\ActivityLog\DataTables\ActivityLogDataTable;
+use Modules\ActivityLog\Paginates\ActivityLogPaginate;
 use Modules\FinancialGoal\DataTables\FinancialGoalDataTable;
 use Modules\FinancialGoal\Http\Requests\FinancialGoalRequest;
 use Modules\FinancialGoal\Http\Resources\Charts\FinancialGoalMonthlyResumeCollection;
@@ -273,30 +273,20 @@ class FinancialGoalController extends ApiController
 
     /**
      * Return a activity of financial goal.
-     * @param ActivityLogDataTable $dataTable
+     * @param ActivityLogPaginate $dataTable
      * @param Request $request
      * @param string $id
      * @param string $id
      * @return JsonResponse
      */
-    public function activity(ActivityLogDataTable $dataTable, Request $request, string $id): JsonResponse
+    public function activity(Request $request, ActivityLogPaginate $paginate, string $id): JsonResponse
     {
-        try {
+        return $this->safe(function () use ($request, $paginate, $id) {
             $this->repository->showToUser($request, $id);
+            $paginate->type = 'financial_goal';
+            $paginate->id = $id;
 
-            $dataTable->type = 'financial_goal';
-            $dataTable->id   = $id;
-
-            return $dataTable->ajax();
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->errors()], 422);
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'message' => 'Not found'], 404);
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 }

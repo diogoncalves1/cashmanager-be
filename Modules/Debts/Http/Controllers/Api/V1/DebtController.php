@@ -4,7 +4,7 @@ namespace Modules\Debts\Http\Controllers\Api\V1;
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Modules\ActivityLog\DataTables\ActivityLogDataTable;
+use Modules\ActivityLog\Paginates\ActivityLogPaginate;
 use Modules\Debts\DataTables\DebtDataTable;
 use Modules\Debts\Http\Requests\DebtRequest;
 use Modules\Debts\Http\Resources\DebtBasicViewCollection;
@@ -189,23 +189,18 @@ class DebtController extends ApiController
     /**
      * Return a activity of debt.
      * @param Request $request
-     * @param ActivityLogDataTable $dataTable
+     * @param ActivityLogPaginate $dataTable
      * @param string $id
      * @return JsonResponse
      */
-    public function activity(ActivityLogDataTable $dataTable, Request $request, string $id)
+    public function activity(Request $request, ActivityLogPaginate $paginate, string $id): \Illuminate\Http\JsonResponse
     {
-        try {
+        return $this->safe(function () use ($request, $paginate, $id) {
             $this->debtRepository->showToUser($request, $id);
+            $paginate->type = 'debt';
+            $paginate->id = $id;
 
-            $dataTable->type = 'debt';
-            $dataTable->id   = $id;
-
-            return $dataTable->ajax();
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage() ?? __('debts::messages.debts.errors.complete'), $e, $e->getCode());
-
-        }
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 }
