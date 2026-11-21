@@ -15,6 +15,7 @@ class FinancialGoalBasicViewResource extends JsonResource
         return [
             'id'              => (string) $this->id,
             'name'            => $this->name,
+            'currencyCode' => $this->currencyCode,
             'currencySymbol'  => $this->currencySymbol,
             'target'          => (float) $this->target,
             'targetFormated'  => Helpers::formatMoneyWithSymbolAndCurrency($this->target, $this->currencyCode, $this->currencySymbol),
