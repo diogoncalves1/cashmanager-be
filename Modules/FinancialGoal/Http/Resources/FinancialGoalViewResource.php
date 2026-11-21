@@ -13,7 +13,7 @@ class FinancialGoalViewResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        foreach ($this->userContributions as &$user) {
+        foreach ($this->userContributions as $user) {
             $user->sharedRole       = $user->pivot->sharedRole;
             $user->totalContributed = $user->pivot->totalContributed;
             $user->currencyCode     = $user->pivot->currencyCode;
@@ -32,7 +32,7 @@ class FinancialGoalViewResource extends JsonResource
 
         $actions = ['edit' => $canEdit, 'destroy' => $canDestroy, 'manage' => $canManage, 'createTransactions' => $canCreateTransactions];
 
-        return [
+        return array_merge(\Modules\FinancialGoal\Services\GoalReservations::goalSummary($this->financialGoal), [
             'id'                                     => $this->id,
             'name'                                   => $this->name,
             'status'                                 => $this->status,
@@ -77,6 +77,6 @@ class FinancialGoalViewResource extends JsonResource
             'createdAt'                              => $this->createdAt,
 
             'actions'                                => $actions,
-        ];
+        ]);
     }
 }

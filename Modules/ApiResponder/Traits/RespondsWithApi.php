@@ -1,6 +1,8 @@
 <?php
+
 namespace Modules\ApiResponder\Traits;
 
+use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\ApiResponder\Services\ApiResponse;
 
 trait RespondsWithApi
@@ -13,6 +15,11 @@ trait RespondsWithApi
     protected function fail(string $message, $errors = null, mixed $code = 400, $additionals = null)
     {
         return ApiResponse::error($message, $errors, $this->normalizeStatus($code, 500), $additionals);
+    }
+
+    protected function respondPaginated(LengthAwarePaginator $paginator, string $collection, int $status = 200, $additionals = null)
+    {
+        return ApiResponse::respondPaginated($paginator, $collection, $status, $additionals);
     }
 
     private function normalizeStatus(mixed $code, int $default): int

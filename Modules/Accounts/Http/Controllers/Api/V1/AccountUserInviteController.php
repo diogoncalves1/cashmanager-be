@@ -1,14 +1,15 @@
 <?php
+
 namespace Modules\Accounts\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Modules\Accounts\DataTables\AccountUserInviteDataTable;
 use Modules\Accounts\Http\Requests\InviteUserAccountRequest;
-use Modules\Accounts\Http\Resources\AccountInvitationStatsResource;
-use Modules\Accounts\Http\Resources\AccountUserInviteResource;
-use Modules\Accounts\Http\Resources\AccountUserResource;
+use Modules\Accounts\Http\Resources\Accounts\AccountInvitationStatsResource;
+use Modules\Accounts\Http\Resources\Accounts\AccountUserInviteResource;
+use Modules\Accounts\Http\Resources\Accounts\AccountUserResource;
+use Modules\Accounts\Paginates\AccountUserInvitePaginate;
 use Modules\Accounts\Repositories\AccountUserInviteRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -26,10 +27,6 @@ class AccountUserInviteController extends ApiController
 
     /**
      * Invite the user for account.
-     * @param InviteUserAccountRequest $request
-     * @param string $id
-     * @param string $userId
-     * @return JsonResponse
      */
     public function invite(InviteUserAccountRequest $request, string $id, string $userId): JsonResponse
     {
@@ -39,6 +36,7 @@ class AccountUserInviteController extends ApiController
             return $this->ok(new AccountUserInviteResource($invite), __('accounts::messages.account-user-invites.invite', ['accountName' => $invite->account->name, 'userName' => $invite->user->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
 
@@ -46,8 +44,8 @@ class AccountUserInviteController extends ApiController
 
     /**
      * Accept account invite.
-     * @param InviteUserAccountRequest $request
-     * @param string $id
+     *
+     * @param  InviteUserAccountRequest  $request
      * @return JsonResponse
      */
     public function accept(Request $request, string $id)
@@ -58,15 +56,15 @@ class AccountUserInviteController extends ApiController
             return $this->ok(new AccountUserResource($relation), __('accounts::messages.account-user-invites.accept', ['name' => $relation->account->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Destroy account invite.
-     * @param InviteUserAccountRequest $request
-     * @param string $id
-     * @param string $userId
+     *
+     * @param  InviteUserAccountRequest  $request
      * @return JsonResponse
      */
     public function destroy(Request $request, string $id, string $userId)
@@ -77,15 +75,15 @@ class AccountUserInviteController extends ApiController
             return $this->ok(message: __('accounts::messages.account-user-invites.destroy', ['accountName' => $invite->account->name, 'userName' => $invite->user->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Revoke account invite.
-     * @param InviteUserAccountRequest $request
-     * @param string $id
-     * @return JsonResponse
+     *
+     * @param  InviteUserAccountRequest  $request
      */
     public function revoke(Request $request, string $id): JsonResponse
     {
@@ -95,6 +93,7 @@ class AccountUserInviteController extends ApiController
             return $this->ok(message: __('accounts::messages.account-user-invites.revoke', ['accountName' => $invite->account->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
 
@@ -102,8 +101,8 @@ class AccountUserInviteController extends ApiController
 
     /**
      * Return a invitations stats of all user financial goals.
-     * @param Request $request
-     * @param string $id
+     *
+     * @param  string  $id
      * @return JsonResponse
      */
     public function getInvitationsStats(Request $request)
@@ -114,41 +113,38 @@ class AccountUserInviteController extends ApiController
             return $this->ok(new AccountInvitationStatsResource($stats));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Return all sent invitations stats of financial goals.
-     * @param AccountUserInviteDataTable $dataTable
+     *
+     * @param  AccountUserInvitePaginate  $dataTable
      * @return JsonResponse
      */
-    public function getSentInvitations(AccountUserInviteDataTable $dataTable)
+    public function getSentInvitations(Request $request, AccountUserInvitePaginate $paginate): \Illuminate\Http\JsonResponse
     {
-        try {
-            $dataTable->type = 'sent';
+        return $this->safe(function () use ($request, $paginate) {
+            $paginate->type = 'sent';
 
-            return $dataTable->ajax();
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 
     /**
      * Return all received invitations stats of financial goals.
-     * @param AccountUserInviteDataTable $dataTable
+     *
+     * @param  AccountUserInvitePaginate  $dataTable
      * @return JsonResponse
      */
-    public function getReceivedInvitations(AccountUserInviteDataTable $dataTable)
+    public function getReceivedInvitations(Request $request, AccountUserInvitePaginate $paginate): \Illuminate\Http\JsonResponse
     {
-        try {
-            $dataTable->type = 'received';
+        return $this->safe(function () use ($request, $paginate) {
+            $paginate->type = 'received';
 
-            return $dataTable->ajax();
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 }

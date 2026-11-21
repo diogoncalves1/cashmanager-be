@@ -1,8 +1,10 @@
 <?php
+
 namespace Modules\SharedRoles\Repositories;
 
 use App\Repositories\RepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -23,7 +25,7 @@ class SharedRoleRepository implements RepositoryInterface
 
                 $sharedRole = SharedRole::create($input);
 
-                Log::info('Shared Role ' . $sharedRole->id . ' successfully created.');
+                Log::info('Shared Role '.$sharedRole->id.' successfully created.');
                 Session::flash('success', 'Papel de partilha adicionado com sucesso.');
             });
         } catch (\Exception $e) {
@@ -41,9 +43,10 @@ class SharedRoleRepository implements RepositoryInterface
                 $input = $request->only('code', 'name');
 
                 $sharedRole->update($input);
+                Cache::forget("shared_role:{$id}");
 
-                Log::info('Shared Role ' . $sharedRole->id . ' successfully updated.');
-                Session::flash('success', "Papel de partilha atualizado com sucesso!");
+                Log::info('Shared Role '.$sharedRole->id.' successfully updated.');
+                Session::flash('success', 'Papel de partilha atualizado com sucesso!');
             });
         } catch (\Exception $e) {
             Log::error($e);
@@ -57,15 +60,21 @@ class SharedRoleRepository implements RepositoryInterface
             $sharedRole = $this->show($id);
 
             $sharedRole->delete();
+            Cache::forget("shared_role:{$id}");
 
-            Log::info('Shared Role ' . $sharedRole->id . ' successfully deleted.');
+            Log::info('Shared Role '.$sharedRole->id.' successfully deleted.');
+
             return $sharedRole;
         });
     }
 
     public function show(string $id)
     {
-        return SharedRole::find($id);
+        return Cache::remember("shared_role:{$id}",
+            now()->addMinutes(60),
+            function () use ($id) {
+                return SharedRole::find($id);
+            });
     }
 
     public function updateRolePermissions(Request $request, string $id)
@@ -76,12 +85,12 @@ class SharedRoleRepository implements RepositoryInterface
 
                 $sharedRole->permissions()->sync($request->input('permissions', []));
 
-                Log::info('Shared role permissions ' . $sharedRole->id . ' successfully updated.');
-                Session::flash('success', "Permissões de partilha do papel de partilha atualizadas com sucesso!");
+                Log::info('Shared role permissions '.$sharedRole->id.' successfully updated.');
+                Session::flash('success', 'Permissões de partilha do papel de partilha atualizadas com sucesso!');
             });
         } catch (\Exception $e) {
             Log::error($e);
-            Session::flash('error', __("Error ao tentar atualizar o permissões de partilha do papel de partilha."));
+            Session::flash('error', __('Error ao tentar atualizar o permissões de partilha do papel de partilha.'));
         }
     }
 
@@ -89,7 +98,7 @@ class SharedRoleRepository implements RepositoryInterface
     {
         $query = SharedRole::where('code', $request->get('code'));
 
-        if ($request->get("id")) {
+        if ($request->get('id')) {
             $query->where('id', '!=', $request->get('id'));
         }
 

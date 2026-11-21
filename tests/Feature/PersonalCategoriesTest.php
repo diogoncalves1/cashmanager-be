@@ -16,6 +16,8 @@ use Modules\Category\Http\Resources\CategoryResource;
 use Modules\Category\Repositories\CategoryRepository;
 use Modules\Category\Rules\SelectableCategory;
 use Modules\Category\Support\CategoryIcons;
+use Modules\Currency\Entities\Currency;
+use Modules\FinancialGoal\Entities\FinancialGoal;
 use Modules\RecurringTransaction\Http\Requests\UpdateRecurringTransactionRequest;
 use Modules\User\Entities\User;
 use Tests\TestCase;
@@ -300,5 +302,19 @@ class PersonalCategoriesTest extends TestCase
         $data = (new CategoryResource($category))->resolve(request());
         $this->assertSame('Shared groceries', $data['name']);
         $this->assertFalse($data['canManage']);
+    }
+
+    public function test_internal_goal_categories_remain_unavailable_for_manual_expenses_and_recurring_entries(): void
+    {
+        foreach (['financialGoalContribution' => 'expense', 'financialGoalWithdrawal' => 'revenue'] as $code => $type) {
+            $category = $this->category(['name' => ['en' => $code], 'type' => $type, 'code' => $code, 'is_default' => true, 'user_id' => null]);
+            foreach (['transactions', 'recurrings'] as $endpoint) {
+                $this->postJson('/api/v1/'.$endpoint, [
+                    'account_id' => 1, 'category_id' => $category->id, 'amount' => 10, 'type' => $type,
+                    'date' => today()->toDateString(), 'status' => 'pending', 'title' => 'Manual',
+                    'frequency' => 'monthly', 'start_date' => today()->toDateString(),
+                ])->assertUnprocessable()->assertJsonValidationErrors('category_id');
+            }
+        }
     }
 }

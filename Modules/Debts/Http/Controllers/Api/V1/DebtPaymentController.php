@@ -1,14 +1,15 @@
 <?php
+
 namespace Modules\Debts\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Modules\Debts\DataTables\DebtPaymentDataTable;
 use Modules\Debts\Http\Requests\DebtPaymentRequest;
 use Modules\Debts\Http\Requests\DebtPaymentUpdateRequest;
 use Modules\Debts\Http\Resources\DebtPaymentResource;
 use Modules\Debts\Http\Resources\DebtPayments\DebtPaymentViewResource;
+use Modules\Debts\Paginates\DebtPaymentPaginate;
 use Modules\Debts\Repositories\DebtPaymentRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -21,20 +22,15 @@ class DebtPaymentController extends ApiController
         $this->repository = $repository;
     }
 
-    public function index(DebtPaymentDataTable $dataTable)
+    public function index(Request $request, DebtPaymentPaginate $paginate): \Illuminate\Http\JsonResponse
     {
-        try {
-            return $dataTable->ajax();
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+        return $this->safe(function () use ($request, $paginate) {
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 
     /**
      * Store a newly created resource in storage.
-     * @param DebtPaymentRequest $request
-     * @return JsonResponse
      */
     public function store(DebtPaymentRequest $request): JsonResponse
     {
@@ -44,14 +40,14 @@ class DebtPaymentController extends ApiController
             return $this->ok(new DebtPaymentResource($debtPayment), __('debts::messages.debt-payments.store'));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Show the specified resource.
-     * @param Request $request
-     * @param string $id
+     *
      * @return JsonResponse
      */
     public function show(Request $request, string $id)
@@ -62,14 +58,14 @@ class DebtPaymentController extends ApiController
             return $this->ok(new DebtPaymentViewResource($debtPayment));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Update the specified resource in storage.
-     * @param DebtPaymentUpdateRequest $request
-     * @param string $id
+     *
      * @return JsonResponse
      */
     public function update(DebtPaymentUpdateRequest $request, string $id)
@@ -80,14 +76,14 @@ class DebtPaymentController extends ApiController
             return $this->ok(new DebtPaymentResource($debtPayment), __('debts::messages.debt-payments.update'));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Remove the specified resource from storage.
-     * @param Request $request
-     * @param string $id
+     *
      * @return JsonResponse
      */
     public function destroy(Request $request, string $id)
@@ -98,14 +94,14 @@ class DebtPaymentController extends ApiController
             return $this->ok(message: __('debts::messages.debt-payments.destroy'));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Confirm the specified resource.
-     * @param Request $request
-     * @param string $id
+     *
      * @return JsonResponse
      */
     public function confirm(Request $request, string $id)
@@ -116,6 +112,7 @@ class DebtPaymentController extends ApiController
             return $this->ok(new DebtPaymentResource($debtPayment), __('debts::messages.debt-payments.confirm'));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
