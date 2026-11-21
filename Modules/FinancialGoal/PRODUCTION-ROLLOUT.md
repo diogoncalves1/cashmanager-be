@@ -91,3 +91,12 @@ Antes do deploy, guardar o relatório completo da pré-visualização e o backup
 Se a origem de um movimento não for recuperável, manter manutenção e reconciliar com a transação original/backup; não inventar uma conta. Depois da conversão, repetir `goals:reservation-rollout --fail-on-review`: deve sair sem erro e sem ajustes pendentes. Confirmar que os débitos/créditos internos neutralizados deixam de contar como consumo/receita e que as despesas reais se mantêm.
 
 Na interface, conferir a conta e a meta com o mesmo utilizador autorizado: os valores da secção “Metas nesta conta” devem corresponder aos da conta na meta. Utilizadores sem acesso a uma meta só veem a reserva global da conta, sem nome/ID da meta. Efetuar o exemplo numa conta de teste do ambiente de ensaio antes de reabrir produção.
+
+### Verificações executadas nesta revisão
+
+- `composer test`: 114 testes passaram, 3160 asserções (SQLite em memória).
+- Suite FinancialGoal: 32 testes passaram, 216 asserções. Inclui migração atómica, repetição sem duplicar reposições, origens em falta e o novo detalhe por conta.
+- Laravel Pint e `git diff --check`: sem erros.
+- FE: 14 testes de metas passaram; TypeScript e build de produção passaram.
+- Falha de ferramenta existente no FE: `npm run check:i18n` não executou a auditoria porque `scripts/check-translations.cjs` não existe (`MODULE_NOT_FOUND`). O teste de paridade PT/EN das metas passou.
+- Não foi executado deploy, merge, migração em produção nem novo ensaio MySQL nesta revisão.
