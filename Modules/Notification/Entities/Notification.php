@@ -1,4 +1,5 @@
 <?php
+
 namespace Modules\Notification\Entities;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,9 +19,9 @@ class Notification extends Model
     protected $fillable = ['user_id', 'type_code', 'data', 'read_at', 'archived_at'];
 
     protected $casts = [
-        'data'        => 'array',
-        'read_at'     => 'datetime',
-        'deleted_at'  => 'datetime',
+        'data' => 'array',
+        'read_at' => 'datetime',
+        'deleted_at' => 'datetime',
         'archived_at' => 'datetime',
     ];
 
@@ -29,7 +30,7 @@ class Notification extends Model
         return $this->belongsTo(User::class);
     }
 
-    protected function notificationType()
+    public function notificationType()
     {
         return $this->belongsTo(NotificationType::class, 'type_code', 'code');
     }

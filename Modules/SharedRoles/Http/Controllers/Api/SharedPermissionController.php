@@ -4,9 +4,9 @@ namespace Modules\SharedRoles\Http\Controllers\Api;
 
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\JsonResponse;
-use Modules\SharedRoles\Repositories\SharedPermissionRepository;
 use Illuminate\Http\Request;
-use Modules\SharedRoles\DataTables\SharedPermissionDataTable;
+use Modules\SharedRoles\Paginates\SharedPermissionPaginate;
+use Modules\SharedRoles\Repositories\SharedPermissionRepository;
 
 class SharedPermissionController extends ApiController
 {
@@ -17,13 +17,11 @@ class SharedPermissionController extends ApiController
         $this->sharedPermissionRepository = $sharedPermissionRepository;
     }
 
-    public function index(SharedPermissionDataTable $dataTable)
+    public function index(Request $request, SharedPermissionPaginate $paginate): JsonResponse
     {
-        try {
-            return $dataTable->ajax();
-        } catch (\Exception $e) {
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+        return $this->safe(function () use ($request, $paginate) {
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 
     public function checkPermissionCode(Request $request): JsonResponse
@@ -32,8 +30,8 @@ class SharedPermissionController extends ApiController
             $this->allowedAction('viewSharedPermission');
 
             $request->validate([
-                "id" => "nullable",
-                "code" => "required|string|max:100",
+                'id' => 'nullable',
+                'code' => 'required|string|max:100',
             ]);
 
             $exists = $this->sharedPermissionRepository->checkPermissionCode($request);

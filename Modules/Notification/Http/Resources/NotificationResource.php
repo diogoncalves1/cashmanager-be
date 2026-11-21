@@ -1,4 +1,5 @@
 <?php
+
 namespace Modules\Notification\Http\Resources;
 
 use Illuminate\Http\Request;
@@ -14,17 +15,18 @@ class NotificationResource extends JsonResource
     {
         $user = $request->user();
 
-        $data = app(RenderNotificationTemplateAction::class)->execute($this->notificationType, $this->data, $this->notificationType->keywords, $user);
+        $data = app(RenderNotificationTemplateAction::class)->execute($this->notificationType, $this->data ?? [], $this->notificationType->keywords, $user);
 
         return [
-            'id'        => $this->id ?? null,
-            'title'     => $data['title'],
-            'message'   => $data['message'],
-            'pathname'  => $data['pathname'],
+            'id' => $this->id ?? null,
+            'source' => $this->whenHas('source'),
+            'title' => $data['title'],
+            'message' => $data['message'],
+            'pathname' => $data['pathname'],
             'createdAt' => $this->created_at
                 ? $this->created_at->format('Y-m-d H:i:s')
                 : null,
-            'readAt'    => $this->read_at ?? null,
+            'readAt' => $this->read_at ?? null,
         ];
     }
 }

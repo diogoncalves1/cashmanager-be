@@ -1,4 +1,5 @@
 <?php
+
 namespace Modules\Category\Repositories;
 
 use App\Http\Controllers\ApiController;
@@ -8,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Modules\Accounts\Paginates\TransactionPaginate;
 use Modules\Category\Entities\Category;
 use Modules\Category\Exceptions\CannotDeleteDefaultCategoryException;
 use Modules\Category\Exceptions\CannotDeleteOthersCategoryException;
@@ -15,11 +17,16 @@ use Modules\Category\Exceptions\CannotUpdateDefaultCategoryException;
 use Modules\Category\Exceptions\CannotUpdateOthersCategoryException;
 use Modules\Category\Exceptions\DefaultCategoryNameTranslationRequiredException;
 use Modules\Category\Exceptions\UnauthorizedDefaultCategoryException;
-use Modules\RecurringTransaction\Filters\RecurringTransactionFilter;
+use Modules\RecurringTransaction\Paginates\RecurringTransactionPaginate;
 use Modules\User\Entities\User;
 
 class CategoryRepository extends ApiController implements RepositoryApiInterface
 {
+    public function __construct(
+        protected TransactionPaginate $transactions,
+        protected RecurringTransactionPaginate $recurrings,
+    ) {}
+
     public function all()
     {
         return Category::all();
@@ -53,21 +60,22 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
 
             $user = Auth::user() ? Auth::user() : $request->user();
 
-            $input["name"] = $request->get('name');
+            $input['name'] = $request->get('name');
 
             if (! $request->get('is_default')) {
                 $input['user_id'] = $user->id;
             } else {
                 if (! $user || ! $user->can('authorization', 'createCategoryDefault')) {
-                    throw new UnauthorizedDefaultCategoryException();
+                    throw new UnauthorizedDefaultCategoryException;
                 }
-                $input['code']       = $request->get('code');
+                $input['code'] = $request->get('code');
                 $input['is_default'] = 1;
             }
 
             $category = Category::create($input);
 
-            Log::info('Category ' . $category->id . ' successfully created.');
+            Log::info('Category '.$category->id.' successfully created.');
+
             return $category;
         });
     }
@@ -78,20 +86,20 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
             $category = $this->show($id);
 
             $input = $request->only(['type', 'icon', 'name', 'color', 'parent_id']);
-            $user  = Auth::user() !== null ? Auth::user() : $request->user();
+            $user = Auth::user() !== null ? Auth::user() : $request->user();
 
             if ($category->is_default) {
                 if (! is_array($request->get('name'))) {
-                    throw new DefaultCategoryNameTranslationRequiredException();
+                    throw new DefaultCategoryNameTranslationRequiredException;
                 }
                 if (! $user->can('authorization', 'editCategoryDefault')) {
-                    throw new CannotUpdateDefaultCategoryException();
+                    throw new CannotUpdateDefaultCategoryException;
                 }
                 $input['code'] = $request->get('code');
             }
 
             if (! $user || ! $category->is_default && $category->user_id != $user->id) {
-                throw new CannotUpdateOthersCategoryException();
+                throw new CannotUpdateOthersCategoryException;
             }
 
             $category->update($input);
@@ -108,11 +116,11 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
             $user = Auth::user() !== null ? Auth::user() : $request->user();
 
             if (! $user || ! $category->is_default && $category->user_id != $user->id) {
-                throw new CannotDeleteOthersCategoryException();
+                throw new CannotDeleteOthersCategoryException;
             }
 
             if ($category->is_default && ! $user->can('authorization', 'destroyCategoryDefault')) {
-                throw new CannotDeleteDefaultCategoryException();
+                throw new CannotDeleteDefaultCategoryException;
             }
 
             $category->delete();
@@ -128,43 +136,18 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
 
     public function allUserTransactionsCategories(Request $request)
     {
-        $user  = $request->user();
-        $query = Category::query()
-            ->join('transactions', 'categories.id', '=', 'transactions.category_id')
-            ->join('accounts_view as category_accounts', 'category_accounts.id', '=', 'transactions.account_id')
-            ->whereRaw("FIND_IN_SET(?, REPLACE(category_accounts.user_ids, ' ', ''))", [$user->id])
-            ->distinct()
-            ->select("categories.*");
+        $request = $this->removeCategoryIdFormRequest($request);
+        $query = $this->transactions->filteredQuery($request->user(), $request)->setEagerLoads([])->select('transactions.category_id');
 
-        if ($request->has('type')) {
-            $query->where("transactions.type", $request->get('type'));
-        }
-        if ($request->has('status')) {
-            $query->where("transactions.status", $request->get('status'));
-        }
-        if ($request->has('dateFrom')) {
-            $query->where("transactions.date", '>=', $request->get('dateFrom'));
-        }
-        if ($request->has('dateTo')) {
-            $query->where("transactions.date", '<=', $request->get('dateTo'));
-        }
-
-        return $query->get();
+        return Category::query()->whereIn('id', $query)->get();
     }
 
     public function allUserRecurringsCategories(Request $request)
     {
-        $user  = $request->user();
-        $query = Category::query()->join('recurring_transactions', 'categories.id', '=', 'recurring_transactions.category_id')
-            ->join('accounts_view as category_accounts', 'category_accounts.id', '=', 'recurring_transactions.account_id')
-            ->whereRaw("FIND_IN_SET(?, REPLACE(category_accounts.user_ids, ' ', ''))", [$user->id])
-            ->whereNull('recurring_transactions.deleted_at')
-            ->distinct()
-            ->select("categories.*");
+        $request = $this->removeCategoryIdFormRequest($request);
+        $query = $this->recurrings->filteredQuery($request->user(), $request)->setEagerLoads([])->select('recurring_transactions.category_id');
 
-        $query = (new RecurringTransactionFilter)->filter($request, $query);
-
-        return $query->get();
+        return Category::query()->whereIn('id', $query)->get();
     }
 
     public function showUser(Request $request, string $id)
@@ -183,5 +166,15 @@ class CategoryRepository extends ApiController implements RepositoryApiInterface
     public function getByCode(string $code)
     {
         return Category::where('code', $code)->first();
+    }
+
+    private function removeCategoryIdFormRequest(Request $request)
+    {
+        $copy = clone $request;
+        $copy->query = clone $request->query;
+        $copy->query->remove('category_id');
+        $copy->query->remove('categoryId');
+
+        return $copy;
     }
 }
