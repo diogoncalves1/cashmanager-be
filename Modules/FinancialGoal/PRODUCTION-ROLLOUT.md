@@ -67,3 +67,27 @@ As migrations são `forward-only`; `down()` recusa uma reversão cega de saldos.
 - Ensaios adicionais em **MySQL 8.0.40 isolado**, a versão indicada no export: esquema original e esquema da tentativa anterior, executando a `230000` duas vezes. Confirmadas contas, saldo, transações preservadas, recibos e eliminação do campo de modo.
 - Testes BE cobrem atomicidade entre metas, valores da meta diferentes da transação, pendentes, utilizações, chaves, auditorias anteriores e saldos negativos. FE verifica o contrato sem modo, traduções, erros, tipos e build.
 - Nenhuma alteração foi executada em bases de dados reais de produção nesta tarefa.
+
+## Conferência desta entrega — 21/11/2026
+
+A discriminação `goalReservations` no detalhe da conta não precisa de outra migration. Depende do ledger e das migrations acima, que têm de ser publicadas com os consumidores correspondentes. Os testes desta tarefa foram executados em SQLite em memória; o ensaio MySQL referido acima pertence à implementação anterior e não foi repetido nesta revisão. A BD real de produção não foi alterada.
+
+### Exemplo de aceitação
+
+Conta Teste com saldo total de 1.000 € e meta Férias sem movimentos:
+
+| Operação concluída | Saldo total | Disponível | Reservado em Férias | Utilizado em Férias | Contribuído líquido |
+|---|---:|---:|---:|---:|---:|
+| Contribuir 100 € | 1.000 € | 900 € | 100 € | 0 € | 100 € |
+| Levantar 20 € | 1.000 € | 920 € | 80 € | 0 € | 80 € |
+| Gastar 30 € criando despesa | 970 € | 920 € | 50 € | 30 € | 80 € |
+
+A redução ao contribuir aplica-se ao **disponível**, mantendo o dinheiro identificado na conta. Uma utilização reduz tanto o saldo total como a reserva; não volta a reduzir o disponível. Associar uma despesa existente também consome a reserva, mas não volta a debitar o saldo total. Pendentes só passam a contar após confirmação.
+
+### Dados antigos e reconciliação
+
+Antes do deploy, guardar o relatório completo da pré-visualização e o backup. Para cada conta, conferir os ajustes de todas as metas no relatório: uma conta pode financiar várias metas, pelo que se somam os `balanceAdjustment` dessas metas. Não usar o `balanceAfter` de uma única meta como saldo final dessa conta quando há várias metas no mesmo relatório. Confirmar separadamente a soma das reservas por conta e por meta.
+
+Se a origem de um movimento não for recuperável, manter manutenção e reconciliar com a transação original/backup; não inventar uma conta. Depois da conversão, repetir `goals:reservation-rollout --fail-on-review`: deve sair sem erro e sem ajustes pendentes. Confirmar que os débitos/créditos internos neutralizados deixam de contar como consumo/receita e que as despesas reais se mantêm.
+
+Na interface, conferir a conta e a meta com o mesmo utilizador autorizado: os valores da secção “Metas nesta conta” devem corresponder aos da conta na meta. Utilizadores sem acesso a uma meta só veem a reserva global da conta, sem nome/ID da meta. Efetuar o exemplo numa conta de teste do ambiente de ensaio antes de reabrir produção.

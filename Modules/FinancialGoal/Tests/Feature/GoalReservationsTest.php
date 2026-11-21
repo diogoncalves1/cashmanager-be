@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Modules\Accounts\Entities\Account;
+use Modules\Accounts\Entities\AccountsView;
 use Modules\Accounts\Entities\Transaction;
+use Modules\Accounts\Http\Resources\Accounts\AccountViewResource;
 use Modules\Accounts\Repositories\AccountRepository;
 use Modules\Accounts\Repositories\TransactionRepository;
 use Modules\ActivityLog\Repositories\ActivityLogRepository;
@@ -21,6 +23,7 @@ use Modules\FinancialGoal\Repositories\FinancialGoalRepository;
 use Modules\FinancialGoal\Services\GoalReservations;
 use Modules\FinancialGoal\Services\MigrateGoalReservations;
 use Modules\User\Entities\User;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class GoalReservationsTest extends TestCase
@@ -177,6 +180,57 @@ class GoalReservationsTest extends TestCase
         $this->assertEquals(2000, $goal->completed_funding);
         $this->assertEquals(2000, GoalReservations::goalSummary($goal)['usedAmount']);
         $this->assertDatabaseCount('transactions', 1);
+    }
+
+    public function test_account_goal_breakdown_tracks_contributions_withdrawals_and_spending(): void
+    {
+        FinancialGoal::whereKey(1)->update(['name' => 'Férias']);
+        $this->add(['amount' => 100]);
+        $this->assertEquals(2900, GoalReservations::accountSummary(Account::find(1))['availableAmount']);
+        $this->assertSame([['id' => '1', 'name' => 'Férias', 'status' => 'in_progress',
+            'fundedAmount' => 100.0, 'usedAmount' => 0.0, 'reservedAmount' => 100]], GoalReservations::accountGoals(Account::find(1), 1));
+        $this->add(['type' => 'withdrawal', 'amount' => 20]);
+        $this->add(['type' => 'usage', 'amount' => 30, 'category_id' => 1]);
+        $this->add(['amount' => 99, 'status' => 'pending']);
+        $row = GoalReservations::accountGoals(Account::find(1), 1)[0];
+        $this->assertEquals(80, $row['fundedAmount']);
+        $this->assertEquals(30, $row['usedAmount']);
+        $this->assertEquals(50, $row['reservedAmount']);
+        $this->assertEquals(2970, Account::find(1)->balance);
+        $this->assertEquals(2920, GoalReservations::accountSummary(Account::find(1))['availableAmount']);
+
+        $view = (new AccountsView)->forceFill([
+            'id' => 1, 'name' => 'Teste', 'type' => 'bank_account', 'balance' => 2970,
+            'currencyCode' => 'EUR', 'currencySymbol' => '€', 'currencyId' => 1,
+            'status' => true, 'totalRevenues' => 0, 'totalExpenses' => 30,
+        ])->setRelation('account', Account::find(1))
+            ->setRelation('users', collect())->setRelation('invites', collect());
+        $resource = (new AccountViewResource($view))->resolve($this->request());
+        $this->assertSame([$row], $resource['goalReservations']);
+        $this->assertEquals(2920, $resource['availableAmount']);
+    }
+
+    public function test_account_goal_breakdown_scopes_accounts_permissions_and_duplicate_memberships(): void
+    {
+        $this->add(['amount' => 100]);
+        DB::table('financial_goal_users')->insert(['financial_goal_id' => 1, 'user_id' => 1, 'shared_role_id' => 1]);
+        $private = FinancialGoal::create(['name' => 'Private', 'total_amount' => 100, 'currency_id' => 1]);
+        FinancialGoalTransaction::create(['financial_goal_id' => $private->id, 'account_id' => 1,
+            'user_id' => 2, 'type' => 'contribution', 'amount' => 50, 'status' => 'completed', 'date' => today()]);
+        DB::table('shared_roles')->insert(['id' => 2, 'code' => 'restricted', 'name' => '{"en":"Restricted"}']);
+        DB::table('financial_goal_users')->insert(['financial_goal_id' => $private->id, 'user_id' => 1, 'shared_role_id' => 2]);
+        $other = Account::create(['name' => 'Other bank', 'balance' => 1000, 'currency_id' => 1]);
+        DB::table('account_users')->insert(['account_id' => $other->id, 'user_id' => 1, 'shared_role_id' => 1]);
+        $this->add(['account_id' => $other->id, 'amount' => 75]);
+        $rows = GoalReservations::accountGoals(Account::find(1), 1);
+        $this->assertCount(1, $rows);
+        $this->assertEquals(100, $rows[0]['reservedAmount']);
+        $this->assertEquals(150, GoalReservations::accountSummary(Account::find(1))['reservedAmount']);
+        $this->assertEquals(75, GoalReservations::accountGoals($other, 1)[0]['reservedAmount']);
+        DB::table('account_users')->insert(['account_id' => 1, 'user_id' => 2, 'shared_role_id' => 1]);
+        $this->assertSame([], GoalReservations::accountGoals(Account::find(1), 2));
+        $this->expectException(HttpException::class);
+        GoalReservations::accountGoals($other, 2);
     }
 
     public function test_linking_an_existing_expense_does_not_debit_again_and_allocations_are_bounded(): void

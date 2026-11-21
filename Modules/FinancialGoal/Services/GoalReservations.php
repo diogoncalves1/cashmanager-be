@@ -63,6 +63,33 @@ class GoalReservations
             'completedFunding' => $goal->completed_funding === null ? null : (float) $goal->completed_funding];
     }
 
+    public static function accountGoals(Account $account, int|string $userId): array
+    {
+        self::permission($account, $userId, 'viewAccount');
+
+        // EXISTS avoids multiplying money when memberships/permissions are duplicated.
+        // Account totals still include private goals, but their identity stays private.
+        return DB::table('financial_goal_transactions as movement')
+            ->join('financial_goals as goal', 'goal.id', '=', 'movement.financial_goal_id')
+            ->where('movement.account_id', $account->id)->where('movement.status', 'completed')
+            ->whereExists(function ($query) use ($userId) {
+                $query->selectRaw('1')->from('financial_goal_users as member')
+                    ->join('shared_permission_roles as role_permission', 'role_permission.shared_role_id', '=', 'member.shared_role_id')
+                    ->join('shared_permissions as permission', 'permission.id', '=', 'role_permission.shared_permission_id')
+                    ->whereColumn('member.financial_goal_id', 'goal.id')
+                    ->where('member.user_id', $userId)->where('permission.code', 'viewFinancialGoal');
+            })
+            ->groupBy('goal.id', 'goal.name', 'goal.status')->orderBy('goal.id')
+            ->select(['goal.id', 'goal.name', 'goal.status'])
+            ->selectRaw("SUM(CASE WHEN movement.type = 'contribution' THEN movement.amount WHEN movement.type = 'withdrawal' THEN -movement.amount ELSE 0 END) AS funded")
+            ->selectRaw("SUM(CASE WHEN movement.type = 'usage' THEN movement.amount ELSE 0 END) AS used")
+            ->get()->map(fn ($row) => [
+                'id' => (string) $row->id, 'name' => $row->name, 'status' => $row->status,
+                'fundedAmount' => (float) $row->funded, 'usedAmount' => (float) $row->used,
+                'reservedAmount' => (self::cents($row->funded) - self::cents($row->used)) / 100,
+            ])->all();
+    }
+
     public static function expenseGoals(int|string $transactionId, int|string $userId): array
     {
         if (! Schema::hasTable('financial_goal_transactions')) {

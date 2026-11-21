@@ -397,3 +397,9 @@ Panorama global das contas do utilizador numa **única moeda** (não converte). 
 **Erros:**
 - 422 — `period` fora da lista, `currency` com formato inválido ou que não pertence a nenhuma conta do utilizador (formato Laravel).
 - 500 — erro inesperado, com a mensagem `accounts::messages.accounts.resume_error` e `errors: null`.
+
+## Reservas por meta no detalhe da conta
+
+`GET /api/v1/accounts/{id}` acrescenta `data.goalReservations`: lista de `{id, name, status, fundedAmount, usedAmount, reservedAmount}`. Valores numéricos na moeda da conta. Só agrega movimentos completed desta conta: funded = contribution − withdrawal; used = usage; reserved = funded − used. Pendentes não contam. Inclui metas concluídas e reservas esgotadas com histórico.
+
+Exige `viewAccount`; cada meta exige pertença e `viewFinancialGoal`. Não expõe nomes/IDs de metas privadas. `reservedAmount`/`availableAmount` globais da conta continuam a incluir todas as reservas, mesmo as de metas privadas; a lista visível pode portanto não somar o total. Não somar novamente as reservas ao património.

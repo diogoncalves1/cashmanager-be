@@ -60,3 +60,7 @@ completed|canceled ──reset──► in_progress
 | POST | `financial-goal-transactions/{id}/confirm` | `@confirm` |
 
 Notas: o paginator de movimentos usa `whereExists` sobre `financial_goal_users` (não join à view agregada) para ser compatível com `ONLY_FULL_GROUP_BY`. Testes: `Modules/FinancialGoal/Tests/Feature/GoalReservationsTest.php`, `PersonalCategoriesTest` (movimentos com categoria interna).
+
+## Discriminação por conta (2026-11-21)
+
+`GoalReservations::accountGoals` agrega por meta apenas os movimentos completed da conta. O detalhe da conta expõe `goalReservations`, com reservado, utilizado e contribuído líquido; o frontend apresenta a secção “Metas nesta conta”. A query usa EXISTS para pertença/permissão da meta, sem multiplicar valores por memberships duplicadas. Totais da conta incluem reservas privadas, mas os nomes/IDs dessas metas não são revelados. Sem nova migration.

@@ -40,6 +40,7 @@ class AccountViewResource extends JsonResource
         $reservationAccount = Account::find($this->id);
 
         return array_merge($reservationAccount ? GoalReservations::accountSummary($reservationAccount) : [], [
+            'goalReservations' => $reservationAccount ? GoalReservations::accountGoals($reservationAccount, $request->user()->id) : [],
             'id' => $this->id,
             'name' => $this->name,
             'currencySymbol' => $this->currencySymbol,
