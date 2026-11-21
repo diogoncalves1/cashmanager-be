@@ -15,7 +15,7 @@ use Modules\Accounts\Http\Resources\Charts\BalanceChartsResource;
 use Modules\Accounts\Http\Resources\MonthlyResumeCollection;
 use Modules\Accounts\Http\Resources\Stats\AccountIndividualDataResource;
 use Modules\Accounts\Repositories\AccountRepository;
-use Modules\ActivityLog\DataTables\ActivityLogDataTable;
+use Modules\ActivityLog\Paginates\ActivityLogPaginate;
 
 /**
  * Finished: True
@@ -172,25 +172,21 @@ class AccountController extends ApiController
 
     /**
      * Return a activity of account.
-     * @param ActivityLogDataTable $dataTable
+     * @param ActivityLogPaginate $dataTable
      * @param Request $request
      * @param string $id
      * @param string $id
      * @return JsonResponse
      */
-    public function activity(ActivityLogDataTable $dataTable, Request $request, string $id): JsonResponse
+    public function activity(Request $request, ActivityLogPaginate $paginate, string $id): JsonResponse
     {
-        try {
+        return $this->safe(function () use ($request, $paginate, $id) {
             $this->repository->showToUser($request, $id);
+            $paginate->type = 'account';
+            $paginate->id = $id;
 
-            $dataTable->type = 'account';
-            $dataTable->id   = $id;
-
-            return $dataTable->ajax();
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 
 }
