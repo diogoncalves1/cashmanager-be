@@ -11,11 +11,13 @@ class AccountBasicViewResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
+        $reservationAccount = \Modules\Accounts\Entities\Account::find($this->id);
+        return array_merge($reservationAccount ? \Modules\FinancialGoal\Services\GoalReservations::accountSummary($reservationAccount) : [], [
             'id'      => (string) $this->id,
             'name'    => $this->name,
+            'currencyCode' => $reservationAccount?->currency?->code,
             'type'    => __('accounts::attributes.accounts.type.' . $this->type),
             'typeOrg' => $this->type,
-        ];
+        ]);
     }
 }

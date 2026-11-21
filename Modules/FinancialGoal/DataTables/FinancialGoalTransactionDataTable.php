@@ -26,18 +26,18 @@ class FinancialGoalTransactionDataTable extends DataTable
             ->eloquent($query)
             ->addColumn('amountFormated', fn(FinancialGoalTransactionView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency($transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
             ->addColumn('balanceBefore', fn(FinancialGoalTransactionView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency(($transaction->balanceBefore ?? 0), $transaction->currencyCode, $transaction->currencySymbol))
-            ->addColumn('balanceAfter', fn(FinancialGoalTransactionView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency(($transaction->balanceBefore ?? 0) + $transaction->amount, $transaction->currencyCode, $transaction->currencySymbol))
+            ->addColumn('balanceAfter', fn(FinancialGoalTransactionView $transaction) => Helpers::formatMoneyWithSymbolAndCurrency(($transaction->balanceBefore ?? 0) + ($transaction->status === 'completed' ? ($transaction->type === 'contribution' ? $transaction->amount : -$transaction->amount) : 0), $transaction->currencyCode, $transaction->currencySymbol))
             ->addColumn('typeTranslated', fn(FinancialGoalTransactionView $transaction) => __('financialgoal::attributes.financial-goal-transactions.type.' . $transaction->type))
             ->addColumn('statusTranslated', fn(FinancialGoalTransactionView $transaction) => __('financialgoal::attributes.financial-goal-transactions.status.' . $transaction->status))
             ->addColumn('actions', function (FinancialGoalTransactionView $transaction) use ($user) {
                 $sharedRole = $transaction->financialGoal->userSharedRole($transaction->financialGoal, $user->id);
 
-                $canView    = $sharedRole->hasPermission('viewFinancialGoalTransaction');
-                $canEdit    = $sharedRole->hasPermission('updateFinancialGoalTransaction');
-                $canDestroy = $sharedRole->hasPermission('destroyFinancialGoalTransaction');
-                $canConfirm = ($transaction->status == 'pending' && $transaction->date < Carbon::now()) && $sharedRole->hasPermission('confirmScheduledFinancialGoalTransactions');
+                $canView    = $sharedRole?->hasPermission('viewFinancialGoalTransaction');
+                $canEdit    = $sharedRole?->hasPermission('updateFinancialGoalTransaction');
+                $canDestroy = $sharedRole?->hasPermission('destroyFinancialGoalTransaction');
+                $canConfirm = ($transaction->status == 'pending' && $transaction->date < Carbon::now()) && $sharedRole?->hasPermission('confirmScheduledFinancialGoalTransactions');
 
-                return ['view' => $canView, 'edit' => $canEdit, 'destroy' => $canDestroy, 'confirm' => $canConfirm];
+                return ['view' => $canView, 'edit' => $canEdit && ($transaction->status === 'pending'), 'destroy' => $canDestroy && ($transaction->status === 'pending' || $transaction->type === 'usage'), 'confirm' => $canConfirm];
             })
             ->removeColumn('currencyId')
             ->removeColumn('userId');

@@ -18,6 +18,9 @@ class FinancialGoalDataTable extends DataTable
 
         return datatables()
             ->eloquent($query)
+            ->addColumn('reservedAmount', fn ($goal) => \Modules\FinancialGoal\Services\GoalReservations::goalSummary($goal->financialGoal)['reservedAmount'])
+            ->addColumn('usedAmount', fn ($goal) => \Modules\FinancialGoal\Services\GoalReservations::goalSummary($goal->financialGoal)['usedAmount'])
+            ->addColumn('completedFunding', fn ($goal) => $goal->financialGoal->completed_funding)
             ->addColumn('totalAmountFormated', fn(FinancialGoalView $financialGoal) => Helpers::formatMoneyWithSymbolAndCurrency($financialGoal->totalAmount, $financialGoal->currencyCode, $financialGoal->currencySymbol))
             ->addColumn('contributedAmountFormated', fn(FinancialGoalView $financialGoal) => Helpers::formatMoneyWithSymbolAndCurrency($financialGoal->contributedAmount, $financialGoal->currencyCode, $financialGoal->currencySymbol))
             ->addColumn('percentageCompeted', fn(FinancialGoalView $financialGoal) => CoreHelpers::percentage($financialGoal->totalAmount, $financialGoal->contributedAmount))
@@ -37,7 +40,6 @@ class FinancialGoalDataTable extends DataTable
             })
             ->removeColumn('userIds')
             ->removeColumn('currencyId')
-            ->removeColumn('currencyCode')
             ->removeColumn('canceledAt')
             ->removeColumn('completedAt')
             ->rawColumns(['name']);

@@ -44,6 +44,8 @@ class TransactionController extends ApiController
             $categories = $this->categoryRepo->allUserTransactionsCategories($request);
 
             return response()->json(array_merge(['data' => $data['data'], 'recordsTotal' => $data['recordsTotal'], 'recordsFiltered' => $data['recordsFiltered']], ['stats' => $stats, 'categories' => new CategoryCollection($categories)]));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -81,6 +83,8 @@ class TransactionController extends ApiController
             $transaction = $this->repository->showToUser($request, $id);
 
             return $this->ok(new TransactionViewResource($transaction));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -119,6 +123,8 @@ class TransactionController extends ApiController
             $transaction = $this->repository->destroy($request, $id);
 
             return $this->ok(message: __('accounts::messages.transactions.destroy'));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());
@@ -137,6 +143,8 @@ class TransactionController extends ApiController
             $transaction = $this->repository->confirm($request, $id);
 
             return $this->ok(new TransactionResource($transaction), __('accounts::messages.transactions.confirm'));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error($e);
             return $this->fail($e->getMessage(), $e, $e->getCode());

@@ -13,13 +13,18 @@ class CreateFinancialGoalTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'financial_goal_id' => 'required|exists:financial_goals,id',
-            'amount'            => 'required|numeric|min:0.01',
+            'financial_goal_id' => 'required|integer|exists:financial_goals,id',
+            'amount'            => 'required|numeric|min:0.01|max:999999999999.99|decimal:0,2',
             'date'              => 'required|date',
             'status'            => 'required|string|in:completed,pending',
-            'type'              => 'required|in:withdrawal,contribution',
-            'description'       => 'nullable|string',
-            'account_id'        => 'required|exists:accounts,id',
+            'type'              => 'required|string|in:withdrawal,contribution,usage',
+            'description'       => 'nullable|string|max:255',
+            'transaction_id' => 'nullable|integer|exists:transactions,id',
+            'category_id' => 'exclude_unless:type,usage|nullable|integer|exists:categories,id',
+            'request_key' => 'required|string|max:100',
+            'recurring_transaction_id' => 'prohibited',
+            'is_recurring' => 'prohibited',
+            'account_id'        => 'required|integer|exists:accounts,id',
         ];
     }
 
