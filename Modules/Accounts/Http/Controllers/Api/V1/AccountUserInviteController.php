@@ -6,9 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Modules\Accounts\DataTables\AccountUserInviteDataTable;
 use Modules\Accounts\Http\Requests\InviteUserAccountRequest;
-use Modules\Accounts\Http\Resources\AccountInvitationStatsResource;
-use Modules\Accounts\Http\Resources\AccountUserInviteResource;
-use Modules\Accounts\Http\Resources\AccountUserResource;
+use Modules\Accounts\Http\Resources\Accounts\AccountInvitationStatsResource;
+use Modules\Accounts\Http\Resources\Accounts\AccountUserInviteResource;
+use Modules\Accounts\Http\Resources\Accounts\AccountUserResource;
 use Modules\Accounts\Repositories\AccountUserInviteRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 

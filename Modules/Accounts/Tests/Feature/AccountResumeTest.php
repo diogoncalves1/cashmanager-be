@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Modules\Accounts\Tests\Feature;
 
 use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
