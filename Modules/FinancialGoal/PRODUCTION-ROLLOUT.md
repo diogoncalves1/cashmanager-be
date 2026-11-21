@@ -1,0 +1,69 @@
+# Produção: modelo único de reservas (CM-120 / CM-250)
+
+Atualizado em 2026-11-02. Este procedimento substitui a entrega anterior, que distinguia metas por `funding_mode`. A aplicação passa a ter um único ledger para todas as metas; a migration remove esse campo e o contrato API deixa de expor `fundingMode`.
+
+## Correção do histórico misto
+
+A conversão examina cada movimento, independentemente de qualquer classificação anterior da meta. Uma meta pode conter movimentos históricos sem `account_id`, reservas recentes sem transação e utilizações ligadas a despesas reais. Todos entram no mesmo cálculo.
+
+Caso de regressão analisado: 22 movimentos concluídos, com 131,40 € de contribuições, 10 € de levantamentos e nenhuma utilização. O reservado é **121,40 €**. Os 10 € recentes não substituem os 21 movimentos históricos cuja conta ainda está por preencher.
+
+- O ledger da meta é a fonte dos valores/estados/datas da reserva. Não sobrescrever esses valores com o montante da transação de conta.
+- A transação original identifica a conta e o efeito contabilístico a neutralizar. O ajuste do saldo usa o valor/estado reais dessa transação; se diferirem do movimento da meta, as diferenças ficam no relatório.
+- A ligação exclusiva de uma contribuição/levantamento à transação identifica a sua origem interna, mesmo que a categoria tenha sido editada. Tipo de transação incompatível, referência partilhada com outra obrigação e origem não recuperável bloqueiam a conversão.
+- As transações e ligações originais são preservadas. As neutralizadas deixam de contar como receitas/despesas. `financial_goal_neutralized_transactions` evita repor o mesmo débito/crédito duas vezes.
+- Reservas recentes já diretamente associadas a uma conta não recebem ajuste de saldo. Despesas de utilização não são reembolsadas nem neutralizadas.
+- Auditorias de uma conversão anterior podem recuperar a conta de transações que essa versão eliminou. A política de reposição registada nessa auditoria é respeitada para não repor dinheiro outra vez.
+- Recibos e chaves existentes são preservados. Não é necessário fabricar recibos para recuperar a conta.
+
+A conversão financeira é **atómica para todas as metas selecionadas**: ou converte o conjunto completo ou não grava nenhuma alteração financeira. Não há metas mantidas num segundo modelo. Uma origem em falta faz a migration falhar com identificação da meta/movimento; deve ser reconciliada explicitamente, sem atribuir uma conta por suposição. A pré-visualização assinala esses casos como `blocked`.
+
+## Antes de executar no servidor
+
+Publicar primeiro a versão corrigida de BE e FE, guardar um backup completo e ativar manutenção. Suspender também workers/agendamentos que geram movimentos. Ensaiar previamente uma cópia recente da BD de produção, com tabelas InnoDB. A pré-visualização só lê dados:
+
+```sh
+php artisan goals:reservation-rollout
+php artisan goals:reservation-rollout --goal=7
+```
+
+Os relatórios têm dados financeiros: guardá-los fora de diretórios públicos.
+
+## Comandos de migração
+
+Executar, por esta ordem, na raiz do backend:
+
+```sh
+php artisan migrate --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_210000_prepare_goal_reservation_rollout.php --force
+php artisan migrate --path=Modules/FinancialGoal/Database/Migrations/2026_11_02_230000_unify_all_goal_reservations.php --force
+```
+
+A `230000` também prepara os campos/tabelas em falta, converte o histórico misto e elimina `funding_mode`. Funciona quando a `210000` e/ou a `220000` da entrega anterior já estão registadas como executadas; não é necessário nem adequado fazer rollback delas. Se forem usadas as migrations do módulo em conjunto, a `220000` usa o mesmo conversor atómico e a repetição é segura.
+
+Não voltar a instalar/executar as quatro migrations retiradas (`2026_11_01_180000`, `2026_11_02_180000`, `185000`, `190000`). Confirmar que esses ficheiros antigos foram removidos do servidor, inclusive em deploys que copiam ficheiros sem eliminar os retirados do Git.
+
+## Verificação e reabertura
+
+Depois de ambas concluírem:
+
+```sh
+php artisan goals:reservation-rollout --fail-on-review
+php artisan goals:reservation-rollout --goal=7
+```
+
+Uma segunda leitura deve mostrar `unchanged`, sem origens em falta. Para os movimentos analisados, a meta 7 deve apresentar 121,40 € reservados, distribuídos pelas contas das transações originais. Se a BD real tiver movimentos adicionais, confirmar o respetivo líquido no relatório.
+
+A auditoria resumida fica em `financial_goal_reservation_rollouts`; cada aplicação adicional guarda um evento e snapshot em `financial_goal_reservation_rollout_events`, preservando também o snapshot inicial. Confirmar saldos, reservas por conta e exclusão das transações internas das despesas. Só depois reativar workers/agendamentos e executar `php artisan up`. Recarregar a interface para obter o novo contrato.
+
+## Falhas e recuperação
+
+Se a conversão financeira falhar, não reabrir a aplicação. Consultar a pré-visualização, corrigir a origem apontada e repetir a migration. Nenhuma outra meta é deixada parcialmente convertida por essa execução. A preparação e remoção do campo são DDL, que no MySQL não formam uma única transação com os dados; esses passos são repetíveis. Se o erro ocorrer no DDL após a conversão financeira, os registos por transação continuam a impedir reposições duplicadas.
+
+As migrations são `forward-only`; `down()` recusa uma reversão cega de saldos. Não usar `migrate:rollback` nem apagar linhas da tabela `migrations` para repetir a conversão. Antes de novas escritas, recuperar com um backup coordenado com a versão de código; depois de novas escritas, reconciliar os movimentos posteriores ou corrigir para a frente.
+
+## Validação realizada
+
+- Teste sanitizado com os 22 valores do caso da meta 7, incluindo 21 contas por recuperar e uma reserva recente: 121,40 € no total e por conta; repetição sem outra reposição.
+- Ensaios adicionais em **MySQL 8.0.40 isolado**, a versão indicada no export: esquema original e esquema da tentativa anterior, executando a `230000` duas vezes. Confirmadas contas, saldo, transações preservadas, recibos e eliminação do campo de modo.
+- Testes BE cobrem atomicidade entre metas, valores da meta diferentes da transação, pendentes, utilizações, chaves, auditorias anteriores e saldos negativos. FE verifica o contrato sem modo, traduções, erros, tipos e build.
+- Nenhuma alteração foi executada em bases de dados reais de produção nesta tarefa.
