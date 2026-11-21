@@ -68,12 +68,12 @@
 
 - **Regra do responsável (20/11/2026):** preparar alterações, testes, commits e pull requests, e aguardar confirmação explícita do responsável antes de qualquer merge/integração. Não integrar automaticamente nem ativar auto-merge. A existência de PR ou checks verdes não substitui essa confirmação.
 - **Ao abrir um PR, passar imediatamente as issues associadas para `Code Complete` no projeto Cash Manager.** Confirmar o estado no campo Status do projeto. Code Complete significa código pronto e PR aberto para revisão; não autoriza merge nem fecho da issue.
-- Criar PRs separados por módulo/subcategoria. Quando há dependências, encadear as branches/PRs e indicar a ordem de integração na descrição.
+- Criar PRs separados por módulo/subcategoria. Quando há dependências, indicar a ordem de integração na descrição. A origem pode conter dependências, mas todos os PRs da entrega têm como destino `develop/vX.Y.Z` da versão correspondente; não usar outra branch de funcionalidade como destino do PR.
 
 
 - **Destino:**
-  - PR da branch para `develop/vX.Y.Z`, se houver uma versão em curso;
-  - caso contrário, PR diretamente para o `main`.
+  - PR da branch de código para `develop/vX.Y.Z` da versão indicada na issue (por exemplo, Version 1.6.2 → `develop/v1.6.2`); confirmar que a branch existe no repositório;
+  - se o ramo de entrega ainda não existir, confirmar/criar o ramo da versão planeada antes de abrir o PR; não substituir o destino por `main` ou por outra funcionalidade.
   - O ramo de versão entra no `main` através de um PR próprio.
 - **Descrição do PR:**
   - ticket (`CM-xxx`);
@@ -99,4 +99,6 @@ Aplica-se a regra **"uma feature, uma implementação, uma revisão, uma aprova�
 
 Confirmar a versão no planeamento/branch de entrega e nas iterações do projeto; não inventar uma versão nem atribuir a atual a trabalho destinado a outra entrega. Em 20/11/2026, a iteração corrente observada é **Version 1.6.2**; isso é contexto desta entrega, não um valor fixo para issues futuras.
 
-Antes de dar a organização por concluída, verificar no GitHub que a issue aparece no projeto e que Version está selecionada. Se o conector não permitir editar Projects, usar a UI do GitHub. Se houver falta de acesso, registar a limitação concretamente e não afirmar que a associação foi feita.
+A issue deve estar associada à branch real do código na secção **Development** do GitHub. Criar a branch a partir da issue ou associar a branch existente nesse seletor. Quando já existe PR aberto para a branch, o GitHub apresenta a associação através desse PR: selecionar o PR correspondente e confirmar que a sua head é a branch de código da issue. Uma referência textual no body, o nome do ticket ou `Refs #n` não substituem esta associação. Ver [documentação do GitHub](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
+
+Antes de dar a organização por concluída, verificar no GitHub: projeto Cash Manager, Version correta, associação em Development à branch/PR correto, head do PR igual à branch de código e base igual a `develop/vX.Y.Z` dessa versão. Ao abrir o PR, confirmar também Status = Code Complete. Se o conector não permitir editar Projects, usar a UI do GitHub. Se houver falta de acesso, registar a limitação concretamente e não afirmar que a associação foi feita.

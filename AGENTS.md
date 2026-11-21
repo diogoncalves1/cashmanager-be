@@ -127,3 +127,5 @@ Enabled modules currently include:
 - GitHub workflow: all issues must belong to Cash Manager project #2 and have its Version field set to the intended delivery iteration (currently Version 1.6.2 for this migration). See docs/process/git-workflow.md. Prepare PRs and wait for the owner's explicit confirmation before merging; never enable auto-merge.
 
 - Opening a PR must immediately move its associated issues to Code Complete in the Cash Manager GitHub project. Verify the project Status field; this does not authorize merge or issue closure.
+
+- PR targets must be the matching delivery branch `develop/vX.Y.Z` (Version 1.6.2 → `develop/v1.6.2`), including dependent changes. Link every issue to its actual code branch in GitHub Development; when the branch already has a PR, link that PR and verify its head branch. Text references alone are insufficient.
