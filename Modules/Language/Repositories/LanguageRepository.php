@@ -1,8 +1,10 @@
 <?php
+
 namespace Modules\Language\Repositories;
 
 use App\Repositories\RepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -17,7 +19,11 @@ class LanguageRepository implements RepositoryInterface
 
     public function allCodes()
     {
-        return $this->all()->pluck('code')->toArray();
+        return Cache::remember('language_codes',
+            now()->addMinutes(60),
+            function () {
+                return $this->all()->pluck('code')->toArray();
+            });
     }
 
     public function store(Request $request)
@@ -27,6 +33,7 @@ class LanguageRepository implements RepositoryInterface
                 $input = $request->only(['name', 'code']);
 
                 Language::create($input);
+                Cache::forget('language_codes');
 
                 Session::flash('success', 'Idioma adicionado com sucesso.');
             });
@@ -45,6 +52,7 @@ class LanguageRepository implements RepositoryInterface
                 $input = $request->all();
 
                 $language->update($input);
+                Cache::forget('language_codes');
 
                 Session::flash('success', 'Idioma atualizado com sucesso.');
             });
@@ -61,6 +69,7 @@ class LanguageRepository implements RepositoryInterface
                 $language = $this->show($id);
 
                 $language->delete();
+                Cache::forget('language_codes');
             });
 
         } catch (\Exception $e) {

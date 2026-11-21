@@ -1,36 +1,36 @@
 <?php
+
 namespace Modules\Notification\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\ApiController;
-use App\Http\Resources\DataTableResource;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\Notification\Actions\Notifications\ArchiveNotificationAction;
 use Modules\Notification\Actions\Notifications\DeleteNotificationAction;
 use Modules\Notification\Actions\Notifications\MarkAllAsReadAction;
 use Modules\Notification\Actions\Notifications\MarkAsReadAction;
-use Modules\Notification\DataTables\NotificationDataTable;
 use Modules\Notification\Http\Resources\NotificationCollection;
 use Modules\Notification\Http\Resources\NotificationResource;
+use Modules\Notification\Paginates\NotificationPaginate;
 use Modules\Notification\Services\NotificationCacheService;
 
 class NotificationController extends ApiController
 {
     /**
      * Display a listing of the resource.
-     * @param NotificationDataTable $dataTable
+     *
+     * @param  NotificationPaginate  $dataTable
      */
-    public function index(NotificationDataTable $dataTable)
+    public function index(Request $request, NotificationPaginate $paginate, NotificationCacheService $service): JsonResponse
     {
-        return $this->safe(function () use ($dataTable) {
-            $data = $dataTable->ajax()->getData(true);
-
-            return new DataTableResource($data);
+        return $this->safe(function () use ($request, $paginate, $service) {
+            return $this->respondModulePaginated($paginate, $request, ['count' => $service->getUnreadCount($request->user()->id)]);
         });
     }
 
     /**
      * Display a listing of the resource.
-     * @param NotificationCacheService $service
      */
     public function feed(NotificationCacheService $service)
     {
@@ -43,8 +43,6 @@ class NotificationController extends ApiController
 
     /**
      * Mark notification as archived
-     * @param ArchiveNotificationAction $action
-     * @param string $id
      */
     public function markAsArchived(ArchiveNotificationAction $action, string $id)
     {
@@ -57,7 +55,6 @@ class NotificationController extends ApiController
 
     /**
      * Mark all user notifications as read
-     * @param MarkAllAsReadAction $action
      */
     public function markAllAsRead(MarkAllAsReadAction $action)
     {
@@ -70,8 +67,6 @@ class NotificationController extends ApiController
 
     /**
      * Mark notification as read
-     * @param MarkAsReadAction $action
-     * @param string $id
      */
     public function markAsRead(MarkAsReadAction $action, string $id)
     {
@@ -81,10 +76,9 @@ class NotificationController extends ApiController
             return $this->ok(new NotificationResource($notification));
         });
     }
+
     /**
      * Remove the specified resource from storage.
-     * @param DeleteNotificationAction $action
-     * @param string $id
      */
     public function destroy(DeleteNotificationAction $action, string $id)
     {

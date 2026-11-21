@@ -1,8 +1,10 @@
 <?php
+
 namespace Modules\Currency\Repositories;
 
 use App\Repositories\RepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -35,7 +37,7 @@ class CurrencyRepository implements RepositoryInterface
                 $name[$language] = $request->get($language);
             }
 
-            $input["name"] = $name;
+            $input['name'] = $name;
 
             $apiToken = config('currency.services.external.api_key');
             $response = Http::get("https://v6.exchangerate-api.com/v6/$apiToken/latest/USD");
@@ -53,7 +55,8 @@ class CurrencyRepository implements RepositoryInterface
 
             $currency = Currency::create($input);
 
-            Log::info('Currency ' . $currency->id . ' successfully created');
+            Log::info('Currency '.$currency->id.' successfully created');
+
             return $currency;
         });
     }
@@ -72,11 +75,13 @@ class CurrencyRepository implements RepositoryInterface
                 $info[$language] = $request->get($language);
             }
 
-            $input["name"] = $info;
+            $input['name'] = $info;
 
             $currency->update($input);
+            Cache::forget("currency:{$id}");
 
-            Log::info('Currency ' . $currency->id . ' successfully updated.');
+            Log::info('Currency '.$currency->id.' successfully updated.');
+
             return $currency;
         });
     }
@@ -88,22 +93,28 @@ class CurrencyRepository implements RepositoryInterface
             $currency = $this->show($id);
 
             $currency->delete();
+            Cache::forget("currency:{$id}");
 
-            Log::info('Currency ' . $currency->id . ' successfully deleted.');
+            Log::info('Currency '.$currency->id.' successfully deleted.');
+
             return $currency;
         });
     }
 
     public function show(string $id)
     {
-        return Currency::find($id);
+        return Cache::remember("currency:{$id}",
+            now()->addMinutes(60),
+            function () use ($id) {
+                return Currency::find($id);
+            });
     }
 
     public function checkCode(Request $request)
     {
         $query = Currency::code($request->get('code'));
 
-        if ($request->get("id")) {
+        if ($request->get('id')) {
             $query->where('id', '!=', $request->get('id'));
         }
 
@@ -112,20 +123,20 @@ class CurrencyRepository implements RepositoryInterface
 
     public function getByCode(string $code)
     {
-        return Currency::where("code", $code)->first();
+        return Currency::where('code', $code)->first();
     }
 
     public function convert(Request $request)
     {
         $fromCurrency = $this->show($request->get('from_id'));
-        $toCurrency   = $this->show($request->get('to_id'));
+        $toCurrency = $this->show($request->get('to_id'));
 
         $amountConverted = Helpers::convertCurrency($request->get('amount'), $fromCurrency, $toCurrency);
 
         return [
             'fromCode' => $fromCurrency->code,
-            'toCode'   => $toCurrency->code,
-            'amount'   => $amountConverted,
+            'toCode' => $toCurrency->code,
+            'amount' => $amountConverted,
         ];
     }
 }

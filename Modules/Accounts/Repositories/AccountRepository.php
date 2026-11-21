@@ -1,19 +1,27 @@
 <?php
+
 namespace Modules\Accounts\Repositories;
 
 use App\Repositories\RepositoryApiInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\Account;
-use Modules\Accounts\Entities\AccountBasicView;
 use Modules\Accounts\Entities\AccountsView;
 use Modules\Accounts\Entities\AccountUser;
 use Modules\Accounts\Entities\Transaction;
 use Modules\Accounts\Exceptions\Accounts\AccountNotFoundException;
+use Modules\Accounts\Exceptions\Accounts\UnauthorizedDeletedAccountException;
+use Modules\Accounts\Exceptions\Accounts\UnauthorizedUpdateAccountException;
+use Modules\Accounts\Exceptions\Accounts\UnauthorizedViewAccount;
 use Modules\ActivityLog\Repositories\ActivityLogRepository;
 use Modules\Currency\Repositories\CurrencyRepository;
+use Modules\FinancialGoal\Entities\FinancialGoalTransaction;
+use Modules\FinancialGoal\Services\GoalReservations;
 use Modules\SharedRoles\Entities\SharedRole;
+use Modules\User\Entities\User;
 
 class AccountRepository implements RepositoryApiInterface
 {
@@ -29,35 +37,32 @@ class AccountRepository implements RepositoryApiInterface
         return Account::all();
     }
 
-    public function allUser(Request $request)
+    public function getAccountsByUserPermission(User $user, string $permission)
     {
-        $user = $request->user();
-
-        return AccountBasicView::query()->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])
-            ->join("account_users", "account_users.account_id", '=', 'account_basic_view.id')
-            ->join("shared_roles", "shared_roles.id", '=', "account_users.shared_role_id")
-            ->join('shared_permission_roles', "shared_permission_roles.shared_role_id", '=', 'shared_roles.id')
-            ->join('shared_permissions', "shared_permissions.id", '=', 'shared_permission_roles.shared_permission_id')
-            ->where("account_users.user_id", $user->id)
-            ->where('shared_permissions.code', 'createTransaction')
-            ->active(true)
-            ->select("account_basic_view.*")->get();
+        return Account::query()
+            ->whereHas('users', fn ($query) => $query->where('users.id', $user->id))
+            ->where('accounts.active', true)
+            ->whereHas('accountUsers', function ($membership) use ($user, $permission) {
+                $membership->where('user_id', $user->id)->whereHas('sharedRole.permissions', fn ($query) => $query->where('code', $permission));
+            })
+            ->with('currency')
+            ->get();
     }
 
     public function store(Request $request)
     {
         return DB::transaction(function () use ($request) {
-            $user  = $request->user();
+            $user = $request->user();
             $input = $request->only(['name', 'type', 'currency_id', 'active']);
 
             $account = Account::create($input);
 
-            $sharedRole = SharedRole::where("code", "creator")->first();
+            $sharedRole = SharedRole::where('code', 'creator')->first();
 
             $accountUserInput = [
-                "user_id"        => $user->id,
-                "account_id"     => $account->id,
-                "shared_role_id" => $sharedRole->id,
+                'user_id' => $user->id,
+                'account_id' => $account->id,
+                'shared_role_id' => $sharedRole->id,
             ];
 
             AccountUser::create($accountUserInput);
@@ -74,24 +79,22 @@ class AccountRepository implements RepositoryApiInterface
 
             $user = $request->user();
 
-            $sharedRole = $account->userSharedRole($account, $user->id);
-            if (! $sharedRole || ! $sharedRole->hasPermission("editAccount")) {
-                throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedUpdateAccountException();
+            if (! Gate::authorize('update', $account)) {
+                throw new UnauthorizedUpdateAccountException;
             }
 
             if ($request->has('currency_id') && (string) $request->input('currency_id') !== (string) $account->currency_id
-                && \Illuminate\Support\Facades\Schema::hasColumn('financial_goal_transactions', 'account_id')
-                && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('account_id', $account->id)->exists()) {
-                \Modules\FinancialGoal\Services\GoalReservations::invalid('currency_id', 'currency_locked');
+                && Schema::hasColumn('financial_goal_transactions', 'account_id')
+                && FinancialGoalTransaction::where('account_id', $account->id)->exists()) {
+                GoalReservations::invalid('currency_id', 'currency_locked');
             }
-            $input = $request->only('name', 'type', 'currency_id', 'active');
 
+            $input = $request->only('name', 'type', 'currency_id', 'active');
             $old = $account->only(['name', 'type', 'currency_id', 'active']);
 
             $changes = [];
 
             foreach ($input as $field => $value) {
-
                 if ($old[$field] != $value) {
 
                     $values = [
@@ -99,13 +102,13 @@ class AccountRepository implements RepositoryApiInterface
                         'new' => $value,
                     ];
                     if ($field == 'type') {
-                        $values['old'] = __('accounts::attributes.accounts.type.' . $old[$field]);
-                        $values['new'] = __('accounts::attributes.accounts.type.' . $value);
+                        $values['old'] = __('accounts::attributes.accounts.type.'.$old[$field]);
+                        $values['new'] = __('accounts::attributes.accounts.type.'.$value);
                     }
                     if ($field == 'active') {
-                        $values['old'] = __("accounts::attributes.accounts.status." . ($old[$field] ? 'activated' : 'inactivated'));
-                        $values['new'] = __("accounts::attributes.accounts.status." . ($value ? 'activated' : 'inactivated'));
-                        $field         = 'status';
+                        $values['old'] = __('accounts::attributes.accounts.status.'.($old[$field] ? 'activated' : 'inactivated'));
+                        $values['new'] = __('accounts::attributes.accounts.status.'.($value ? 'activated' : 'inactivated'));
+                        $field = 'status';
                     }
                     if ($field == 'currency_id') {
                         $values['oldFallback'] = $this->currencyRepo->show($old[$field])->name->{$user->preferences->lang};
@@ -115,15 +118,15 @@ class AccountRepository implements RepositoryApiInterface
                 }
             }
 
-            $account->update($input);
-
             if (! empty($changes)) {
+                $account->update($input);
+
                 $this->activityRepo->storeActivity(
                     $account->id,
                     $user->id,
                     'account',
                     [
-                        'type'    => 'account_updated',
+                        'type' => 'account_updated',
                         'changes' => $changes,
                     ]
                 );
@@ -140,9 +143,8 @@ class AccountRepository implements RepositoryApiInterface
 
             $user = $request->user();
 
-            $sharedRole = $account->userSharedRole($account, $user->id);
-            if (! $sharedRole || ! $sharedRole->hasPermission("editAccount")) {
-                throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedUpdateAccountException();
+            if (! Gate::authorize('update', $account)) {
+                throw new UnauthorizedUpdateAccountException;
             }
 
             $account->active = ! $account->active;
@@ -162,19 +164,16 @@ class AccountRepository implements RepositoryApiInterface
 
     public function destroy(Request $request, string $id)
     {
-        return DB::transaction(function () use ($request, $id) {
+        return DB::transaction(function () use ($id) {
             $account = Account::whereKey($id)->lockForUpdate()->firstOrFail();
 
-            $user = $request->user();
-
-            $sharedRole = $account->userSharedRole($account, $user->id);
-            if (! $sharedRole || ! $sharedRole->hasPermission("destroyAccount")) {
-                throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedDeletedAccountException();
+            if (! Gate::authorize('delete', $account)) {
+                throw new UnauthorizedDeletedAccountException;
             }
 
-            if (\Illuminate\Support\Facades\Schema::hasColumn('financial_goal_transactions', 'account_id')
-                && \Modules\FinancialGoal\Entities\FinancialGoalTransaction::where('account_id', $account->id)->exists()) {
-                \Modules\FinancialGoal\Services\GoalReservations::invalid('account_id', 'account_history');
+            if (Schema::hasColumn('financial_goal_transactions', 'account_id')
+                && FinancialGoalTransaction::where('account_id', $account->id)->exists()) {
+                GoalReservations::invalid('account_id', 'account_history');
             }
             $account->delete();
 
@@ -189,7 +188,7 @@ class AccountRepository implements RepositoryApiInterface
         $account = Account::find($id);
 
         if (! $account) {
-            throw new AccountNotFoundException();
+            throw new AccountNotFoundException;
         }
 
         return $account;
@@ -199,11 +198,8 @@ class AccountRepository implements RepositoryApiInterface
     {
         $account = $this->show($id);
 
-        $user = $request->user();
-
-        $sharedRole = $account->userSharedRole($account, $user->id);
-        if (! $sharedRole || ! $sharedRole->hasPermission("viewAccount")) {
-            throw new \Modules\Accounts\Exceptions\Accounts\UnauthorizedViewAccount();
+        if (! Gate::authorize('show', $account)) {
+            throw new UnauthorizedViewAccount;
         }
 
         $accountView = $this->showView($id);
@@ -216,7 +212,7 @@ class AccountRepository implements RepositoryApiInterface
         $account = AccountsView::find($id);
 
         if (! $account) {
-            throw new AccountNotFoundException();
+            throw new AccountNotFoundException;
         }
 
         return $account;
@@ -270,7 +266,7 @@ class AccountRepository implements RepositoryApiInterface
             });
         $netWorth = (float) (clone $base)->selectRaw('COALESCE(SUM(a.balance * (user_currency.rate / account_currency.rate)), 0) AS amount')->value('amount');
         $totalQuery = (clone $base)->join('transactions as t', 't.account_id', '=', 'a.id')
-            ->tap(fn ($query) => \Modules\Accounts\Entities\Transaction::excludeNeutralizedGoals($query, 't.id'))
+            ->tap(fn ($query) => Transaction::excludeNeutralizedGoals($query, 't.id'))
             ->selectRaw("SUM(CASE WHEN t.type = 'revenue' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate) ELSE 0 END) AS totalRevenues,
                 SUM(CASE WHEN t.type = 'expense' AND t.status = 'completed' THEN t.amount * (user_currency.rate / account_currency.rate) ELSE 0 END) AS totalExpenses")
             ->first();
@@ -280,9 +276,6 @@ class AccountRepository implements RepositoryApiInterface
                 ->where('status', '1')
                 ->whereRaw("FIND_IN_SET(?, REPLACE(user_ids, ' ', ''))", [$user->id])
                 ->count(),
-            'netWorth'       => Helpers::formatMoneyWithSymbolAndCurrency($netWorth, $currency->code, $currency->symbol),
-            'totalRevenues'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalRevenues ?? 0, $currency->code, $currency->symbol),
-            'totalExpenses'  => Helpers::formatMoneyWithSymbolAndCurrency($totalQuery->totalExpenses ?? 0, $currency->code, $currency->symbol),
             'netWorthAmount' => (float) ($netWorth),
             'totalRevenuesAmount' => (float) ($totalQuery->totalRevenues ?? 0),
             'totalExpensesAmount' => (float) ($totalQuery->totalExpenses ?? 0),
@@ -302,7 +295,7 @@ class AccountRepository implements RepositoryApiInterface
         $totalFormated = Helpers::formatMoneyWithCurrency($total, $account->currencyCode, $account->currencySymbol);
 
         return [
-            'data'          => $account->transactionsView()
+            'data' => $account->transactionsView()
                 ->selectRaw("
                     COUNT(*) AS count,
                     SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) AS value,
@@ -321,7 +314,7 @@ class AccountRepository implements RepositoryApiInterface
                 )
                 ->orderByDesc('value')
                 ->get(),
-            'total'         => $total,
+            'total' => $total,
             'totalFormated' => $totalFormated,
 
         ];
@@ -332,47 +325,47 @@ class AccountRepository implements RepositoryApiInterface
         $monthlyRevenues = (float) $account->transactions()
             ->where('type', 'revenue')
             ->where('status', 'completed')
-            ->whereRaw("MONTH(date) = ?", [date("m")])
-            ->whereRaw("YEAR(date) = ?", [date("Y")])
+            ->whereRaw('MONTH(date) = ?', [date('m')])
+            ->whereRaw('YEAR(date) = ?', [date('Y')])
             ->sum('amount');
 
         $monthlyExpenses = (float) $account->transactions()
             ->where('type', 'expense')
             ->where('status', 'completed')
-            ->whereRaw("MONTH(date) = ?", [date("m")])
-            ->whereRaw("YEAR(date) = ?", [date("Y")])
+            ->whereRaw('MONTH(date) = ?', [date('m')])
+            ->whereRaw('YEAR(date) = ?', [date('Y')])
             ->sum('amount');
 
         $lastMonthExpenses = (float) $account->transactions()
             ->where('type', 'expense')
             ->where('status', 'completed')
-            ->whereRaw("MONTH(date) = ?", [date("m", strtotime("-1 month"))])
-            ->whereRaw("YEAR(date) = ?", [date("Y", strtotime("-1 month"))])
+            ->whereRaw('MONTH(date) = ?', [date('m', strtotime('-1 month'))])
+            ->whereRaw('YEAR(date) = ?', [date('Y', strtotime('-1 month'))])
             ->sum('amount');
         $lastMonthRevenues = (float) $account->transactions()
             ->where('type', 'revenue')
             ->where('status', 'completed')
-            ->whereRaw("MONTH(date) = ?", [date("m", strtotime("-1 month"))])
-            ->whereRaw("YEAR(date) = ?", [date("Y", strtotime("-1 month"))])
+            ->whereRaw('MONTH(date) = ?', [date('m', strtotime('-1 month'))])
+            ->whereRaw('YEAR(date) = ?', [date('Y', strtotime('-1 month'))])
             ->sum('amount');
 
         return [
-            'monthlyRevenues'   => $monthlyRevenues,
-            'monthlyExpenses'   => $monthlyExpenses,
+            'monthlyRevenues' => $monthlyRevenues,
+            'monthlyExpenses' => $monthlyExpenses,
             'lastMonthExpenses' => $lastMonthExpenses,
             'lastMonthRevenues' => $lastMonthRevenues,
-            'currencyCode'      => $account->currencyCode,
-            'currencySymbol'    => $account->currencySymbol,
+            'currencyCode' => $account->currencyCode,
+            'currencySymbol' => $account->currencySymbol,
         ];
     }
 
     public function getChartsData(Request $request, string $id)
     {
         $periods = [
-            'weekly'    => 7,
-            'monthly'   => 30,
+            'weekly' => 7,
+            'monthly' => 30,
             'quarterly' => 90,
-            'annualy'   => 365,
+            'annualy' => 365,
         ];
 
         // Step 1: Query daily totals only (no running sum in SQL)
@@ -390,8 +383,8 @@ class AccountRepository implements RepositoryApiInterface
         // Step 2: Compute cumulative in PHP
         $cumulative = 0;
         foreach ($dailyTotals as $row) {
-            $cumulative      += $row->transactionAmount;
-            $row->cumulative  = $cumulative;
+            $cumulative += $row->transactionAmount;
+            $row->cumulative = $cumulative;
         }
 
         // Step 3: Build chart data by period
@@ -403,9 +396,9 @@ class AccountRepository implements RepositoryApiInterface
 
             $charts[$period] = $transactions->map(function ($row) {
                 return (object) [
-                    'date'              => $row->date,
+                    'date' => $row->date,
                     'transactionAmount' => $row->transactionAmount,
-                    'amount'            => $row->cumulative,
+                    'amount' => $row->cumulative,
                 ];
             });
         }
@@ -420,23 +413,25 @@ class AccountRepository implements RepositoryApiInterface
     {
         $account = $transaction->account;
 
-        $account->balance += $transaction->type === "revenue" ? $transaction->amount : -$transaction->amount;
+        $account->balance += $transaction->type === 'revenue' ? $transaction->amount : -$transaction->amount;
 
         $account->save();
     }
+
     public function updateBalance(Transaction $transaction, float $difference): void
     {
         $account = $transaction->account;
 
-        $account->balance += $transaction->type == "revenue" ? -$difference : $difference;
+        $account->balance += $transaction->type == 'revenue' ? -$difference : $difference;
 
         $account->save();
     }
+
     public function reverseBalance(Transaction $transaction): void
     {
         $account = $transaction->account;
 
-        $account->balance += $transaction->type == "revenue" ? -$transaction->amount : $transaction->amount;
+        $account->balance += $transaction->type == 'revenue' ? -$transaction->amount : $transaction->amount;
 
         $account->save();
     }
