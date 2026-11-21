@@ -1,12 +1,13 @@
 <?php
+
 namespace Modules\User\Http\Controllers\Api;
 
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Modules\User\DataTables\SearchUserDataTable;
 use Modules\User\Http\Resources\UserResource;
+use Modules\User\Paginates\SearchUserPaginate;
 use Modules\User\Repositories\UserRepository;
 
 class UserController extends ApiController
@@ -20,8 +21,6 @@ class UserController extends ApiController
 
     /**
      * Display a listing of the resource.
-     * @param Request $request
-     * @return JsonResponse
      */
     public function updateSettings(Request $request): JsonResponse
     {
@@ -31,14 +30,13 @@ class UserController extends ApiController
             return $this->ok(new UserResource($user), __('user::messages.users.update'));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Check a listing of the usernames.
-     * @param Request $request
-     * @return JsonResponse
      */
     public function checkUsername(Request $request): JsonResponse
     {
@@ -48,21 +46,20 @@ class UserController extends ApiController
             return $this->ok(['exists' => $exists]);
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
+
     /**
      * Search users.
-     * @param SearchUserDataTable $dataTable
-     * @return JsonResponse
+     *
+     * @param  SearchUserPaginate  $dataTable
      */
-    public function searchUser(SearchUserDataTable $dataTable): JsonResponse
+    public function searchUser(Request $request, SearchUserPaginate $paginate): JsonResponse
     {
-        try {
-            return $dataTable->ajax();
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+        return $this->safe(function () use ($request, $paginate) {
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 }

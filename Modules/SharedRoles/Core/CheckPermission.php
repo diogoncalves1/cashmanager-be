@@ -1,4 +1,5 @@
 <?php
+
 namespace Modules\SharedRoles\Core;
 
 use Illuminate\Support\Facades\Cache;
@@ -6,7 +7,7 @@ use Modules\SharedRoles\Entities\SharedRole;
 
 class CheckPermission
 {
-    public static function check(?SharedRole $sharedRole, string | array $permissions): bool
+    public static function check(?SharedRole $sharedRole, string|array $permissions): bool
     {
         if (! $sharedRole) {
             return false;
@@ -26,7 +27,7 @@ class CheckPermission
     public static function checkMultiple(?SharedRole $sharedRole, array $permissions): array
     {
         if (! $sharedRole) {
-            return [];
+            return array_fill_keys(array_keys($permissions), false);
         }
 
         $allowed = [];
