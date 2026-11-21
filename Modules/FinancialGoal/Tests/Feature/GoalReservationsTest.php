@@ -1,7 +1,8 @@
 <?php
 
-namespace Tests\Feature;
+namespace Modules\FinancialGoal\Tests\Feature;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -10,13 +11,15 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Modules\Accounts\Entities\Account;
 use Modules\Accounts\Entities\Transaction;
+use Modules\Accounts\Repositories\AccountRepository;
 use Modules\Accounts\Repositories\TransactionRepository;
 use Modules\ActivityLog\Repositories\ActivityLogRepository;
+use Modules\Currency\Entities\Currency;
 use Modules\FinancialGoal\Entities\FinancialGoal;
 use Modules\FinancialGoal\Entities\FinancialGoalTransaction;
 use Modules\FinancialGoal\Repositories\FinancialGoalRepository;
-use Modules\FinancialGoal\Services\MigrateGoalReservations;
 use Modules\FinancialGoal\Services\GoalReservations;
+use Modules\FinancialGoal\Services\MigrateGoalReservations;
 use Modules\User\Entities\User;
 use Tests\TestCase;
 
@@ -379,6 +382,7 @@ class GoalReservationsTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->migration()->down();
     }
+
     private function historicalEntry(array $entry = [], array $transaction = []): FinancialGoalTransaction
     {
         FinancialGoal::whereKey(1)->update(['contributed_amount' => 100]);
@@ -392,7 +396,6 @@ class GoalReservationsTest extends TestCase
         return FinancialGoalTransaction::create(array_replace(['financial_goal_id' => 1, 'transaction_id' => $tx->id,
             'user_id' => 1, 'amount' => 100, 'type' => 'contribution', 'status' => 'completed', 'date' => today()->toDateString()], $entry));
     }
-
 
     public function test_mixed_goal_history_from_the_goal_7_regression_is_fully_assigned_and_totals_121_40(): void
     {
@@ -557,7 +560,7 @@ class GoalReservationsTest extends TestCase
         try {
             app(MigrateGoalReservations::class)->run(true);
             $this->fail('The write failure must abort every goal.');
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             $this->assertStringContainsString('fixture balance failure', $e->getMessage());
         }
         $this->assertNull($first->fresh()->account_id);
@@ -608,15 +611,18 @@ class GoalReservationsTest extends TestCase
     {
         $this->historicalEntry();
         Schema::table('currencies', fn (Blueprint $t) => $t->decimal('rate', 15, 6)->default(1));
-        Schema::create('user_preferences', function (Blueprint $t) { $t->unsignedBigInteger('user_id'); $t->unsignedBigInteger('currency_id'); });
+        Schema::create('user_preferences', function (Blueprint $t) {
+            $t->unsignedBigInteger('user_id');
+            $t->unsignedBigInteger('currency_id');
+        });
         DB::table('user_preferences')->insert(['user_id' => 1, 'currency_id' => 1]);
         DB::statement("CREATE VIEW accounts_view AS SELECT id, balance, currency_id AS currencyId, active AS status, '1' AS user_ids FROM accounts");
         $permission = DB::table('shared_permissions')->insertGetId(['code' => 'updateUserBalance']);
         DB::table('shared_permission_roles')->insert(['shared_role_id' => 1, 'shared_permission_id' => $permission]);
-        auth()->user()->setRelation('preferences', (object) ['currency' => \Modules\Currency\Entities\Currency::find(1)]);
+        auth()->user()->setRelation('preferences', (object) ['currency' => Currency::find(1)]);
         app(MigrateGoalReservations::class)->run(true);
         DB::connection()->getPdo()->sqliteCreateFunction('FIND_IN_SET', fn ($id, $members) => in_array((string) $id, explode(',', $members), true) ? 1 : 0, 2);
-        $stats = app(\Modules\Accounts\Repositories\AccountRepository::class)->getStats($this->request());
+        $stats = app(AccountRepository::class)->getStats($this->request());
         $this->assertEquals(3100, $stats['netWorthAmount']);
         $this->assertEquals(0, $stats['totalExpensesAmount']);
     }
