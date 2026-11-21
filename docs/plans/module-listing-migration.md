@@ -86,3 +86,5 @@ A paginação do frontend também distingue as origens personal/broadcast ao ded
 ## Regras de associação e destino (21/11/2026)
 
 Todos os PRs desta entrega têm como base `develop/v1.6.2`. Cada issue deve estar ligada na secção Development à branch de código da tabela; como estas branches já têm PR aberto, a associação aparece através do PR correspondente. Confirmar a head do PR, além do número da issue. Referências no body não bastam. Mantêm-se projeto Cash Manager, Version 1.6.2, Status Code Complete e confirmação explícita antes de merge.
+
+Verificação em 21/11/2026: os 22 PRs permanecem abertos e sem merge, todos com base `develop/v1.6.2`; as 22 issues foram associadas em Development aos PRs correspondentes às branches de código da tabela e a ligação foi confirmada na UI.
