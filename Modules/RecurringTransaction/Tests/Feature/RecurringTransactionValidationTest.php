@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Modules\RecurringTransaction\Tests\Feature;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
