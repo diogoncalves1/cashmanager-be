@@ -182,6 +182,73 @@ class GoalReservationsTest extends TestCase
         $this->assertDatabaseCount('transactions', 1);
     }
 
+    public function test_deletion_preview_reports_reserves_without_changing_money(): void
+    {
+        $this->getJson('/api/v1/financial-goals/1/deletion-context')->assertOk()
+            ->assertJsonPath('data.canDelete', true)->assertJsonPath('data.canReleaseAndCancel', false);
+        $this->add(['amount' => 100]);
+        $this->getJson('/api/v1/financial-goals/1/deletion-context')->assertOk()
+            ->assertJsonPath('data.canDelete', false)->assertJsonPath('data.canReleaseAndCancel', true)
+            ->assertJsonPath('data.reservedAmount', 100)->assertJsonPath('data.accounts.0.reservedAmount', 100);
+        $this->deleteJson('/api/v1/financial-goals/1')->assertUnprocessable();
+        $this->assertEquals(100, GoalReservations::reserved(1, 1));
+        $this->assertEquals(3000, Account::find(1)->balance);
+    }
+
+    public function test_release_and_cancel_releases_each_origin_and_preserves_expenses_and_history_on_retry(): void
+    {
+        $other = Account::create(['name' => 'Second', 'balance' => 500, 'currency_id' => 1, 'active' => false]);
+        DB::table('account_users')->insert(['account_id' => $other->id, 'user_id' => 1, 'shared_role_id' => 1]);
+        $this->add(['amount' => 100]);
+        $this->add(['type' => 'usage', 'amount' => 30, 'category_id' => 1]);
+        FinancialGoalTransaction::create(['financial_goal_id' => 1, 'account_id' => $other->id, 'user_id' => 1,
+            'amount' => 50, 'type' => 'contribution', 'status' => 'completed', 'date' => today()]);
+        FinancialGoal::whereKey(1)->update(['status' => 'completed', 'completed_funding' => 150]);
+        $this->postJson('/api/v1/financial-goals/1/release-and-cancel')->assertOk()->assertJsonPath('data.status', 'canceled');
+        $this->postJson('/api/v1/financial-goals/1/release-and-cancel')->assertOk();
+        $this->assertEquals(0, GoalReservations::reserved(1, 1));
+        $this->assertEquals(0, GoalReservations::reserved($other->id, 1));
+        $this->assertEquals(2970, Account::find(1)->balance);
+        $this->assertEquals(500, $other->fresh()->balance);
+        $this->assertDatabaseCount('transactions', 1);
+        $this->assertDatabaseCount('financial_goal_transactions', 5);
+        $this->assertEquals(150, FinancialGoal::find(1)->completed_funding);
+        $this->assertEquals(30, GoalReservations::goalSummary(FinancialGoal::find(1))['usedAmount']);
+        $this->getJson('/api/v1/financial-goals/1/deletion-context')->assertOk()
+            ->assertJsonPath('data.canDelete', false)->assertJsonPath('data.canReleaseAndCancel', false);
+    }
+
+    public function test_pending_movements_block_automatic_release_without_partial_changes(): void
+    {
+        $this->add(['amount' => 100]);
+        $this->add(['amount' => 20, 'status' => 'pending']);
+        $this->getJson('/api/v1/financial-goals/1/deletion-context')->assertOk()
+            ->assertJsonPath('data.pendingCount', 1)->assertJsonPath('data.canReleaseAndCancel', false);
+        $this->postJson('/api/v1/financial-goals/1/release-and-cancel')->assertUnprocessable()->assertJsonValidationErrors('financial_goal_id');
+        $this->assertEquals(100, GoalReservations::reserved(1, 1));
+        $this->assertDatabaseCount('financial_goal_transactions', 2);
+        $this->assertEquals('in_progress', FinancialGoal::find(1)->status);
+    }
+
+    public function test_inaccessible_origin_blocks_and_rolls_back_releases_from_other_accounts(): void
+    {
+        $this->add(['amount' => 100]);
+        $other = Account::create(['name' => 'Secret bank', 'balance' => 500, 'currency_id' => 1]);
+        FinancialGoalTransaction::create(['financial_goal_id' => 1, 'account_id' => $other->id, 'user_id' => 2,
+            'amount' => 50, 'type' => 'contribution', 'status' => 'completed', 'date' => today()]);
+        $this->getJson('/api/v1/financial-goals/1/deletion-context')->assertOk()
+            ->assertJsonPath('data.canReleaseAndCancel', false)->assertJsonPath('data.accounts.1.id', null)
+            ->assertJsonPath('data.accounts.1.name', null);
+        $this->postJson('/api/v1/financial-goals/1/release-and-cancel')->assertForbidden();
+        $this->assertEquals(100, GoalReservations::reserved(1, 1));
+        $this->assertEquals(50, GoalReservations::reserved($other->id, 1));
+        $this->assertDatabaseCount('financial_goal_transactions', 2);
+        $this->assertEquals('in_progress', FinancialGoal::find(1)->status);
+        $this->actingAs((new User)->forceFill(['id' => 2, 'name' => 'Other']));
+        $this->getJson('/api/v1/financial-goals/1/deletion-context')->assertForbidden();
+        $this->postJson('/api/v1/financial-goals/1/release-and-cancel')->assertForbidden();
+    }
+
     public function test_account_goal_breakdown_tracks_contributions_withdrawals_and_spending(): void
     {
         FinancialGoal::whereKey(1)->update(['name' => 'Férias']);

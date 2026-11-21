@@ -100,3 +100,9 @@ Na interface, conferir a conta e a meta com o mesmo utilizador autorizado: os va
 - FE: 14 testes de metas passaram; TypeScript e build de produção passaram.
 - Falha de ferramenta existente no FE: `npm run check:i18n` não executou a auditoria porque `scripts/check-translations.cjs` não existe (`MODULE_NOT_FOUND`). O teste de paridade PT/EN das metas passou.
 - Não foi executado deploy, merge, migração em produção nem novo ensaio MySQL nesta revisão.
+
+## Eliminação assistida — complemento de 21/11/2026
+
+Sem nova migration: publicar os endpoints deletion-context/release-and-cancel antes do FE correspondente. O diálogo distingue DELETE de uma meta vazia de libertar reservas e cancelar uma meta com histórico. Testar em ensaio com duas contas (incluindo uma inativa), uma utilização já registada, pendentes e utilizador sem acesso a uma origem. Confirmar que os saldos totais e as despesas não mudam, as reservas ficam a zero, o disponível aumenta e um segundo pedido não cria levantamentos adicionais. As contas com reserva zero deixam de aparecer em “Onde está o dinheiro reservado”; os seletores continuam a oferecer contas elegíveis para novas contribuições.
+
+Validação deste complemento: `composer test` passou com 118 testes e 3215 asserções; FE passou 18 testes de metas, TypeScript e build. Os dois primeiros testes do diálogo falharam inicialmente por problemas do próprio harness (identificação do botão e Error entre contextos VM); corrigidos e todos passaram na repetição. Mantém-se a limitação já registada de `check:i18n` por script inexistente. Sem ensaio MySQL novo nem alterações em produção. Inventário de 300 rotas e 474 links locais verificados sem destinos em falta.

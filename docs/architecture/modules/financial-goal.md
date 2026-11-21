@@ -64,3 +64,7 @@ Notas: o paginator de movimentos usa `whereExists` sobre `financial_goal_users` 
 ## Discriminação por conta (2026-11-21)
 
 `GoalReservations::accountGoals` agrega por meta apenas os movimentos completed da conta. O detalhe da conta expõe `goalReservations`, com reservado, utilizado e contribuído líquido; o frontend apresenta a secção “Metas nesta conta”. A query usa EXISTS para pertença/permissão da meta, sem multiplicar valores por memberships duplicadas. Totais da conta incluem reservas privadas, mas os nomes/IDs dessas metas não são revelados. Sem nova migration.
+
+## Eliminação assistida
+
+`Services/GoalDeletion` fornece o contexto prévio à eliminação e a ação atómica `release-and-cancel`. A ação liberta o remanescente nas contas de origem através de withdrawals do ledger e marca canceled, preservando o histórico e as despesas reais. Permite também encerrar uma meta completed sem perder completedFunding. Pendentes devem ser resolvidos antes. Ver contrato e permissões em `docs/api/financial-goals.md`. DELETE físico mantém a regra de inexistência de histórico.

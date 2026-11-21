@@ -663,3 +663,14 @@ Confirma um movimento agendado (`pending → completed`). É idempotente: se já
 - 422 — `date: date` (data futura); `financial_goal_id: closed` (meta fora de `in_progress`, conta inativa num tipo que não é `withdrawal`, ou moeda diferente); `amount: reserved` (libertação acima da reserva atual).
 - 403 — `{"success": false, "message": ""}`.
 - 404 — `Not found`.
+
+## Eliminação assistida e libertação das reservas (2026-11-21)
+
+- `GET /api/v1/financial-goals/{id}/deletion-context` requer `destroyFinancialGoal` e devolve `success: true`, `data`: resumo (`reservedAmount`, `usedAmount`, `fundedAmount`, `completedFunding`), `currencyCode`, `status`, `hasHistory`, `pendingCount`, `canDelete`, `canReleaseAndCancel` e `accounts`.
+- Cada conta com reserva positiva tem `{id, name, reservedAmount, canRelease}`. Sem `viewAccount`, id/name são null e canRelease é false. Os totais da meta continuam visíveis ao utilizador autorizado; não se revelam identidades de contas privadas.
+- O FE consulta o contexto ao abrir “Apagar”. Sem histórico, apresenta a confirmação de DELETE. Com histórico, explica a preservação dos movimentos e oferece abrir a meta para gerir utilizações/pendentes ou “Libertar reservas e cancelar meta”. Pendentes bloqueiam a ação automática; erros mantêm o diálogo aberto e atualizam o contexto.
+- `POST /api/v1/financial-goals/{id}/release-and-cancel` não recebe montantes/contas do cliente. Recalcula o reservado por conta, cria um withdrawal completed pelo remanescente de cada origem e marca a meta canceled. Sucesso: `{success: true, data: {status: "canceled"}}`.
+- Exige `destroyFinancialGoal` e `updateFinancialGoal`; para cada reserva positiva exige `storeFinancialGoalTransaction` na meta e `viewAccount`/`createTransaction` na conta. Pode libertar reservas em contas inativas. A conta tem de ter a moeda da meta.
+- A operação é atómica (user → contas ordenadas → meta → movimentos). Leituras com lock veem o estado atual; alteração das contas de origem durante a aquisição dos locks devolve 422 para atualizar/repetir. Pendentes, origem desconhecida e reservas negativas impedem a operação. Falta de permissão devolve 403; nada é parcialmente libertado.
+- Repetir o pedido não duplica levantamentos. Não altera o saldo total das contas: aumenta apenas o disponível. Compras, utilizações, movimentos anteriores e completedFunding são preservados. Mesmo sem reserva restante, uma meta com histórico pode ser cancelada pelo mesmo fluxo; não é apagada definitivamente. DELETE continua a recusar metas com histórico (422).
+- Não há migration nova. Publicar BE antes do FE. O endpoint é executado apenas após escolha explícita no diálogo, nunca ao abrir o aviso.

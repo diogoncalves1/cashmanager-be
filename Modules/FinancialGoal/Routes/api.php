@@ -5,10 +5,11 @@ use Modules\FinancialGoal\Http\Controllers\Api\V1\FinancialGoalController;
 use Modules\FinancialGoal\Http\Controllers\Api\V1\FinancialGoalTransactionController;
 use Modules\FinancialGoal\Http\Controllers\Api\V1\FinancialGoalUserController;
 use Modules\FinancialGoal\Http\Controllers\Api\V1\FinancialGoalUserInviteController;
+use Modules\FinancialGoal\Http\Controllers\Api\V1\GoalReservationsController;
 
 Route::group([
     'prefix' => 'v1',
-    'as'     => 'v1.',
+    'as' => 'v1.',
 ], function () {
     Route::group(
         [
@@ -17,7 +18,7 @@ Route::group([
         function () {
             // Financial Goals
             Route::group([
-                'as'     => 'financial-goals.',
+                'as' => 'financial-goals.',
                 'prefix' => 'financial-goals',
             ], function () {
                 Route::get('/all', [FinancialGoalController::class, 'allUser']);
@@ -28,8 +29,10 @@ Route::group([
 
                 Route::get('/{id}/activity', [FinancialGoalController::class, 'activity']);
 
-                Route::get('/{id}/reservations', [\Modules\FinancialGoal\Http\Controllers\Api\V1\GoalReservationsController::class, 'context']);
-                Route::get('/{id}/eligible-expenses', [\Modules\FinancialGoal\Http\Controllers\Api\V1\GoalReservationsController::class, 'expenses']);
+                Route::get('/{id}/reservations', [GoalReservationsController::class, 'context']);
+                Route::get('/{id}/deletion-context', [GoalReservationsController::class, 'deletionContext']);
+                Route::post('/{id}/release-and-cancel', [GoalReservationsController::class, 'releaseAndCancel']);
+                Route::get('/{id}/eligible-expenses', [GoalReservationsController::class, 'expenses']);
 
                 // Updates
                 Route::post('/{id}/cancel', [FinancialGoalController::class, 'cancel']);
@@ -53,7 +56,7 @@ Route::group([
 
             // Financial Goal Transactionss
             Route::group([
-                'as'     => 'financial-goal-transactions.',
+                'as' => 'financial-goal-transactions.',
                 'prefix' => 'financial-goal-transactions',
             ], function () {
                 Route::post('/{id}/confirm', [FinancialGoalTransactionController::class, 'confirm']);

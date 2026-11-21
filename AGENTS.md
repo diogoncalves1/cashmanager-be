@@ -131,3 +131,5 @@ Enabled modules currently include:
 - PR targets must be the matching delivery branch `develop/vX.Y.Z` (Version 1.6.2 → `develop/v1.6.2`), including dependent changes. Link every issue to its actual code branch in GitHub Development; when the branch already has a PR, link that PR and verify its head branch. Text references alone are insufficient.
 
 - Account goal breakdown (2026-11-21): account detail returns `goalReservations` via `GoalReservations::accountGoals` (completed entries scoped to account, EXISTS membership + viewFinancialGoal); private goal identities stay hidden while account totals include their reserves. Tests in GoalReservationsTest cover the 100 contribution / 20 withdrawal / 30 usage example, account separation and duplicate memberships. No new migration.
+
+- Assisted goal deletion: GoalDeletion exposes deletion-context and POST release-and-cancel (bodyless). Locks user → sorted accounts → goal → entries, releases remaining reserves atomically using ledger withdrawals, preserves expenses/history/completedFunding, blocks pending/unreconciled entries and unauthorized origins. Physical DELETE still rejects history. No migration.

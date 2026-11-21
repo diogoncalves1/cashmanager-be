@@ -1,6 +1,6 @@
 # Inventário de rotas registadas
 
-Gerado em 2026-11-20 a partir de `php artisan route:list --json`: **298 registos**, dos quais **141 de API**. Um registo pode aceitar vários métodos HTTP.
+Gerado em 2026-11-21 a partir de `php artisan route:list --json`: **300 registos**, dos quais **143 de API**. Um registo pode aceitar vários métodos HTTP.
 
 Este é o mapa de registo da aplicação local, incluindo rotas de backoffice e pacotes. Não valida a execução dos handlers, permissões internas, dados ou configuração de produção. Contratos e exemplos: [convenções da API](README.md). Regeneração: [manutenção](../process/documentation.md).
 
@@ -143,10 +143,12 @@ Os nomes de middleware abaixo são os devolvidos pelo Laravel. `Authenticate:san
 | GET, HEAD | `/api/v1/financial-goals/{id}/activity` | [FinancialGoalController@activity](../../Modules/FinancialGoal/Http/Controllers/Api/V1/FinancialGoalController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
 | POST | `/api/v1/financial-goals/{id}/cancel` | [FinancialGoalController@cancel](../../Modules/FinancialGoal/Http/Controllers/Api/V1/FinancialGoalController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
 | POST | `/api/v1/financial-goals/{id}/complete` | [FinancialGoalController@complete](../../Modules/FinancialGoal/Http/Controllers/Api/V1/FinancialGoalController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
+| GET, HEAD | `/api/v1/financial-goals/{id}/deletion-context` | [GoalReservationsController@deletionContext](../../Modules/FinancialGoal/Http/Controllers/Api/V1/GoalReservationsController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
 | GET, HEAD | `/api/v1/financial-goals/{id}/eligible-expenses` | [GoalReservationsController@expenses](../../Modules/FinancialGoal/Http/Controllers/Api/V1/GoalReservationsController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
 | DELETE | `/api/v1/financial-goals/{id}/invite/{userId}` | [FinancialGoalUserInviteController@destroy](../../Modules/FinancialGoal/Http/Controllers/Api/V1/FinancialGoalUserInviteController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
 | POST | `/api/v1/financial-goals/{id}/invite/{userId}` | [FinancialGoalUserInviteController@invite](../../Modules/FinancialGoal/Http/Controllers/Api/V1/FinancialGoalUserInviteController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
 | DELETE | `/api/v1/financial-goals/{id}/leave` | [FinancialGoalUserController@leave](../../Modules/FinancialGoal/Http/Controllers/Api/V1/FinancialGoalUserController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
+| POST | `/api/v1/financial-goals/{id}/release-and-cancel` | [GoalReservationsController@releaseAndCancel](../../Modules/FinancialGoal/Http/Controllers/Api/V1/GoalReservationsController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
 | GET, HEAD | `/api/v1/financial-goals/{id}/reservations` | [GoalReservationsController@context](../../Modules/FinancialGoal/Http/Controllers/Api/V1/GoalReservationsController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
 | POST | `/api/v1/financial-goals/{id}/reset` | [FinancialGoalController@reset](../../Modules/FinancialGoal/Http/Controllers/Api/V1/FinancialGoalController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
 | POST | `/api/v1/financial-goals/{id}/revoke` | [FinancialGoalUserInviteController@revoke](../../Modules/FinancialGoal/Http/Controllers/Api/V1/FinancialGoalUserInviteController.php) | `api`, `Authenticate:sanctum`, `SetLocale` |
