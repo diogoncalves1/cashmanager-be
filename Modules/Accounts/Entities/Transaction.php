@@ -15,6 +15,21 @@ class Transaction extends Model
     protected $table    = 'transactions';
     protected $fillable = ['user_id', 'account_id', 'type', 'amount', 'date', 'description', 'status', 'category_id', 'is_recurring', 'recurring_transaction_id' /*, 'currency_id'*/];
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('goal_reservations', function ($query) {
+            self::excludeNeutralizedGoals($query, $query->getModel()->qualifyColumn('id'));
+        });
+    }
+
+    public static function excludeNeutralizedGoals($query, string $idColumn): void
+    {
+        if (\Illuminate\Support\Facades\Schema::hasTable('financial_goal_neutralized_transactions')) {
+            $query->whereNotExists(fn ($q) => $q->selectRaw('1')->from('financial_goal_neutralized_transactions as goal_history')
+                ->whereColumn('goal_history.transaction_id', $idColumn));
+        }
+    }
+
     protected static function newFactory()
     {
         return \Modules\Accounts\Database\Factories\TransactionFactory::new ();

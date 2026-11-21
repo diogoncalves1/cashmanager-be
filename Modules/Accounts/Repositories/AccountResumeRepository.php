@@ -79,6 +79,8 @@ class AccountResumeRepository
 
                 return ['id' => (string) $account->id, 'name' => $account->name, 'type' => $account->type,
                     'active' => (bool) $account->active, 'balance' => round((float) $account->balance, 2),
+                    'reservedAmount' => \Modules\FinancialGoal\Services\GoalReservations::reserved($account->id),
+                    'availableAmount' => round((float) $account->balance - \Modules\FinancialGoal\Services\GoalReservations::reserved($account->id), 2),
                     'revenues' => round((float) ($row?->revenues ?? 0), 2), 'expenses' => round((float) ($row?->expenses ?? 0), 2),
                     'transactionCount' => (int) ($row?->count ?? 0)];
             })->all(),

@@ -4,7 +4,7 @@ namespace Modules\RecurringTransaction\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Modules\Accounts\Http\Resources\AccountResource;
+use Modules\Accounts\Http\Resources\Accounts\AccountResource;
 use Modules\Accounts\Http\Resources\TransactionCollection;
 use Modules\Category\Http\Resources\CategoryResource;
 use Modules\Debts\Http\Resources\DebtResource;

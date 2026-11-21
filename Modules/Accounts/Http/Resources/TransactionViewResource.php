@@ -13,7 +13,9 @@ class TransactionViewResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $goalUsages = \Modules\FinancialGoal\Services\GoalReservations::expenseGoals($this->id, $request->user()->id);
         return [
+            'goalUsages' => $goalUsages,
             'id'               => $this->id,
             'date'             => $this->date,
             'status'           => $this->status,

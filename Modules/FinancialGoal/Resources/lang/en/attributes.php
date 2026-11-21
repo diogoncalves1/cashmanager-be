@@ -3,7 +3,7 @@
 return [
     'financial-goals'             => [
         'status'   => [
-            'completed'   => 'Paid',
+            'completed'   => 'Completed',
             'in_progress' => 'In Progress',
             'canceled'    => 'Canceled',
         ],
@@ -21,8 +21,9 @@ return [
         ],
 
         'type'   => [
-            'contribution' => 'Contribution',
-            'withdrawal'   => 'Withdrawal',
+            'contribution' => 'Reservation',
+            'usage' => 'Usage',
+            'withdrawal'   => 'Release',
         ],
     ],
     'financial-goal-user-invites' => [
