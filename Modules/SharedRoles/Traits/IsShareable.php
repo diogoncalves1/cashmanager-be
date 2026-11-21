@@ -1,20 +1,26 @@
 <?php
+
 namespace Modules\SharedRoles\Traits;
 
 use Modules\SharedRoles\Repositories\SharedRoleRepository;
+use Modules\User\Entities\User;
 
 trait IsShareable
 {
-    public function userSharedRole($model, string $userId)
+    public function userSharedRole($model, ?string $userId = null, ?User $user = null)
     {
-        $user = $model->users()
-            ->where('user_id', $userId)
-            ->first();
+        if ($userId) {
+            $user = $model->relationLoaded('users')
+                ? $model->users->firstWhere('id', $userId)
+                : $model->users()->where('user_id', $userId)->first();
+        }
 
         if (! $user) {
             return null;
         }
 
-        return app(SharedRoleRepository::class)->show($user?->pivot->shared_role_id);
+        $roleId = $user->pivot?->shared_role_id;
+
+        return $roleId ? app(SharedRoleRepository::class)->show((string) $roleId) : null;
     }
 }

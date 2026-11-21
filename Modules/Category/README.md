@@ -49,7 +49,7 @@ Update payload has the same editable fields, omitting `type`. `icon` and `color`
 
 Metadata counts all personal categories, independently of type and archive filters. Resource flags do not expose owner IDs. Mutations return the standard `success`, `message`, `data`, `errors` envelope; creation returns 201, other successful mutations 200. Validation and quota errors return 422 with field `errors`; ownership failures return 403 and missing/invisible detail IDs return 404. Requests should send `Accept: application/json`. Category form validation also returns JSON without that header.
 
-Creation/update/archive/deletion serialize on the owner user row. Assignments from API form requests are revalidated while holding user/category locks inside the transaction to protect against concurrent archival/deletion. Trusted internal recurring/goal/debt requests preserve their existing behavior and references.
+Creation/update/archive/deletion serialize on the owner user row. Assignments from direct transaction API requests are revalidated while holding user/category locks inside the transaction to protect against concurrent archival/deletion. Goal/debt repositories also receive FormRequests, but assign their categories on the server: do not apply manual category selection rules to their creation requests. Trusted internal recurring/goal/debt requests preserve their existing behavior and references.
 
 ## Deployment and tests
 

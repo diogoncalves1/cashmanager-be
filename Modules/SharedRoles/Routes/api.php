@@ -11,8 +11,8 @@ Route::group(
     function () {
         Route::group(
             [
-                'as'         => 'shared-roles.',
-                'prefix'     => 'shared-roles/',
+                'as' => 'shared-roles.',
+                'prefix' => 'shared-roles/',
                 'middleware' => ['auth', 'web', 'setlocale'],
             ],
             function () {
@@ -23,13 +23,15 @@ Route::group(
         Route::group([
             'middleware' => ['setlocale', 'auth:sanctum'],
         ], function () {
+            Route::get('shared-roles/paginated', [SharedRoleController::class, 'index']);
+            Route::get('shared-permissions', [SharedPermissionController::class, 'index']);
             Route::get('shared-roles', [SharedRoleController::class, 'all']);
         });
 
         Route::group(
             [
-                'as'         => 'shared-permissions.',
-                'prefix'     => 'shared-permissions/',
+                'as' => 'shared-permissions.',
+                'prefix' => 'shared-permissions/',
                 'middleware' => ['auth', 'web', 'setlocale'],
             ],
             function () {

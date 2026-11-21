@@ -1,21 +1,26 @@
 <?php
+
 namespace Modules\User\Entities;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Modules\Accounts\Entities\Account;
 use Modules\Accounts\Entities\AccountsView;
+use Modules\Debts\Entities\Debt;
 use Modules\Notification\Entities\UserNotificationPreferences;
 use Modules\Permission\Entities\Role;
+use Modules\SharedRoles\Entities\SharedRole;
 use Modules\UserPreferences\Entities\UserPrefence;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    /** @use HasFactory<UserFactory> */
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -42,7 +47,7 @@ class User extends Authenticatable
 
     protected static function newFactory()
     {
-        return \Modules\User\Database\Factories\UserFactory::new ();
+        return \Modules\User\Database\Factories\UserFactory::new();
     }
 
     /**
@@ -54,8 +59,8 @@ class User extends Authenticatable
     {
         return [
             'username_updated_at' => 'datetime',
-            'email_verified_at'   => 'datetime',
-            'password'            => 'hashed',
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
         ];
     }
 
@@ -69,9 +74,24 @@ class User extends Authenticatable
         return $this->hasOne(UserPrefence::class);
     }
 
-     public function notificationPreferences()
+    public function notificationPreferences()
     {
         return $this->hasMany(UserNotificationPreferences::class, 'user_id');
+    }
+
+    public function accounts()
+    {
+        return $this->belongsToMany(Account::class, 'account_users', 'user_id', 'account_id');
+    }
+
+    public function debts()
+    {
+        return $this->belongsToMany(Debt::class, 'debt_users', 'user_id', 'debt_id');
+    }
+
+    public function sharedRoles()
+    {
+        return $this->belongsToMany(SharedRole::class, 'account_users', 'user_id', 'shared_role_id');
     }
 
     public function getBalance(): float

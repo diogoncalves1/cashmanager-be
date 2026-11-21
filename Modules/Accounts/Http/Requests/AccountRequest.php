@@ -1,6 +1,8 @@
 <?php
+
 namespace Modules\Accounts\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AccountRequest extends FormRequest
@@ -16,15 +18,17 @@ class AccountRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        $presence = $this->isMethod('POST') ? 'required' : 'sometimes';
+
         return [
-            'name'        => 'required|string|max:255',
-            'currency_id' => 'required|exists:currencies,id',
-            'type'        => 'required|string|in:cash,bank_account,credit_card,digital_wallet',
-            'active'      => 'required',
+            'name' => "$presence|string|max:255",
+            'currency_id' => "$presence|exists:currencies,id",
+            'type' => "$presence|string|in:cash,bank_account,credit_card,digital_wallet",
+            'active' => "$presence",
         ];
     }
 }
