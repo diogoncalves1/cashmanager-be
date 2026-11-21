@@ -10,11 +10,23 @@ use Illuminate\Validation\ValidationException;
 use Modules\Accounts\Entities\Account;
 use Modules\Accounts\Entities\Transaction;
 use Modules\FinancialGoal\Entities\FinancialGoal;
+use Modules\FinancialGoal\Services\GoalDeletion;
 use Modules\FinancialGoal\Services\GoalReservations;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class GoalReservationsController extends ApiController
 {
+    public function deletionContext(Request $request, string $id)
+    {
+        return $this->respond(fn () => app(GoalDeletion::class)
+            ->context(FinancialGoal::findOrFail($id), $request->user()->id));
+    }
+
+    public function releaseAndCancel(Request $request, string $id)
+    {
+        return $this->respond(fn () => app(GoalDeletion::class)->releaseAndCancel($request, $id));
+    }
+
     private function respond(callable $callback)
     {
         try {
@@ -72,5 +84,4 @@ class GoalReservationsController extends ApiController
                 'page' => $expenses->currentPage(), 'hasMore' => $expenses->hasMorePages()];
         });
     }
-
 }

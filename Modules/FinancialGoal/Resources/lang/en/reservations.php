@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'deletion_changed' => 'The goal movements changed. Refresh and try again.',
+    'deletion_pending' => 'Resolve pending movements before releasing the reserves and cancelling the goal.',
+
     'historical_linked' => 'Manage this historical goal movement from its financial goal to keep amounts consistent.',
     'target_locked' => 'Reopen the goal before changing its completed target amount.',
     'account_history' => 'An account with reservation history cannot be deleted. You can deactivate it and release its remaining reserves.',

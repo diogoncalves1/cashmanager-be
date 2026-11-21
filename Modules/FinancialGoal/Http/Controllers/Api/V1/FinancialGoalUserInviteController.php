@@ -1,14 +1,15 @@
 <?php
+
 namespace Modules\FinancialGoal\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Modules\FinancialGoal\DataTables\FinancialGoalUserInviteDataTable;
 use Modules\FinancialGoal\Http\Requests\InviteUserFinancialGoalRequest;
 use Modules\FinancialGoal\Http\Resources\FinancialGoals\FinancialGoalInvitationStatsResource;
-use Modules\FinancialGoal\Http\Resources\FinancialGoalUserInvites\FinancialGoalUserInviteResource;
 use Modules\FinancialGoal\Http\Resources\FinancialGoalUser\FinancialGoalUserResource;
+use Modules\FinancialGoal\Http\Resources\FinancialGoalUserInvites\FinancialGoalUserInviteResource;
+use Modules\FinancialGoal\Paginates\FinancialGoalUserInvitePaginate;
 use Modules\FinancialGoal\Repositories\FinancialGoalUserInviteRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -26,10 +27,6 @@ class FinancialGoalUserInviteController extends ApiController
 
     /**
      * Invite the user for financial goal.
-     * @param InviteUserFinancialGoalRequest $request
-     * @param string $id
-     * @param string $userId
-     * @return JsonResponse
      */
     public function invite(InviteUserFinancialGoalRequest $request, string $id, string $userId): JsonResponse
     {
@@ -39,6 +36,7 @@ class FinancialGoalUserInviteController extends ApiController
             return $this->ok(new FinancialGoalUserInviteResource($invite), __('financialgoal::messages.financial-goal-user-invites.invite', ['goalName' => $invite->financialGoal->name, 'userName' => $invite->user->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
 
@@ -46,8 +44,7 @@ class FinancialGoalUserInviteController extends ApiController
 
     /**
      * Accept financial goal invite.
-     * @param Request $request
-     * @param string $id
+     *
      * @return JsonResponse
      */
     public function accept(Request $request, string $id)
@@ -58,15 +55,14 @@ class FinancialGoalUserInviteController extends ApiController
             return $this->ok(new FinancialGoalUserResource($relation), __('financialgoal::messages.financial-goal-user-invites.accept', ['name' => $relation->financialGoal->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Destroy financial goal invite.
-     * @param Request $request
-     * @param string $id
-     * @param string $userId
+     *
      * @return JsonResponse
      */
     public function destroy(Request $request, string $id, string $userId)
@@ -77,15 +73,13 @@ class FinancialGoalUserInviteController extends ApiController
             return $this->ok(message: __('financialgoal::messages.financial-goal-user-invites.destroy', ['goalName' => $invite->financialGoal->name, 'userName' => $invite->user->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Revoke financial goal invite.
-     * @param Request $request
-     * @param string $id
-     * @return JsonResponse
      */
     public function revoke(Request $request, string $id): JsonResponse
     {
@@ -95,6 +89,7 @@ class FinancialGoalUserInviteController extends ApiController
             return $this->ok(message: __('financialgoal::messages.financial-goal-user-invites.revoke', ['goalName' => $invite->financialGoal->name]));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
 
@@ -102,8 +97,8 @@ class FinancialGoalUserInviteController extends ApiController
 
     /**
      * Return a invitations stats of all user financial goals.
-     * @param Request $request
-     * @param string $id
+     *
+     * @param  string  $id
      * @return JsonResponse
      */
     public function getInvitationsStats(Request $request)
@@ -114,41 +109,38 @@ class FinancialGoalUserInviteController extends ApiController
             return $this->ok(new FinancialGoalInvitationStatsResource($stats));
         } catch (\Exception $e) {
             Log::error($e);
+
             return $this->fail($e->getMessage(), $e, $e->getCode());
         }
     }
 
     /**
      * Return all sent invitations stats of financial goals.
-     * @param FinancialGoalUserInviteDataTable $dataTable
+     *
+     * @param  FinancialGoalUserInvitePaginate  $dataTable
      * @return JsonResponse
      */
-    public function getSentInvitations(FinancialGoalUserInviteDataTable $dataTable)
+    public function getSentInvitations(Request $request, FinancialGoalUserInvitePaginate $paginate): \Illuminate\Http\JsonResponse
     {
-        try {
-            $dataTable->type = 'sent';
+        return $this->safe(function () use ($request, $paginate) {
+            $paginate->type = 'sent';
 
-            return $dataTable->ajax();
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 
     /**
      * Return all received invitations stats of financial goals.
-     * @param FinancialGoalUserInviteDataTable $dataTable
+     *
+     * @param  FinancialGoalUserInvitePaginate  $dataTable
      * @return JsonResponse
      */
-    public function getReceivedInvitations(FinancialGoalUserInviteDataTable $dataTable)
+    public function getReceivedInvitations(Request $request, FinancialGoalUserInvitePaginate $paginate): \Illuminate\Http\JsonResponse
     {
-        try {
-            $dataTable->type = 'received';
+        return $this->safe(function () use ($request, $paginate) {
+            $paginate->type = 'received';
 
-            return $dataTable->ajax();
-        } catch (\Exception $e) {
-            Log::error($e);
-            return $this->fail($e->getMessage(), $e, $e->getCode());
-        }
+            return $this->respondModulePaginated($paginate, $request);
+        });
     }
 }

@@ -67,3 +67,42 @@ As migrations são `forward-only`; `down()` recusa uma reversão cega de saldos.
 - Ensaios adicionais em **MySQL 8.0.40 isolado**, a versão indicada no export: esquema original e esquema da tentativa anterior, executando a `230000` duas vezes. Confirmadas contas, saldo, transações preservadas, recibos e eliminação do campo de modo.
 - Testes BE cobrem atomicidade entre metas, valores da meta diferentes da transação, pendentes, utilizações, chaves, auditorias anteriores e saldos negativos. FE verifica o contrato sem modo, traduções, erros, tipos e build.
 - Nenhuma alteração foi executada em bases de dados reais de produção nesta tarefa.
+
+## Conferência desta entrega — 21/11/2026
+
+A discriminação `goalReservations` no detalhe da conta não precisa de outra migration. Depende do ledger e das migrations acima, que têm de ser publicadas com os consumidores correspondentes. Os testes desta tarefa foram executados em SQLite em memória; o ensaio MySQL referido acima pertence à implementação anterior e não foi repetido nesta revisão. A BD real de produção não foi alterada.
+
+### Exemplo de aceitação
+
+Conta Teste com saldo total de 1.000 € e meta Férias sem movimentos:
+
+| Operação concluída | Saldo total | Disponível | Reservado em Férias | Utilizado em Férias | Contribuído líquido |
+|---|---:|---:|---:|---:|---:|
+| Contribuir 100 € | 1.000 € | 900 € | 100 € | 0 € | 100 € |
+| Levantar 20 € | 1.000 € | 920 € | 80 € | 0 € | 80 € |
+| Gastar 30 € criando despesa | 970 € | 920 € | 50 € | 30 € | 80 € |
+
+A redução ao contribuir aplica-se ao **disponível**, mantendo o dinheiro identificado na conta. Uma utilização reduz tanto o saldo total como a reserva; não volta a reduzir o disponível. Associar uma despesa existente também consome a reserva, mas não volta a debitar o saldo total. Pendentes só passam a contar após confirmação.
+
+### Dados antigos e reconciliação
+
+Antes do deploy, guardar o relatório completo da pré-visualização e o backup. Para cada conta, conferir os ajustes de todas as metas no relatório: uma conta pode financiar várias metas, pelo que se somam os `balanceAdjustment` dessas metas. Não usar o `balanceAfter` de uma única meta como saldo final dessa conta quando há várias metas no mesmo relatório. Confirmar separadamente a soma das reservas por conta e por meta.
+
+Se a origem de um movimento não for recuperável, manter manutenção e reconciliar com a transação original/backup; não inventar uma conta. Depois da conversão, repetir `goals:reservation-rollout --fail-on-review`: deve sair sem erro e sem ajustes pendentes. Confirmar que os débitos/créditos internos neutralizados deixam de contar como consumo/receita e que as despesas reais se mantêm.
+
+Na interface, conferir a conta e a meta com o mesmo utilizador autorizado: os valores da secção “Metas nesta conta” devem corresponder aos da conta na meta. Utilizadores sem acesso a uma meta só veem a reserva global da conta, sem nome/ID da meta. Efetuar o exemplo numa conta de teste do ambiente de ensaio antes de reabrir produção.
+
+### Verificações executadas nesta revisão
+
+- `composer test`: 114 testes passaram, 3160 asserções (SQLite em memória).
+- Suite FinancialGoal: 32 testes passaram, 216 asserções. Inclui migração atómica, repetição sem duplicar reposições, origens em falta e o novo detalhe por conta.
+- Laravel Pint e `git diff --check`: sem erros.
+- FE: 14 testes de metas passaram; TypeScript e build de produção passaram.
+- Falha de ferramenta existente no FE: `npm run check:i18n` não executou a auditoria porque `scripts/check-translations.cjs` não existe (`MODULE_NOT_FOUND`). O teste de paridade PT/EN das metas passou.
+- Não foi executado deploy, merge, migração em produção nem novo ensaio MySQL nesta revisão.
+
+## Eliminação assistida — complemento de 21/11/2026
+
+Sem nova migration: publicar os endpoints deletion-context/release-and-cancel antes do FE correspondente. O diálogo distingue DELETE de uma meta vazia de libertar reservas e cancelar uma meta com histórico. Testar em ensaio com duas contas (incluindo uma inativa), uma utilização já registada, pendentes e utilizador sem acesso a uma origem. Confirmar que os saldos totais e as despesas não mudam, as reservas ficam a zero, o disponível aumenta e um segundo pedido não cria levantamentos adicionais. As contas com reserva zero deixam de aparecer em “Onde está o dinheiro reservado”; os seletores continuam a oferecer contas elegíveis para novas contribuições.
+
+Validação deste complemento: `composer test` passou com 118 testes e 3215 asserções; FE passou 18 testes de metas, TypeScript e build. Os dois primeiros testes do diálogo falharam inicialmente por problemas do próprio harness (identificação do botão e Error entre contextos VM); corrigidos e todos passaram na repetição. Mantém-se a limitação já registada de `check:i18n` por script inexistente. Sem ensaio MySQL novo nem alterações em produção. Inventário de 300 rotas e 474 links locais verificados sem destinos em falta.

@@ -1,4 +1,5 @@
 <?php
+
 namespace Modules\Accounts\Policies;
 
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -34,7 +35,7 @@ class AccountPolicy
             return true;
         }
 
-        if (! $sharedRole || ! CheckPermission::check($sharedRole, "editAccount")) {
+        if (! $sharedRole || ! CheckPermission::check($sharedRole, 'editAccount')) {
             return false;
         }
 
@@ -49,7 +50,7 @@ class AccountPolicy
             return true;
         }
 
-        if (! $sharedRole || ! CheckPermission::check($sharedRole, "createTransaction")) {
+        if (! $sharedRole || ! CheckPermission::check($sharedRole, 'createTransaction')) {
             return false;
         }
 
@@ -63,8 +64,8 @@ class AccountPolicy
         return $this->isOwner($sharedRole);
     }
 
-    private function isOwner(SharedRole $sharedRole)
+    private function isOwner(?SharedRole $sharedRole): bool
     {
-        return $sharedRole->code == "creator";
+        return $sharedRole?->code == 'creator';
     }
 }

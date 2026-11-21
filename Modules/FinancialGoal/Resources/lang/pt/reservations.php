@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'deletion_changed' => 'Os movimentos da meta mudaram. Atualiza os dados e tenta novamente.',
+    'deletion_pending' => 'Resolve os movimentos pendentes antes de libertar as reservas e cancelar a meta.',
+
     'historical_linked' => 'Gere este movimento histórico a partir da meta financeira para manter os valores consistentes.',
     'target_locked' => 'Reabre a meta antes de alterar o valor do objetivo concluído.',
     'account_history' => 'Não podes eliminar uma conta com histórico de reservas. Podes desativá-la e libertar as reservas restantes.',
