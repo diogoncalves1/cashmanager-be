@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\Account;
 use Modules\Accounts\Entities\AccountsView;
 use Modules\Accounts\Entities\Transaction;
@@ -180,6 +181,25 @@ class GoalReservationsTest extends TestCase
         $this->assertEquals(2000, $goal->completed_funding);
         $this->assertEquals(2000, GoalReservations::goalSummary($goal)['usedAmount']);
         $this->assertDatabaseCount('transactions', 1);
+    }
+
+    public function test_new_reservation_events_store_currency_and_a_formatted_amount_snapshot(): void
+    {
+        $this->mock(ActivityLogRepository::class, function ($mock) {
+            $mock->shouldReceive('storeActivity')->once()->withArgs(fn ($id, $userId, $type) => $type === 'account')->andReturnNull();
+            $mock->shouldReceive('storeActivity')->times(3)->withArgs(function ($goalId, $userId, $type, $metadata) {
+                if ($type !== 'financial_goal') {
+                    return false;
+                }
+                $this->assertEquals(1, $metadata['currencyId']);
+                $this->assertSame(Helpers::formatMoneyWithCurrency((float) $metadata['amount'], 'EUR', '€', true), $metadata['amountFallback']);
+
+                return $goalId === 1;
+            })->andReturnNull();
+        });
+        $this->add(['amount' => 100]);
+        $this->add(['amount' => 20, 'status' => 'pending']);
+        $this->add(['type' => 'usage', 'amount' => 30, 'category_id' => 1]);
     }
 
     public function test_deletion_preview_reports_reserves_without_changing_money(): void

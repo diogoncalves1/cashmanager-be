@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
+use Modules\Accounts\Core\Helpers;
 use Modules\Accounts\Entities\Account;
 use Modules\Accounts\Entities\Transaction;
 use Modules\Accounts\Repositories\TransactionRepository;
@@ -236,6 +237,8 @@ class GoalReservations
             app(ActivityLogRepository::class)->storeActivity($goal->id, $user->id, 'financial_goal', [
                 'type' => $entry->status === 'pending' ? 'financial_transaction_scheduled' : 'financial_transaction_added',
                 'transactionType' => $entry->type, 'date' => $entry->date, 'amount' => $entry->amount, 'goalId' => $goal->id,
+                'currencyId' => $goal->currency_id,
+                'amountFallback' => Helpers::formatMoneyWithCurrency((float) $entry->amount, $goal->currency->code, $goal->currency->symbol, true),
             ]);
 
             return $entry;

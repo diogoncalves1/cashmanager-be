@@ -68,3 +68,7 @@ Notas: o paginator de movimentos usa `whereExists` sobre `financial_goal_users` 
 ## Eliminação assistida
 
 `Services/GoalDeletion` fornece o contexto prévio à eliminação e a ação atómica `release-and-cancel`. A ação liberta o remanescente nas contas de origem através de withdrawals do ledger e marca canceled, preservando o histórico e as despesas reais. Permite também encerrar uma meta completed sem perder completedFunding. Pendentes devem ser resolvidos antes. Ver contrato e permissões em `docs/api/financial-goals.md`. DELETE físico mantém a regra de inexistência de histórico.
+
+## Atividade: compatibilidade dos valores monetários
+
+Os eventos de reservas guardam `amount`, `goalId`, `currencyId` e `amountFallback`. O leitor aceita também os eventos já gravados sem fallback, incluindo os gerados pela versão anterior do ledger: formata com a moeda disponível sem lançar Undefined array key. Ver regras de recurso em `support.md`. Não exige alterar logs existentes nem executar migrations.

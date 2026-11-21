@@ -674,3 +674,7 @@ Confirma um movimento agendado (`pending → completed`). É idempotente: se já
 - A operação é atómica (user → contas ordenadas → meta → movimentos). Leituras com lock veem o estado atual; alteração das contas de origem durante a aquisição dos locks devolve 422 para atualizar/repetir. Pendentes, origem desconhecida e reservas negativas impedem a operação. Falta de permissão devolve 403; nada é parcialmente libertado.
 - Repetir o pedido não duplica levantamentos. Não altera o saldo total das contas: aumenta apenas o disponível. Compras, utilizações, movimentos anteriores e completedFunding são preservados. Mesmo sem reserva restante, uma meta com histórico pode ser cancelada pelo mesmo fluxo; não é apagada definitivamente. DELETE continua a recusar metas com histórico (422).
 - Não há migration nova. Publicar BE antes do FE. O endpoint é executado apenas após escolha explícita no diálogo, nunca ao abrir o aviso.
+
+### Compatibilidade da atividade das metas
+
+`GET /api/v1/financial-goals/{id}/activity` lê movimentos existentes sem amountFallback e eventos de criação sem initialTargetFallback. O contrato paginado mantém-se. A mensagem usa a moeda guardada no evento ou a moeda da meta; se ambas forem indisponíveis, usa o fallback guardado ou apresenta o valor sem símbolo. A autorização sobre a meta continua obrigatória. Não é necessário reconciliar ou regravar os logs para corrigir o erro.
